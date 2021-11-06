@@ -1,6 +1,6 @@
 import os
 import string
-import random
+import secrets
 from tkinter import *
 
 window = Tk()
@@ -9,10 +9,11 @@ window.title('RandPyPwGen v.0.0')
 # Get username NOTE: This might be Windows only, need to look into in the future
 name = os.getlogin()
 
-textOnly = string.ascii_letters
-textAndNumbers = string.digits + string.ascii_letters
-textNumberAndSpecial = string.digits + string.punctuation + string.ascii_letters
-
+low = string.ascii_lowercase
+high = string.ascii_uppercase
+n = string.digits
+symbols = string.punctuation
+mix = low + high + n + symbols
 pw = ""
 pwLen = 0
 var = StringVar(window, "1")
@@ -33,5 +34,11 @@ for (text, value) in difficulty.items():
 
 sendBtn = Button(window, text="Generate")
 sendBtn.pack(side=BOTTOM)
+
+
+def click(pw):
+    pw = ''.join(secrets.choice(mix) for i in range(pwLen))
+    printed = Label(window, text=f"{pw}")
+
 
 window.mainloop()
