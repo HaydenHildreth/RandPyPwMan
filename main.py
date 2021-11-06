@@ -22,15 +22,13 @@ difficulty = {"Text only": "1",
               "Text and numbers": "2",
               "Text, numbers and special characters": "3"}
 
-greeting = Label(window, text=f"Hello {name}.")
-greeting.pack()
-t = Label(window, text="Please input desired password length:")
-t.pack()
-inputText = Text(window, height=1, width=3)
+greeting = Label(window, text=f"Hello {name}.").pack
+t = Label(window, text="Please input desired password length:").pack
+inputText = Text(window, height=1, width=6)
 inputText.pack()
 
 for (text, value) in difficulty.items():
-    Radiobutton(window, text=text, variable=var, value=value).pack(side=TOP, ipady=5)
+    Radiobutton(window, text=text, variable=var, value=value).pack(side=TOP, ipady=2)
 
 sendBtn = Button(window, text="Generate")
 sendBtn.pack(side=BOTTOM)
