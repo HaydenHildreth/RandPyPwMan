@@ -3,38 +3,33 @@ import string
 import secrets
 from tkinter import *
 
+
 window = Tk()
-window.title('RandPyPwGen v.0.0')
+window.title('RandPyPwGen v0.1')
 
 # Get username NOTE: This might be Windows only, need to look into in the future
 name = os.getlogin()
 
-low = string.ascii_lowercase
-high = string.ascii_uppercase
-n = string.digits
-symbols = string.punctuation
-mix = low + high + n + symbols
-pw = ""
-pwLen = 0
-var = StringVar(window, "1")
+alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
+password = ""
 
-# Selection box answers
-difficulty = {"Text only": "1",
-              "Text and numbers": "2",
-              "Text, numbers and special characters": "3"}
+
+def click():
+    global password
+    password = ''.join(secrets.choice(alphabet) for i in range(20))
+    print_pw.configure(text=f"Your password is {password}.")
+
 
 greeting = Label(window, text=f"Hello {name}.").pack()
-t = Label(window, text="Please input desired password length:").pack()
-inputText = Text(window, height=1, width=6).pack()
-
-for (text, value) in difficulty.items():
-    Radiobutton(window, text=text, variable=var, value=value).pack(side=TOP, ipady=2)
-
-sendBtn = Button(window, text="Generate").pack(side=BOTTOM)
-
-def click(pwLen):
-    pw = ''.join(secrets.choice(mix) for i in range(pwLen))
-    printed = Label(window, text=f"{pw}").pack
+"""
+Will be the input for future dev
+"""
+# t = Label(window, text="Please input desired password length:").pack()
+# input_text = Entry().pack()
+print_pw = Label(window, text=f"Your password is {password}.")
+print_pw.pack()
 
 
+sendBtn = Button(window, text="Generate!", command=click)
+sendBtn.pack(side=BOTTOM)
 window.mainloop()
