@@ -1,11 +1,12 @@
 import os
 import string
 import secrets
+import pyperclip
 from tkinter import *
 
 
 window = Tk()
-window.title('RandPyPwGen v.0.1')
+window.title('RandPyPwGen v.0.2')
 window.geometry("800x600")
 name = os.getlogin()
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
@@ -22,6 +23,11 @@ def click():
     print_pw.configure(text=f"Your password is {password}")
 
 
+def copy():
+    global password
+    pyperclip.copy(password)
+
+
 greeting = Label(window, text=f"Hello {name}.").pack()
 t = Label(window, text="Please input desired password length:").pack()
 input_text = Entry(window, textvariable=entry_len)
@@ -31,5 +37,7 @@ print_pw.pack()
 
 
 sendBtn = Button(window, text="Generate!", command=click)
+copyBtn = Button(window, text="Copy!", command=copy)
 sendBtn.pack(side=BOTTOM)
+copyBtn.pack(side=BOTTOM)
 window.mainloop()
