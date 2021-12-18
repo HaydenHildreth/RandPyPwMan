@@ -1,6 +1,8 @@
 import os
 import string
 import secrets
+import tkinter.messagebox
+
 import pyperclip
 from tkinter import *
 
@@ -18,12 +20,26 @@ entry_len = StringVar()
 def click():
     global password
     global pw_len
+    '''
     if not entry_len.get():
         pass
     else:
         pw_len = int(entry_len.get())
     password = ''.join(secrets.choice(alphabet) for i in range(pw_len))
     print_pw.configure(text=f"Your password is {password}")
+    '''
+    try:
+        pw_len = int(entry_len.get())
+        if pw_len > 100 or pw_len <= 0:
+            raise RuntimeError
+
+        password = ''.join(secrets.choice(alphabet) for i in range(pw_len))
+        print_pw.configure(text=f"Your password is {password}")
+    except ValueError:
+        tkinter.messagebox.showerror(title="Invalid input", message="Enter an integer...")
+        print('Enter an integer...')
+    except RuntimeError:
+        tkinter.messagebox.showerror(title="Invalid input", message="Password length must be non-negative and less than 100 characters")
 
 
 def copy():
