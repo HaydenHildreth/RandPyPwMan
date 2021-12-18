@@ -10,3 +10,5 @@ Make sure you have Python 3 or higher installed. Either clone the repository or 
 - Very ugly
     - Will fix and update the UI/UX soon
 - Need to use functions to add new node and sites
+- Encryption (hashing)
+- Landing/login page
