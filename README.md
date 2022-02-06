@@ -12,3 +12,4 @@ Make sure you have Python 3 or higher installed. Either clone the repository or 
 - Need to use functions to add new node and sites
 - Encryption (hashing)
 - Landing/login page
+- Database functionality
