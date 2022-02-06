@@ -3,17 +3,16 @@ import string
 import secrets
 import tkinter.messagebox
 import pyperclip
-from tkinter import *
+import tkinter as tk
 
-
-window = Tk()
+window = tk.Tk()
 window.title('RandPyPwGen v.0.1')
 window.geometry("800x600")
 name = os.getlogin()
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
 pw_len = 0
-entry_len = StringVar()
+entry_len = tk.StringVar()
 
 
 def click():
@@ -37,14 +36,16 @@ def copy():
     pyperclip.copy(password)
 
 
-greeting = Label(window, text=f"Hello {name}.").pack()
-t = Label(window, text="Please input desired password length:").pack()
-input_text = Entry(window, textvariable=entry_len)
-input_text.pack()
-print_pw = Label(window, text=f"Your password is: {password}")
-print_pw.pack()
-sendBtn = Button(window, text="Generate!", command=click)
-copyBtn = Button(window, text="Copy!", command=copy)
-sendBtn.pack(side=BOTTOM)
-copyBtn.pack(side=BOTTOM)
+greeting = tk.Label(window, text=f"Greetings {name}.")
+greeting.grid(row=0, column=0, sticky=tk.W)
+t = tk.Label(window, text="Please input desired password length:")
+t.grid(row=1, column=1, sticky=tk.E + tk.W)
+input_text = tk.Entry(window, textvariable=entry_len)
+input_text.grid(row=1, column=2, sticky=tk.E + tk.W)
+print_pw = tk.Label(window, text=f"Your password is: {password}")
+print_pw.grid(row=1, column=1, sticky=tk.E + tk.W)
+sendBtn = tk.Button(window, text="Generate!", command=click)
+copyBtn = tk.Button(window, text="Copy!", command=copy)
+sendBtn.grid(row=2, column=1, sticky=tk.E + tk.W)
+copyBtn.grid(row=2, column=2, sticky=tk.E + tk.W)
 window.mainloop()
