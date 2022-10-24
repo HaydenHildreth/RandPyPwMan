@@ -39,10 +39,30 @@ def click():
 
 
 def new_window():
+    global site_name
+    global username
+    global password_str
     new = tk.Toplevel(window)
     new.title("Add new site...")
     new.geometry("500x500")
+    lblsn = Label(new, text="Site name:")
+    lblsn.grid()
+    ipsn = tk.Entry(new, textvariable=site_name)
+    ipsn.grid()
+    lblun = Label(new, text="Username:")
+    lblun.grid()
+    ipun = tk.Entry(new, textvariable=username)
+    ipun.grid()
+    lblpw = Label(new, text="Password:")
+    lblpw.grid()
+    ippw = tk.Entry(new, textvariable=password_str)
+    ippw.grid()
+    btnSubmit = Button(new, text="Add account", command=placeholder())
+    btnSubmit.grid()
 
+
+def placeholder():
+    pass
 
 
 def copy():
