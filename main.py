@@ -16,6 +16,9 @@ password = ""
 pw_len = 0
 entry_len = tk.StringVar()
 columns = ('Site name', 'Username', 'Password')
+site_name = ''
+username = ''
+password_str = ''
 
 
 def click():
@@ -32,6 +35,14 @@ def click():
         tkinter.messagebox.showerror(title="Invalid input", message="Enter an integer...")
     except RuntimeError:
         tkinter.messagebox.showerror(title="Invalid input", message="Number must be positive and under 101 characters")
+    new_window()
+
+
+def new_window():
+    new = tk.Toplevel(window)
+    new.title("Add new site...")
+    new.geometry("500x500")
+
 
 
 def copy():
