@@ -44,7 +44,7 @@ def new_window():
     global password_str
     new = tk.Toplevel(window)
     new.title("Add new site...")
-    new.geometry("500x500")
+    new.geometry("200x200")
     lblsn = Label(new, text="Site name:")
     lblsn.grid()
     ipsn = tk.Entry(new, textvariable=site_name)
@@ -57,11 +57,11 @@ def new_window():
     lblpw.grid()
     ippw = tk.Entry(new, textvariable=password_str)
     ippw.grid()
-    btnSubmit = Button(new, text="Add account", command=placeholder())
+    btnSubmit = Button(new, text="Add account", command=addwebsite())
     btnSubmit.grid()
 
 
-def placeholder():
+def addwebsite():
     pass
 
 
