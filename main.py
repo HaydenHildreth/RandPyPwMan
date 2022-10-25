@@ -31,7 +31,6 @@ def click():
 
         password = ''.join(secrets.choice(alphabet) for i in range(pw_len))
         print_pw.configure(text=f"Your password is {password}")
-        new_window()
     except ValueError:
         tkinter.messagebox.showerror(title="Invalid input", message="Enter an integer...")
     except RuntimeError:
@@ -42,6 +41,9 @@ def new_window():
     global site_name
     global username
     global password_str
+    global ipsn
+    global ipun
+    global ippw
     new = tk.Toplevel(window)
     new.title("Add new site...")
     new.geometry("200x200")
@@ -57,12 +59,23 @@ def new_window():
     lblpw.grid()
     ippw = tk.Entry(new, textvariable=password_str)
     ippw.grid()
-    btnSubmit = Button(new, text="Add account", command=addwebsite())
+    btnSubmit = Button(new, text="Add account", command=insert_info)
     btnSubmit.grid()
 
 
-def addwebsite():
-    pass
+def insert_info():
+    site_name = ipsn.get()
+    username = ipun.get()
+    password_str = ippw.get()
+    tvData.insert(parent='', index='end', values=(site_name, username, password_str))
+
+
+def add_button():
+    pw_len_verify = int(len(password))
+    if pw_len_verify > 100 or pw_len_verify <= 0:
+        raise RuntimeError(tkinter.messagebox.showerror(title="Invalid usage", message="Generate a password first..."))
+    else:
+        new_window()
 
 
 def copy():
@@ -78,13 +91,20 @@ input_text = tk.Entry(window, textvariable=entry_len)
 input_text.grid(row=1, column=1, sticky=tk.E + tk.W)
 print_pw = tk.Label(window, text=f"Your password is: {password}")
 print_pw.grid(row=2, column=0, sticky=tk.E + tk.W)
-sendBtn = tk.Button(window, text="Generate!", command=click)
-copyBtn = tk.Button(window, text="Copy!", command=copy)
+sendBtn = tk.Button(window, text="Generate", command=click)
+copyBtn = tk.Button(window, text="Copy", command=copy)
+addBtn = tk.Button(window, text="Add", command=add_button)
 sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
 copyBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
+addBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
 tvData = Treeview(window, columns=columns, show='headings')
 tvData.grid(row=4, column=0, columnspan=5)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
+
+
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+
+
 window.mainloop()
