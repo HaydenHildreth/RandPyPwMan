@@ -31,11 +31,11 @@ def click():
 
         password = ''.join(secrets.choice(alphabet) for i in range(pw_len))
         print_pw.configure(text=f"Your password is {password}")
+        new_window()
     except ValueError:
         tkinter.messagebox.showerror(title="Invalid input", message="Enter an integer...")
     except RuntimeError:
         tkinter.messagebox.showerror(title="Invalid input", message="Number must be positive and under 101 characters")
-    new_window()
 
 
 def new_window():
