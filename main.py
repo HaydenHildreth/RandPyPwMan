@@ -20,6 +20,13 @@ site_name = ''
 username = ''
 password_str = ''
 
+# TO DO:
+# - Splashscreen/login page
+# - Encrypt/Decrypt passwords - Also, display raw passwords in Treeview
+# - Edit/Remove records
+# - Connect to DB
+# - Fix UI
+
 
 def click():
     global password
@@ -69,6 +76,7 @@ def insert_info():
     username = ipun.get()
     password_str = ippw.get()
     tvData.insert(parent='', index='end', values=(site_name, username, password_str))
+    # close window
 
 
 def add_button():
