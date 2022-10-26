@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter.ttk import *
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.1')
+window.title('RandPyPwGen v.0.1.5')
 window.geometry("800x600")
 name = os.getlogin()
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
@@ -61,6 +61,7 @@ def new_window():
     ippw.grid()
     btnSubmit = Button(new, text="Add account", command=insert_info)
     btnSubmit.grid()
+    ippw.insert(0, password)
 
 
 def insert_info():
