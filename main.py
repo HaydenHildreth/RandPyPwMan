@@ -69,6 +69,8 @@ def new_window():
     ippw.grid()
     btnSubmit = Button(new, text="Add account", command=insert_info)
     btnSubmit.grid()
+    btnCancel = Button(new, text="Cancel", command=cancel_button)
+    btnCancel.grid()
     ippw.insert(0, password)
 
 
@@ -78,6 +80,12 @@ def insert_info():
     password_str = ippw.get()
     tvData.insert(parent='', index='end', values=(site_name, username, password_str))
     # close window
+
+
+def cancel_button():
+    ipsn.delete(0, 'end')
+    ipun.delete(0, 'end')
+    ippw.delete(0, 'end')
 
 
 def add_button():
@@ -91,6 +99,12 @@ def add_button():
 def copy():
     global password
     pyperclip.copy(password)
+
+
+def selectRecord():
+    # RETURNS WHOLE ROW, FIX THIS
+    curPw = tvData.focus()
+    print(tvData.item(curPw))
 
 
 greeting = tk.Label(window, text=f"Greetings {name}.")
@@ -112,6 +126,8 @@ tvData.grid(row=4, column=0, columnspan=5)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
+selectBtn = tk.Button(window, text="Select", command=selectRecord)
+selectBtn.grid()
 
 
 tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
