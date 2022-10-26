@@ -27,6 +27,7 @@ password_str = ''
 # - Connect to DB
 # - Fix UI
 # - Add groups (Streaming, random, sports, etc... Groups of PWs)
+# - Add scrollbar functionality
 
 
 def click():
@@ -131,6 +132,10 @@ selectBtn.grid()
 
 
 tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@website.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
 
 
 window.mainloop()
