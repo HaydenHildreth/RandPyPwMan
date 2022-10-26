@@ -26,6 +26,7 @@ password_str = ''
 # - Edit/Remove records
 # - Connect to DB
 # - Fix UI
+# - Add groups (Streaming, random, sports, etc... Groups of PWs)
 
 
 def click():
