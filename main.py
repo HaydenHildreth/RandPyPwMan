@@ -107,6 +107,10 @@ def deleteRecord():
     tvData.delete(sel)
 
 
+def editRecord():
+    pass
+
+
 greeting = tk.Label(window, text=f"Greetings {name}.")
 greeting.grid(row=0, column=0, sticky=tk.W)
 t = tk.Label(window, text="Please input desired password length:")
@@ -126,8 +130,10 @@ tvData.grid(row=4, column=0, columnspan=5)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
-selectBtn = tk.Button(window, text="Delete", command=deleteRecord)
-selectBtn.grid()
+deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
+deleteBtn.grid(row=5, column=0, sticky=tk.E + tk.W)
+editBtn = tk.Button(window, text="Edit", command=editRecord)
+editBtn.grid(row=5, column=1, sticky=tk.E + tk.W)
 
 
 tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
