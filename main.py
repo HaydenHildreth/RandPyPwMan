@@ -53,6 +53,7 @@ def new_window():
     global ipsn
     global ipun
     global ippw
+    global new
     new = tk.Toplevel(window)
     new.title("Add new site...")
     new.geometry("200x200")
@@ -72,6 +73,8 @@ def new_window():
     btnSubmit.grid()
     btnCancel = Button(new, text="Cancel", command=cancel_button)
     btnCancel.grid()
+    btnExit = Button(new, text="Exit", command=exit_button)
+    btnExit.grid()
     ippw.insert(0, password)
 
 
@@ -80,7 +83,7 @@ def insert_info():
     username = ipun.get()
     password_str = ippw.get()
     tvData.insert(parent='', index='end', values=(site_name, username, password_str))
-    # close window
+    new.destroy()
 
 
 def cancel_button():
@@ -108,6 +111,10 @@ def deleteRecord():
 
 
 def editRecord():
+    global ipsn
+    global ipun
+    global ippw
+    global new
     cur = tvData.focus()
     v = tvData.item(cur)
     d = v['values']
@@ -130,14 +137,23 @@ def editRecord():
     lblpw.grid()
     ippw = tk.Entry(new, textvariable=password_str)
     ippw.grid()
-    btnSubmit = Button(new, text="Add account", command=insert_info)
+    btnSubmit = Button(new, text="update account", command=update_info)
     btnSubmit.grid()
     btnCancel = Button(new, text="Cancel", command=cancel_button)
     btnCancel.grid()
+    btnExit = Button(new, text="Exit", command=exit_button)
+    btnExit.grid()
     ipsn.insert(0, sn)
     ipun.insert(0, un)
     ippw.insert(0, pw)
-    # CANCELLED GIVES ipsn UNDEFINED ERROR
+
+
+def exit_button():
+    new.destroy()
+
+
+def update_info():
+    pass
 
 
 greeting = tk.Label(window, text=f"Greetings {name}.")
