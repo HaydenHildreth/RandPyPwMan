@@ -102,10 +102,9 @@ def copy():
     pyperclip.copy(password)
 
 
-def selectRecord():
-    # RETURNS WHOLE ROW, FIX THIS
-    curPw = tvData.focus()
-    print(tvData.item(curPw))
+def deleteRecord():
+    sel = tvData.selection()[0]
+    tvData.delete(sel)
 
 
 greeting = tk.Label(window, text=f"Greetings {name}.")
@@ -127,14 +126,14 @@ tvData.grid(row=4, column=0, columnspan=5)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
-selectBtn = tk.Button(window, text="Select", command=selectRecord)
+selectBtn = tk.Button(window, text="Delete", command=deleteRecord)
 selectBtn.grid()
 
 
 tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
 tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
 tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@website.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@givenhansco.com", "ahhhh281"))
 tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
 
 
