@@ -108,7 +108,36 @@ def deleteRecord():
 
 
 def editRecord():
-    pass
+    cur = tvData.focus()
+    v = tvData.item(cur)
+    d = v['values']
+    sn = d[0]
+    un = d[1]
+    pw = d[2]
+
+    new = tk.Toplevel(window)
+    new.title("Add new site...")
+    new.geometry("200x200")
+    lblsn = Label(new, text="Site name:")
+    lblsn.grid()
+    ipsn = tk.Entry(new, textvariable=site_name)
+    ipsn.grid()
+    lblun = Label(new, text="Username:")
+    lblun.grid()
+    ipun = tk.Entry(new, textvariable=username)
+    ipun.grid()
+    lblpw = Label(new, text="Password:")
+    lblpw.grid()
+    ippw = tk.Entry(new, textvariable=password_str)
+    ippw.grid()
+    btnSubmit = Button(new, text="Add account", command=insert_info)
+    btnSubmit.grid()
+    btnCancel = Button(new, text="Cancel", command=cancel_button)
+    btnCancel.grid()
+    ipsn.insert(0, sn)
+    ipun.insert(0, un)
+    ippw.insert(0, pw)
+    # CANCELLED GIVES ipsn UNDEFINED ERROR
 
 
 greeting = tk.Label(window, text=f"Greetings {name}.")
