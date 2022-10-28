@@ -83,6 +83,9 @@ def insert_info():
     username = ipun.get()
     password_str = ippw.get()
     tvData.insert(parent='', index='end', values=(site_name, username, password_str))
+    """
+    INSERT INTO DB
+    """
     new.destroy()
 
 
@@ -108,6 +111,9 @@ def copy():
 def deleteRecord():
     sel = tvData.selection()[0]
     tvData.delete(sel)
+    """
+    REMOVE FROM DB
+    """
 
 
 def editRecord():
@@ -121,7 +127,6 @@ def editRecord():
     sn = d[0]
     un = d[1]
     pw = d[2]
-
     new = tk.Toplevel(window)
     new.title("Add new site...")
     new.geometry("200x200")
@@ -137,7 +142,7 @@ def editRecord():
     lblpw.grid()
     ippw = tk.Entry(new, textvariable=password_str)
     ippw.grid()
-    btnSubmit = Button(new, text="update account", command=update_info)
+    btnSubmit = Button(new, text="Update", command=update_info)
     btnSubmit.grid()
     btnCancel = Button(new, text="Cancel", command=cancel_button)
     btnCancel.grid()
@@ -146,6 +151,9 @@ def editRecord():
     ipsn.insert(0, sn)
     ipun.insert(0, un)
     ippw.insert(0, pw)
+    """
+    ERROR HANDLING FOR IF EDITRECORD() IS CLICKED WITH NOTHING SELECTED
+    """
 
 
 def exit_button():
@@ -153,6 +161,10 @@ def exit_button():
 
 
 def update_info():
+    # FINISH THIS
+    """
+    EDIT IN DB
+    """
     pass
 
 
@@ -184,7 +196,7 @@ editBtn.grid(row=5, column=1, sticky=tk.E + tk.W)
 tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
 tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
 tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@givenhansco.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
 tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
 
 
