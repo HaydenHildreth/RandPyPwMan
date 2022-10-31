@@ -151,6 +151,7 @@ def editRecord():
     ipsn.insert(0, sn)
     ipun.insert(0, un)
     ippw.insert(0, pw)
+    print(cur)
     """
     ERROR HANDLING FOR IF EDITRECORD() IS CLICKED WITH NOTHING SELECTED
     """
@@ -161,11 +162,16 @@ def exit_button():
 
 
 def update_info():
-    # FINISH THIS
+    global ipsn
+    global ipun
+    global ippw
+    global new
+    sel = tvData.focus()
+    val = tvData.item(sel, values=(ipsn.get(), ipun.get(), ippw.get()))
     """
     EDIT IN DB
     """
-    pass
+    new.destroy()
 
 
 greeting = tk.Label(window, text=f"Greetings {name}.")
@@ -193,6 +199,16 @@ editBtn = tk.Button(window, text="Edit", command=editRecord)
 editBtn.grid(row=5, column=1, sticky=tk.E + tk.W)
 
 
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
 tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
 tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
 tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
