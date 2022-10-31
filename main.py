@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter.ttk import *
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.1.5')
+window.title('RandPyPwGen v.0.1.9')
 window.geometry("800x600")
 name = os.getlogin()
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
