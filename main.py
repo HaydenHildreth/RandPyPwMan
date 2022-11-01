@@ -27,6 +27,7 @@ password_str = ''
 # 4. Encrypt/Decrypt passwords - Also, display raw passwords in Treeview
 # 5. Fix UI
 # 6. Splashscreen/login page
+# 7. Make UI fit screen (grow/shrink with window size)
 # ? (not sure if it will be implemented) NOT NULL functionality? Should things be allowed to be blank?
 
 
