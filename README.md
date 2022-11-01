@@ -1,6 +1,6 @@
-# RandPyPwGen
+# RandPyPwMan
 
-## What is RandPyPwGen - WIP [Work in progress]
+## What is RandPyPwMan - WIP [Work in progress]
 It's a simple and easy to use password generator and password manager that's open-source and made in Python 3.
 
 ## How to use it?
