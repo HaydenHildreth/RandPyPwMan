@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter.ttk import *
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.1.9')
+window.title('RandPyPwGen v.0.1.7')
 window.geometry("800x600")
 name = os.getlogin()
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
@@ -144,7 +144,7 @@ def editRecord():
     ippw.grid()
     btnSubmit = Button(new, text="Update", command=update_info)
     btnSubmit.grid()
-    btnCancel = Button(new, text="Cancel", command=cancel_button)
+    btnCancel = Button(new, text="Cancel", command=cancel_edit)
     btnCancel.grid()
     btnExit = Button(new, text="Exit", command=exit_button)
     btnExit.grid()
@@ -172,6 +172,27 @@ def update_info():
     EDIT IN DB
     """
     new.destroy()
+
+
+def cancel_edit():
+    global ipsn
+    global ipun
+    global ippw
+    cur = tvData.focus()
+    v = tvData.item(cur)
+    d = v['values']
+    sn = d[0]
+    un = d[1]
+    pw = d[2]
+    ipsn.delete(0, 'end')
+    ipun.delete(0, 'end')
+    ippw.delete(0, 'end')
+    # clear entries
+    # insert entries
+    ipsn.insert(0, sn)
+    ipun.insert(0, un)
+    ippw.insert(0, pw)
+    pass
 
 
 greeting = tk.Label(window, text=f"Greetings {name}.")
