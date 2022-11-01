@@ -8,10 +8,12 @@ Make sure you have Python 3 or higher installed. Either clone the repository or 
 
 ## Known problems
 - Very ugly
-    - Will fix and update the UI/UX soon
+    - Planning to fix UI/UX soon, see comments in main.py for upcoming features
 - Need to use functions to add new node and sites
-    - ACTIVE FEATURE BUT STILL WIP [Work in Progress]
+    - ACTIVE FEATURE FOR TREEVIEW, ONCE CONNECTION TO DB IS MADE CAN FINISH THIS
 - Encryption (hashing)
     - Looking into the passlib framework/library for this (SHA256)
 - Landing/login page
+    - Hash/salt a masterkey
 - Database functionality
+    - Establishing a connection
