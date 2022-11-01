@@ -21,13 +21,13 @@ username = ''
 password_str = ''
 
 # TO DO:
-# - Splashscreen/login page
-# - Encrypt/Decrypt passwords - Also, display raw passwords in Treeview
-# - Edit/Remove records
-# - Connect to DB
-# - Fix UI
-# - Add groups (Streaming, random, sports, etc... Groups of PWs)
-# - Add scrollbar functionality
+# 1. Add scrollbar functionality
+# 2. Add groups (Streaming, random, sports, etc... Groups of PWs)
+# 3. Connect to DB -- add/remove from DB/table -- mysql, sql_lite, etc...
+# 4. Encrypt/Decrypt passwords - Also, display raw passwords in Treeview
+# 5. Fix UI
+# 6. Splashscreen/login page
+# ? (not sure if it will be implemented) NOT NULL functionality? Should things be allowed to be blank?
 
 
 def click():
@@ -187,12 +187,9 @@ def cancel_edit():
     ipsn.delete(0, 'end')
     ipun.delete(0, 'end')
     ippw.delete(0, 'end')
-    # clear entries
-    # insert entries
     ipsn.insert(0, sn)
     ipun.insert(0, un)
     ippw.insert(0, pw)
-    pass
 
 
 greeting = tk.Label(window, text=f"Greetings {name}.")
