@@ -17,3 +17,5 @@ Make sure you have Python 3 or higher installed. Either clone the repository or 
     - Hash/salt a masterkey
 - Database functionality
     - Establishing a connection
+- README.md sucks
+    - Will fix this/make it more accurate as this project matures and really comes to life
