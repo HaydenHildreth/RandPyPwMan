@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter.ttk import *
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.1.7')
+window.title('RandPyPwGen v.0.1.8')
 window.geometry("800x600")
 name = os.getlogin()
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
@@ -115,6 +115,9 @@ def deleteRecord():
     """
     REMOVE FROM DB
     """
+    """
+    ERROR HANDLING IF NO TV RECORD IS SELECTED
+    """
 
 
 def editRecord():
@@ -212,12 +215,46 @@ tvData.grid(row=4, column=0, columnspan=5)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
+tvScrollbar = Scrollbar()
+tvScrollbar.config(command=tvData.yview)
+tvData.config(yscrollcommand=tvScrollbar.set)
+tvScrollbar.grid(row=4, column=4, sticky='NSE')
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=5, column=0, sticky=tk.E + tk.W)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
 editBtn.grid(row=5, column=1, sticky=tk.E + tk.W)
 
 
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
+tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
+tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
+tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
+tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
+tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
 tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
 tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
 tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
