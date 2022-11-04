@@ -1,4 +1,3 @@
-import os
 import string
 import secrets
 import tkinter.messagebox
@@ -8,7 +7,7 @@ import tkinter as tk
 from tkinter.ttk import *
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.1.8')
+window.title('RandPyPwGen v.0.1.9')
 window.geometry("800x600")
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -200,7 +199,6 @@ def copyPasswordTV():
     d = v['values']
     pw = d[2]
     pyperclip.copy(pw)
-    print(pw)
 
 
 t = tk.Label(window, text="Please input desired password length:")
