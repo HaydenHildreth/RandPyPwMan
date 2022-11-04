@@ -10,7 +10,6 @@ from tkinter.ttk import *
 window = tk.Tk()
 window.title('RandPyPwGen v.0.1.8')
 window.geometry("800x600")
-name = os.getlogin()
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
 pw_len = 0
@@ -155,7 +154,6 @@ def editRecord():
     ipsn.insert(0, sn)
     ipun.insert(0, un)
     ippw.insert(0, pw)
-    print(cur)
     """
     ERROR HANDLING FOR IF EDITRECORD() IS CLICKED WITH NOTHING SELECTED
     """
@@ -196,8 +194,6 @@ def cancel_edit():
     ippw.insert(0, pw)
 
 
-greeting = tk.Label(window, text=f"Greetings {name}.")
-greeting.grid(row=0, column=0, sticky=tk.W)
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -210,8 +206,17 @@ addBtn = tk.Button(window, text="Add", command=add_button)
 sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
 copyBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
 addBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
+sendBtn.config(height=2)
+copyBtn.config(height=2)
+addBtn.config(height=2)
 tvData = Treeview(window, columns=columns, show='headings')
-tvData.grid(row=4, column=0, columnspan=5)
+tvData.grid(row=4, column=0, columnspan=5, sticky='NSEW')
+window.grid_rowconfigure(4, weight=1)
+window.grid_columnconfigure(0, weight=1)
+window.grid_columnconfigure(1, weight=1)
+window.grid_columnconfigure(2, weight=1)
+window.grid_columnconfigure(3, weight=1)
+window.grid_columnconfigure(4, weight=1)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
@@ -220,9 +225,11 @@ tvScrollbar.config(command=tvData.yview)
 tvData.config(yscrollcommand=tvScrollbar.set)
 tvScrollbar.grid(row=4, column=4, sticky='NSE')
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
-deleteBtn.grid(row=5, column=0, sticky=tk.E + tk.W)
+deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
-editBtn.grid(row=5, column=1, sticky=tk.E + tk.W)
+editBtn.grid(row=5, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+deleteBtn.config(height=3)
+editBtn.config(height=3)
 
 
 tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
