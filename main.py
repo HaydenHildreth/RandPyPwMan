@@ -194,6 +194,15 @@ def cancel_edit():
     ippw.insert(0, pw)
 
 
+def copyPasswordTV():
+    cur = tvData.focus()
+    v = tvData.item(cur)
+    d = v['values']
+    pw = d[2]
+    pyperclip.copy(pw)
+    print(pw)
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -228,6 +237,8 @@ deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
 editBtn.grid(row=5, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+copyPwBtn = tk.Button(window, text="Copy password", command=copyPasswordTV)
+copyPwBtn.grid(row=5, column=2, sticky=tk.E + tk.W + tk.N + tk.S)
 deleteBtn.config(height=3)
 editBtn.config(height=3)
 
