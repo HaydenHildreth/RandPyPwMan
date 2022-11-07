@@ -15,7 +15,7 @@ alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + str
 password = ""
 pw_len = 0
 entry_len = tk.StringVar()
-columns = ('Site name', 'Username', 'Password')
+columns = ('ID', 'Site name', 'Username', 'Password')
 site_name = ''
 username = ''
 password_str = ''
@@ -87,7 +87,7 @@ def insert_info():
     site_name = ipsn.get()
     username = ipun.get()
     password_str = ippw.get()
-    tvData.insert(parent='', index='end', values=(site_name, username, password_str))
+    tvData.insert(parent='', index='end', values=(None, site_name, username, password_str))
     c.execute("INSERT INTO data VALUES (?,?,?,?)", (None, site_name, username, password_str))
     conn.commit()
     new.destroy()
@@ -114,9 +114,10 @@ def copy():
 
 def deleteRecord():
     sel = tvData.selection()[0]
+    v = tvData.item(sel)
     tvData.delete(sel)
-    index = sel[1:]
-    iid = int(index)
+    d = v['values']
+    iid = d[0]
     c.execute("DELETE FROM data WHERE id = ?", (iid,))
     conn.commit()
     """
@@ -182,8 +183,10 @@ def update_info():
     values.append(temp_sn)
     values.append(temp_un)
     values.append(temp_pw)
-    index = sel[1:]
-    iid = int(index)
+    v = tvData.item(sel)
+    d = v['values']
+    print(d)
+    iid = d[0]
     c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], iid))
     conn.commit()
     new.destroy()
@@ -233,6 +236,7 @@ window.grid_columnconfigure(4, weight=1)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
+tvData.heading('ID', text='ID')
 tvScrollbar = Scrollbar()
 tvScrollbar.config(command=tvData.yview)
 tvData.config(yscrollcommand=tvScrollbar.set)
@@ -247,7 +251,7 @@ editBtn.config(height=3)
 
 count = 0
 for i in records:
-    tvData.insert(parent='', index='end', values=(records[count][1], records[count][2], records[count][3]))
+    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], records[count][3]))
     count += 1
 
 
