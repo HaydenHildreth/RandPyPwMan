@@ -9,7 +9,7 @@ import tkinter as tk
 from tkinter.ttk import *
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.1.8')
+window.title('RandPyPwGen v.0.2.9')
 window.geometry("800x600")
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
