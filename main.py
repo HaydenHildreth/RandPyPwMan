@@ -1,5 +1,6 @@
 import string
 import secrets
+import time
 import tkinter.messagebox
 import pyperclip
 import passlib
@@ -19,18 +20,19 @@ site_name = ''
 username = ''
 password_str = ''
 
-# conn = sqlite3.connect('dbname.db')
-# c = conn.cursor()
+conn = sqlite3.connect('db/data.db')
+c = conn.cursor()
+c.execute("SELECT * FROM data")
+records = c.fetchall()
+
 
 # TO DO:
 # 1. Add scrollbar functionality
 # 2. Add groups (Streaming, random, sports, etc... Groups of PWs)
-# 3. Connect to DB -- add/remove from DB/table -- mysql, sql_lite, etc...
-# 4. Encrypt/Decrypt passwords - Also, display decrypted passwords in Treeview
-# 5. Fix UI
-# 6. Splashscreen/login page
-# 7. Make UI fit screen (grow/shrink with window size)
-# ? (not sure if it will be implemented) NOT NULL functionality? Should things be allowed to be blank?
+# 3. Encrypt/Decrypt passwords - Also, display decrypted passwords in Treeview
+# 4. Fix UI
+# 5. Splashscreen/login page
+# 6. Make UI fit screen (grow/shrink with window size)
 
 
 def click():
@@ -86,10 +88,8 @@ def insert_info():
     username = ipun.get()
     password_str = ippw.get()
     tvData.insert(parent='', index='end', values=(site_name, username, password_str))
-    """
-    INSERT INTO DB
-    c.execute("INSERT INTO dbname VALUES (site_name, username, password_str)") 
-    """
+    c.execute("INSERT INTO data VALUES (?,?,?,?)", (None, site_name, username, password_str))
+    conn.commit()
     new.destroy()
 
 
@@ -115,9 +115,10 @@ def copy():
 def deleteRecord():
     sel = tvData.selection()[0]
     tvData.delete(sel)
-    """
-    REMOVE FROM DB
-    """
+    index = sel[1:]
+    iid = int(index)
+    c.execute("DELETE FROM data WHERE id = ?", (iid,))
+    conn.commit()
     """
     ERROR HANDLING IF NO TV RECORD IS SELECTED
     """
@@ -174,9 +175,17 @@ def update_info():
     global new
     sel = tvData.focus()
     val = tvData.item(sel, values=(ipsn.get(), ipun.get(), ippw.get()))
-    """
-    EDIT IN DB
-    """
+    values = []
+    temp_sn = ipsn.get()
+    temp_un = ipun.get()
+    temp_pw = ippw.get()
+    values.append(temp_sn)
+    values.append(temp_un)
+    values.append(temp_pw)
+    index = sel[1:]
+    iid = int(index)
+    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], iid))
+    conn.commit()
     new.destroy()
 
 
@@ -236,51 +245,10 @@ deleteBtn.config(height=3)
 editBtn.config(height=3)
 
 
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@replacethisemail.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
+count = 0
+for i in records:
+    tvData.insert(parent='', index='end', values=(records[count][1], records[count][2], records[count][3]))
+    count += 1
 
 
 window.mainloop()
