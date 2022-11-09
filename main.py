@@ -20,10 +20,15 @@ site_name = ''
 username = ''
 password_str = ''
 
-conn = sqlite3.connect('db/data.db')
-c = conn.cursor()
-c.execute("SELECT * FROM data")
-records = c.fetchall()
+
+try:
+    conn = sqlite3.connect('db/data.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM data")
+    records = c.fetchall()
+except sqlite3.OperationalError:
+    tkinter.messagebox.showerror(title="SQLite not installed", message="Please install SQLite before use.")
+    exit()
 
 
 # TO DO:
@@ -113,16 +118,16 @@ def copy():
 
 
 def deleteRecord():
-    sel = tvData.selection()[0]
-    v = tvData.item(sel)
-    tvData.delete(sel)
-    d = v['values']
-    iid = d[0]
-    c.execute("DELETE FROM data WHERE id = ?", (iid,))
-    conn.commit()
-    """
-    ERROR HANDLING IF NO TV RECORD IS SELECTED
-    """
+    try:
+        sel = tvData.selection()[0]
+        v = tvData.item(sel)
+        tvData.delete(sel)
+        d = v['values']
+        iid = d[0]
+        c.execute("DELETE FROM data WHERE id = ?", (iid,))
+        conn.commit()
+    except IndexError:
+        tkinter.messagebox.showerror(title="Cannot delete record", message="Please choose a record to delete.")
 
 
 def editRecord():
@@ -130,39 +135,39 @@ def editRecord():
     global ipun
     global ippw
     global new
-    cur = tvData.focus()
-    v = tvData.item(cur)
-    d = v['values']
-    sn = d[0]
-    un = d[1]
-    pw = d[2]
-    new = tk.Toplevel(window)
-    new.title("Add new site...")
-    new.geometry("200x200")
-    lblsn = Label(new, text="Site name:")
-    lblsn.grid()
-    ipsn = tk.Entry(new, textvariable=site_name)
-    ipsn.grid()
-    lblun = Label(new, text="Username:")
-    lblun.grid()
-    ipun = tk.Entry(new, textvariable=username)
-    ipun.grid()
-    lblpw = Label(new, text="Password:")
-    lblpw.grid()
-    ippw = tk.Entry(new, textvariable=password_str)
-    ippw.grid()
-    btnSubmit = Button(new, text="Update", command=update_info)
-    btnSubmit.grid()
-    btnCancel = Button(new, text="Cancel", command=cancel_edit)
-    btnCancel.grid()
-    btnExit = Button(new, text="Exit", command=exit_button)
-    btnExit.grid()
-    ipsn.insert(0, sn)
-    ipun.insert(0, un)
-    ippw.insert(0, pw)
-    """
-    ERROR HANDLING FOR IF EDITRECORD() IS CLICKED WITH NOTHING SELECTED
-    """
+    try:
+        cur = tvData.focus()
+        v = tvData.item(cur)
+        d = v['values']
+        sn = d[1]
+        un = d[2]
+        pw = d[3]
+        new = tk.Toplevel(window)
+        new.title("Add new site...")
+        new.geometry("200x200")
+        lblsn = Label(new, text="Site name:")
+        lblsn.grid()
+        ipsn = tk.Entry(new, textvariable=site_name)
+        ipsn.grid()
+        lblun = Label(new, text="Username:")
+        lblun.grid()
+        ipun = tk.Entry(new, textvariable=username)
+        ipun.grid()
+        lblpw = Label(new, text="Password:")
+        lblpw.grid()
+        ippw = tk.Entry(new, textvariable=password_str)
+        ippw.grid()
+        btnSubmit = Button(new, text="Update", command=update_info)
+        btnSubmit.grid()
+        btnCancel = Button(new, text="Cancel", command=cancel_edit)
+        btnCancel.grid()
+        btnExit = Button(new, text="Exit", command=exit_button)
+        btnExit.grid()
+        ipsn.insert(0, sn)
+        ipun.insert(0, un)
+        ippw.insert(0, pw)
+    except IndexError:
+        tkinter.messagebox.showerror(title="Cannot edit record", message="Please choose a record to edit.")
 
 
 def exit_button():
@@ -185,7 +190,6 @@ def update_info():
     values.append(temp_pw)
     v = tvData.item(sel)
     d = v['values']
-    print(d)
     iid = d[0]
     c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], iid))
     conn.commit()
