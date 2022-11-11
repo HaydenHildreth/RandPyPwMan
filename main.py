@@ -1,33 +1,43 @@
-import os
 import string
 import secrets
+import time
 import tkinter.messagebox
 import pyperclip
 import passlib
+import sqlite3
 import tkinter as tk
 from tkinter.ttk import *
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.1.5')
+window.title('RandPyPwGen v.0.3.9')
 window.geometry("800x600")
-name = os.getlogin()
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
 pw_len = 0
 entry_len = tk.StringVar()
-columns = ('Site name', 'Username', 'Password')
+columns = ('ID', 'Site name', 'Username', 'Password')
 site_name = ''
 username = ''
 password_str = ''
 
+
+try:
+    conn = sqlite3.connect('db/data.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM data")
+    records = c.fetchall()
+except sqlite3.OperationalError:
+    tkinter.messagebox.showerror(title="SQLite not installed", message="Please install SQLite before use.")
+    exit()
+
+
 # TO DO:
-# - Splashscreen/login page
-# - Encrypt/Decrypt passwords - Also, display raw passwords in Treeview
-# - Edit/Remove records
-# - Connect to DB
-# - Fix UI
-# - Add groups (Streaming, random, sports, etc... Groups of PWs)
-# - Add scrollbar functionality
+# 1. Add scrollbar functionality
+# 2. Add groups (Streaming, random, sports, etc... Groups of PWs)
+# 3. Encrypt/Decrypt passwords - Also, display decrypted passwords in Treeview
+# 4. Fix UI
+# 5. Splashscreen/login page
+# 6. Make UI fit screen (grow/shrink with window size)
 
 
 def click():
@@ -53,6 +63,7 @@ def new_window():
     global ipsn
     global ipun
     global ippw
+    global new
     new = tk.Toplevel(window)
     new.title("Add new site...")
     new.geometry("200x200")
@@ -72,15 +83,21 @@ def new_window():
     btnSubmit.grid()
     btnCancel = Button(new, text="Cancel", command=cancel_button)
     btnCancel.grid()
+    btnExit = Button(new, text="Exit", command=exit_button)
+    btnExit.grid()
     ippw.insert(0, password)
 
 
 def insert_info():
+    global index
     site_name = ipsn.get()
     username = ipun.get()
     password_str = ippw.get()
-    tvData.insert(parent='', index='end', values=(site_name, username, password_str))
-    # close window
+    tvData.insert(parent='', index='end', values=(index, site_name, username, password_str))
+    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, password_str))
+    index = index + 1
+    conn.commit()
+    new.destroy()
 
 
 def cancel_button():
@@ -103,12 +120,102 @@ def copy():
 
 
 def deleteRecord():
-    sel = tvData.selection()[0]
-    tvData.delete(sel)
+    try:
+        sel = tvData.selection()[0]
+        v = tvData.item(sel)
+        tvData.delete(sel)
+        d = v['values']
+        iid = d[0]
+        c.execute("DELETE FROM data WHERE id = ?", (iid,))
+        conn.commit()
+    except IndexError:
+        tkinter.messagebox.showerror(title="Cannot delete record", message="Please choose a record to delete.")
 
 
-greeting = tk.Label(window, text=f"Greetings {name}.")
-greeting.grid(row=0, column=0, sticky=tk.W)
+def editRecord():
+    global ipsn
+    global ipun
+    global ippw
+    global new
+    try:
+        cur = tvData.focus()
+        v = tvData.item(cur)
+        d = v['values']
+        sn = d[1]
+        un = d[2]
+        pw = d[3]
+        new = tk.Toplevel(window)
+        new.title("Add new site...")
+        new.geometry("200x200")
+        lblsn = Label(new, text="Site name:")
+        lblsn.grid()
+        ipsn = tk.Entry(new, textvariable=site_name)
+        ipsn.grid()
+        lblun = Label(new, text="Username:")
+        lblun.grid()
+        ipun = tk.Entry(new, textvariable=username)
+        ipun.grid()
+        lblpw = Label(new, text="Password:")
+        lblpw.grid()
+        ippw = tk.Entry(new, textvariable=password_str)
+        ippw.grid()
+        btnSubmit = Button(new, text="Update", command=update_info)
+        btnSubmit.grid()
+        btnCancel = Button(new, text="Cancel", command=cancel_edit)
+        btnCancel.grid()
+        btnExit = Button(new, text="Exit", command=exit_button)
+        btnExit.grid()
+        ipsn.insert(0, sn)
+        ipun.insert(0, un)
+        ippw.insert(0, pw)
+    except IndexError:
+        tkinter.messagebox.showerror(title="Cannot edit record", message="Please choose a record to edit.")
+
+
+def exit_button():
+    new.destroy()
+
+
+def update_info():
+    global ipsn
+    global ipun
+    global ippw
+    global new
+    sel = tvData.focus()
+    item = tvData.item(sel)
+    get_values = item['values']
+    selected_index = get_values[0]
+    val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get()))
+    values = []
+    temp_sn = ipsn.get()
+    temp_un = ipun.get()
+    temp_pw = ippw.get()
+    values.append(temp_sn)
+    values.append(temp_un)
+    values.append(temp_pw)
+    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
+    conn.commit()
+    new.destroy()
+
+
+def cancel_edit():
+    global ipsn
+    global ipun
+    global ippw
+    cur = tvData.focus()
+    v = tvData.item(cur)
+    d = v['values']
+    sn = d[0]
+    un = d[1]
+    pw = d[2]
+    ipsn.delete(0, 'end')
+    ipun.delete(0, 'end')
+    ippw.delete(0, 'end')
+    ipsn.insert(0, sn)
+    ipun.insert(0, un)
+    ippw.insert(0, pw)
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -121,20 +228,42 @@ addBtn = tk.Button(window, text="Add", command=add_button)
 sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
 copyBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
 addBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
+sendBtn.config(height=2)
+copyBtn.config(height=2)
+addBtn.config(height=2)
 tvData = Treeview(window, columns=columns, show='headings')
-tvData.grid(row=4, column=0, columnspan=5)
+tvData.grid(row=4, column=0, columnspan=5, sticky='NSEW')
+window.grid_rowconfigure(4, weight=1)
+window.grid_columnconfigure(0, weight=1)
+window.grid_columnconfigure(1, weight=1)
+window.grid_columnconfigure(2, weight=1)
+window.grid_columnconfigure(3, weight=1)
+window.grid_columnconfigure(4, weight=1)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
-selectBtn = tk.Button(window, text="Delete", command=deleteRecord)
-selectBtn.grid()
+tvData.heading('ID', text='ID')
+tvScrollbar = Scrollbar()
+tvScrollbar.config(command=tvData.yview)
+tvData.config(yscrollcommand=tvScrollbar.set)
+tvScrollbar.grid(row=4, column=4, sticky='NSE')
+deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
+deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
+editBtn = tk.Button(window, text="Edit", command=editRecord)
+editBtn.grid(row=5, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+deleteBtn.config(height=3)
+editBtn.config(height=3)
 
 
-tvData.insert(parent='', index='end', values=("Test", "Testt", "Testtt"))
-tvData.insert(parent='', index='end', values=("Netflix", "hayden@gmail.org", "Testtt"))
-tvData.insert(parent='', index='end', values=("HackerRank", "steven@linux.net", "BadPassword123"))
-tvData.insert(parent='', index='end', values=("Debug", "debugging@givenhansco.com", "ahhhh281"))
-tvData.insert(parent='', index='end', values=("Please", "Work", "Now"))
+count = 0
+for i in records:
+    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], records[count][3]))
+    count += 1
+
+
+last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+last = c.fetchone()
+index = last[0] + 1
 
 
 window.mainloop()
