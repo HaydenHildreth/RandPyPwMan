@@ -9,7 +9,7 @@ import tkinter as tk
 from tkinter.ttk import *
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.2.9')
+window.title('RandPyPwGen v.0.3.9')
 window.geometry("800x600")
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -89,11 +89,13 @@ def new_window():
 
 
 def insert_info():
+    global index
     site_name = ipsn.get()
     username = ipun.get()
     password_str = ippw.get()
-    tvData.insert(parent='', index='end', values=(None, site_name, username, password_str))
-    c.execute("INSERT INTO data VALUES (?,?,?,?)", (None, site_name, username, password_str))
+    tvData.insert(parent='', index='end', values=(index, site_name, username, password_str))
+    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, password_str))
+    index = index + 1
     conn.commit()
     new.destroy()
 
@@ -135,6 +137,7 @@ def editRecord():
     global ipun
     global ippw
     global new
+    global index
     try:
         cur = tvData.focus()
         v = tvData.item(cur)
@@ -163,6 +166,7 @@ def editRecord():
         btnCancel.grid()
         btnExit = Button(new, text="Exit", command=exit_button)
         btnExit.grid()
+        index.insert(0, index)
         ipsn.insert(0, sn)
         ipun.insert(0, un)
         ippw.insert(0, pw)
@@ -180,7 +184,7 @@ def update_info():
     global ippw
     global new
     sel = tvData.focus()
-    val = tvData.item(sel, values=(ipsn.get(), ipun.get(), ippw.get()))
+    val = tvData.item(sel, values=(None, ipsn.get(), ipun.get(), ippw.get()))
     values = []
     temp_sn = ipsn.get()
     temp_un = ipun.get()
@@ -257,6 +261,11 @@ count = 0
 for i in records:
     tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], records[count][3]))
     count += 1
+
+
+last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+last = c.fetchone()
+index = last[0] + 1
 
 
 window.mainloop()
