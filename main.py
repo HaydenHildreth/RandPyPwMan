@@ -137,7 +137,6 @@ def editRecord():
     global ipun
     global ippw
     global new
-    global index
     try:
         cur = tvData.focus()
         v = tvData.item(cur)
@@ -166,7 +165,6 @@ def editRecord():
         btnCancel.grid()
         btnExit = Button(new, text="Exit", command=exit_button)
         btnExit.grid()
-        index.insert(0, index)
         ipsn.insert(0, sn)
         ipun.insert(0, un)
         ippw.insert(0, pw)
@@ -184,7 +182,10 @@ def update_info():
     global ippw
     global new
     sel = tvData.focus()
-    val = tvData.item(sel, values=(None, ipsn.get(), ipun.get(), ippw.get()))
+    item = tvData.item(sel)
+    get_values = item['values']
+    selected_index = get_values[0]
+    val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get()))
     values = []
     temp_sn = ipsn.get()
     temp_un = ipun.get()
@@ -192,10 +193,7 @@ def update_info():
     values.append(temp_sn)
     values.append(temp_un)
     values.append(temp_pw)
-    v = tvData.item(sel)
-    d = v['values']
-    iid = d[0]
-    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], iid))
+    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
     conn.commit()
     new.destroy()
 
