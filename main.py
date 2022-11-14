@@ -1,16 +1,55 @@
 import string
 import secrets
-import time
 import tkinter.messagebox
 import pyperclip
-import passlib
+import bcrypt
 import sqlite3
 import tkinter as tk
 from tkinter.ttk import *
 
+
+def unlock():
+    global master
+    global tb_ss
+
+    master = tb_ss.get()
+    master = bytes(master, 'utf-8')
+
+    ss_conn = sqlite3.connect('db/unlock.db')
+    ss_c = ss_conn.cursor()
+
+    ss_c.execute("SELECT * FROM master")
+    fetch = ss_c.fetchone()
+    ss_key = fetch[0]
+
+    if bcrypt.checkpw(master, ss_key):
+        print('match')
+        splashscreen.destroy()
+    else:
+        print('wasted time...')
+
+
+splashscreen = tk.Tk()
+splashscreen.title('RandPyPwGen login')
+splashscreen.geometry('200x50')
+
+
+key = b''
+master = b''
+lbl_ss = tk.Label(splashscreen, text='master key:')
+tb_ss = tk.Entry(splashscreen, textvariable=master)
+btn_ss = tk.Button(splashscreen, text='Unlock', command=unlock)
+lbl_ss.grid(row=0, column=0)
+tb_ss.grid(row=0, column=1)
+btn_ss.grid(column=0, row=1, columnspan=2)
+
+
+splashscreen.mainloop()
+
+
 window = tk.Tk()
 window.title('RandPyPwGen v.0.3.9')
-window.geometry("800x600")
+window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
 pw_len = 0
