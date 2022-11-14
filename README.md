@@ -11,5 +11,3 @@ Make sure you have Python 3 or higher installed. Either clone the repository and
     - Planning to fix UI/UX soon
 - Encryption (hashing)
     - Looking into the passlib framework/library for this (SHA256)
-- Landing/login page
-    - Hash/salt a masterkey
