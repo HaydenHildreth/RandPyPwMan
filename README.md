@@ -13,3 +13,6 @@ Make sure you have Python 3 or higher installed. Either clone the repository and
     - Looking into the passlib framework/library for this (SHA256)
 - Landing/login page
     - Hash/salt a masterkey
+
+## News
+In version 0.4.5 I've added a login screen/splash screen. Alongside a hashed master password. See the splashscreen branch for more details.
