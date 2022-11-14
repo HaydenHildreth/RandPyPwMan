@@ -8,12 +8,8 @@ def set_master():
     password = tb_password.get()
     password = bytes(password, 'utf-8')
     hash_master = bcrypt.hashpw(password, bcrypt.gensalt())
-    print(password)
-    print(hash_master)
-    no = 'noooo'
     c2.execute("INSERT INTO master VALUES (?)", (hash_master,))
     conn2.commit()
-    print(f'inserted {hash_master} into table')
     window.destroy()
 
 
