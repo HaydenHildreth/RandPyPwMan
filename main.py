@@ -1,4 +1,3 @@
-import splashscreen
 import string
 import secrets
 import tkinter.messagebox
