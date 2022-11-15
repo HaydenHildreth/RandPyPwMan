@@ -20,6 +20,7 @@ def unlock():
 
     if bcrypt.checkpw(master, ss_key):
         splashscreen.destroy()
+        import main
     else:
         tk.messagebox.showerror(title="Incorrect password...", message="Incorrect master key.")
 
