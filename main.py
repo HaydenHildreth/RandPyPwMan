@@ -32,12 +32,9 @@ except sqlite3.OperationalError:
 
 
 # TO DO:
-# 1. Add scrollbar functionality
-# 2. Add groups (Streaming, random, sports, etc... Groups of PWs)
-# 3. Encrypt/Decrypt passwords - Also, display decrypted passwords in Treeview
-# 4. Fix UI
-# 5. Splashscreen/login page
-# 6. Make UI fit screen (grow/shrink with window size)
+# 1. Encrypt/Decrypt passwords - Also, display decrypted passwords in Treeview
+# 2. Fix UI
+# ?. Make UI fit screen (grow/shrink with window size)
 
 
 def click():
