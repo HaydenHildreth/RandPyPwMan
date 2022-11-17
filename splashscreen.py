@@ -33,7 +33,7 @@ splashscreen.geometry('200x50')
 key = b''
 master = b''
 lbl_ss = tk.Label(splashscreen, text='master key:')
-tb_ss = tk.Entry(splashscreen, textvariable=master)
+tb_ss = tk.Entry(splashscreen, textvariable=master, show='*')
 btn_ss = tk.Button(splashscreen, text='Unlock', command=unlock)
 lbl_ss.grid(row=0, column=0)
 tb_ss.grid(row=0, column=1)
