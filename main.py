@@ -1,3 +1,4 @@
+# import splashscreen
 import string
 import secrets
 import tkinter.messagebox
@@ -8,7 +9,7 @@ from tkinter.ttk import *
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.3.9')
+window.title('RandPyPwGen v.0.4.5')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -114,8 +115,11 @@ def add_button():
 
 
 def copy():
-    global password
-    pyperclip.copy(password)
+    sel = tvData.selection()[0]
+    item = tvData.item(sel)
+    v = item['values']
+    val = v[3]
+    pyperclip.copy(val)
 
 
 def deleteRecord():
@@ -222,13 +226,10 @@ input_text.grid(row=1, column=1, sticky=tk.E + tk.W)
 print_pw = tk.Label(window, text=f"Your password is: {password}")
 print_pw.grid(row=2, column=0, sticky=tk.E + tk.W)
 sendBtn = tk.Button(window, text="Generate", command=click)
-copyBtn = tk.Button(window, text="Copy", command=copy)
 addBtn = tk.Button(window, text="Add", command=add_button)
 sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
-copyBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
-addBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
+addBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
 sendBtn.config(height=2)
-copyBtn.config(height=2)
 addBtn.config(height=2)
 tvData = Treeview(window, columns=columns, show='headings')
 tvData.grid(row=4, column=0, columnspan=5, sticky='NSEW')
@@ -250,8 +251,11 @@ deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
 editBtn.grid(row=5, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+copyBtn = tk.Button(window, text="Copy", command=copy)
+copyBtn.grid(row=5, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 deleteBtn.config(height=3)
 editBtn.config(height=3)
+copyBtn.config(height=3)
 
 
 count = 0
