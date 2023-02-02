@@ -1,10 +1,10 @@
-# import splashscreen
 import string
 import secrets
 import tkinter.messagebox
 import pyperclip
 import sqlite3
 import tkinter as tk
+from cryptography.fernet import Fernet
 from tkinter.ttk import *
 
 
@@ -20,7 +20,6 @@ site_name = ''
 username = ''
 password_str = ''
 
-
 try:
     conn = sqlite3.connect('db/data.db')
     c = conn.cursor()
@@ -28,6 +27,17 @@ try:
     records = c.fetchall()
 except sqlite3.OperationalError:
     tkinter.messagebox.showerror(title="SQLite not installed", message="Please install SQLite before use.")
+    exit()
+
+
+try:
+    conn2 = sqlite3.connect('db/unlock.db')
+    c2 = conn2.cursor()
+    c2.execute("SELECT enc_key FROM master")
+    records2 = c2.fetchall()
+    key = records2
+except sqlite3.OperationalError:
+    tkinter.messagebox.showerror(title="Encryption key not found", message="Please run install.py again.")
     exit()
 
 
@@ -273,5 +283,6 @@ if last is None:
 else:
     index = last[0] + 1
 
+print(records2)
 
 window.mainloop()
