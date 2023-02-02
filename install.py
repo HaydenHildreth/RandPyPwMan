@@ -1,5 +1,6 @@
 import sqlite3
 import bcrypt
+from cryptography.fernet import Fernet
 import tkinter as tk
 
 
@@ -8,7 +9,8 @@ def set_master():
     password = tb_password.get()
     password = bytes(password, 'utf-8')
     hash_master = bcrypt.hashpw(password, bcrypt.gensalt())
-    c2.execute("INSERT INTO master VALUES (?)", (hash_master,))
+    enc_key = Fernet.generate_key()
+    c2.execute("INSERT INTO master VALUES (?,?)", (hash_master, enc_key,))
     conn2.commit()
     window.destroy()
 
@@ -25,7 +27,8 @@ c.execute("CREATE TABLE data(id INTEGER PRIMARY KEY,"
 conn2 = sqlite3.connect('db/unlock.db')
 c2 = conn2.cursor()
 
-c2.execute("CREATE TABLE master(key varchar(255))")
+c2.execute("CREATE TABLE master(key varchar(255), "
+           "enc_key varchar(255))")
 
 window = tk.Tk()
 window.title('RandPyPwMan setup')
