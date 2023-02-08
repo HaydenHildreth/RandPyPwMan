@@ -35,7 +35,10 @@ try:
     c2 = conn2.cursor()
     c2.execute("SELECT enc_key FROM master")
     records2 = c2.fetchall()
-    key = records2
+    conv = records2[0]
+    conv2 = conv[0]
+    key = conv2
+    f = Fernet(key)
 except sqlite3.OperationalError:
     tkinter.messagebox.showerror(title="Encryption key not found", message="Please run install.py again.")
     exit()
@@ -103,6 +106,9 @@ def insert_info():
     site_name = ipsn.get()
     username = ipun.get()
     password_str = ippw.get()
+
+    enc_test = password_str
+
     tvData.insert(parent='', index='end', values=(index, site_name, username, password_str))
     c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, password_str))
     index = index + 1
@@ -282,7 +288,5 @@ if last is None:
     index = 0
 else:
     index = last[0] + 1
-
-print(records2)
 
 window.mainloop()
