@@ -12,9 +12,10 @@ Make sure you have Python 3 or higher installed. Either clone the repository and
 ## Known problems
 - Very ugly
     - Planning to fix UI/UX soon
-- Encryption (hashing)
+- Encryption 
     - Using Cryptography package
-- Landing/login page
+        - Already partially implemented within encryption2 branch
+- Landing/login page (hashing)
     - Hash/salt a masterkey (already done in dev/encryption branch)
 
 ## News
