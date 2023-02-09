@@ -108,6 +108,9 @@ def insert_info():
     password_str = ippw.get()
 
     enc_test = password_str
+    enc_test = bytes(enc_test, 'utf-8')
+    test = f.encrypt(enc_test)
+    print(test)
 
     tvData.insert(parent='', index='end', values=(index, site_name, username, password_str))
     c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, password_str))
