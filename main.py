@@ -1,16 +1,16 @@
 import string
 import secrets
-import time
 import tkinter.messagebox
 import pyperclip
-import passlib
 import sqlite3
 import tkinter as tk
+from cryptography.fernet import Fernet
 from tkinter.ttk import *
 
+
 window = tk.Tk()
-window.title('RandPyPwGen v.0.3.9')
-window.geometry("800x600")
+window.title('RandPyPwGen v.0.6.0')
+window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
 pw_len = 0
@@ -19,7 +19,6 @@ columns = ('ID', 'Site name', 'Username', 'Password')
 site_name = ''
 username = ''
 password_str = ''
-
 
 try:
     conn = sqlite3.connect('db/data.db')
@@ -31,10 +30,25 @@ except sqlite3.OperationalError:
     exit()
 
 
+try:
+    conn2 = sqlite3.connect('db/unlock.db')
+    c2 = conn2.cursor()
+    c2.execute("SELECT enc_key FROM master")
+    records2 = c2.fetchall()
+    conv = records2[0]
+    conv2 = conv[0]
+    key = conv2
+    f = Fernet(key)
+except sqlite3.OperationalError:
+    tkinter.messagebox.showerror(title="Encryption key not found", message="Please run install.py again.")
+    exit()
+
+
 # TO DO:
-# 1. Encrypt/Decrypt passwords - Also, display decrypted passwords in Treeview
-# 2. Fix UI
-# ?. Make UI fit screen (grow/shrink with window size)
+# Add scrollbar functionality
+# Add groups (Streaming, random, sports, etc... Groups of PWs)
+# Fix UI
+# Make UI fit screen (grow/shrink with window size)
 
 
 def click():
@@ -90,8 +104,12 @@ def insert_info():
     site_name = ipsn.get()
     username = ipun.get()
     password_str = ippw.get()
+
+    pw_copy = bytes(password_str, 'utf-8')
+    enc = f.encrypt(pw_copy)
+
     tvData.insert(parent='', index='end', values=(index, site_name, username, password_str))
-    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, password_str))
+    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, enc))
     index = index + 1
     conn.commit()
     new.destroy()
@@ -112,8 +130,11 @@ def add_button():
 
 
 def copy():
-    global password
-    pyperclip.copy(password)
+    sel = tvData.selection()[0]
+    item = tvData.item(sel)
+    v = item['values']
+    val = v[3]
+    pyperclip.copy(val)
 
 
 def deleteRecord():
@@ -183,13 +204,17 @@ def update_info():
     get_values = item['values']
     selected_index = get_values[0]
     val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get()))
+
+    pw_copy = bytes(ippw.get(), 'utf-8')
+    enc = f.encrypt(pw_copy)
+
     values = []
     temp_sn = ipsn.get()
     temp_un = ipun.get()
     temp_pw = ippw.get()
     values.append(temp_sn)
     values.append(temp_un)
-    values.append(temp_pw)
+    values.append(enc)
     c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
     conn.commit()
     new.destroy()
@@ -220,13 +245,10 @@ input_text.grid(row=1, column=1, sticky=tk.E + tk.W)
 print_pw = tk.Label(window, text=f"Your password is: {password}")
 print_pw.grid(row=2, column=0, sticky=tk.E + tk.W)
 sendBtn = tk.Button(window, text="Generate", command=click)
-copyBtn = tk.Button(window, text="Copy", command=copy)
 addBtn = tk.Button(window, text="Add", command=add_button)
 sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
-copyBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
-addBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
+addBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
 sendBtn.config(height=2)
-copyBtn.config(height=2)
 addBtn.config(height=2)
 tvData = Treeview(window, columns=columns, show='headings')
 tvData.grid(row=4, column=0, columnspan=5, sticky='NSEW')
@@ -248,19 +270,28 @@ deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
 editBtn.grid(row=5, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+copyBtn = tk.Button(window, text="Copy", command=copy)
+copyBtn.grid(row=5, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 deleteBtn.config(height=3)
 editBtn.config(height=3)
+copyBtn.config(height=3)
 
 
 count = 0
 for i in records:
-    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], records[count][3]))
+    decrypted = f.decrypt(records[count][3])
+    decrypted = decrypted.decode('utf-8')
+    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], decrypted))
     count += 1
 
 
 last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
 last = c.fetchone()
-index = last[0] + 1
 
+
+if last is None:
+    index = 0
+else:
+    index = last[0] + 1
 
 window.mainloop()
