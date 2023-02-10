@@ -14,6 +14,6 @@ Make sure you have Python 3 or higher installed. Either clone the repository and
     - Planning to fix UI/UX soon
 
 ## Major Patch Notes
-- ##### See commit logs for more detailed information.
+- #### See commit logs for more detailed information.
 - In version 0.6.0 I've added encryption of passwords sent to database. See dev or encryption branch/issues for more details.
 - In version 0.4.5 I've added a login screen/splash screen. Alongside a hashed master password. See the dev branch for more details.
