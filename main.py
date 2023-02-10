@@ -9,7 +9,7 @@ from tkinter.ttk import *
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.4.7')
+window.title('RandPyPwGen v.0.6.0')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -45,12 +45,10 @@ except sqlite3.OperationalError:
 
 
 # TO DO:
-# 1. Add scrollbar functionality
-# 2. Add groups (Streaming, random, sports, etc... Groups of PWs)
-# 3. Encrypt/Decrypt passwords - Also, display decrypted passwords in Treeview
-# 4. Fix UI
-# 5. Splashscreen/login page
-# 6. Make UI fit screen (grow/shrink with window size)
+# Add scrollbar functionality
+# Add groups (Streaming, random, sports, etc... Groups of PWs)
+# Fix UI
+# Make UI fit screen (grow/shrink with window size)
 
 
 def click():
@@ -107,7 +105,6 @@ def insert_info():
     username = ipun.get()
     password_str = ippw.get()
 
-    # Encrypt PW
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
 
