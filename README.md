@@ -11,6 +11,3 @@ Make sure you have Python 3 or higher installed. Either clone the repository and
     - Planning to fix UI/UX soon
 - Encryption
     - Using Cryptography package
-
-## THIS BRANCH IS FOR DEVELOPMENT PURPOSES
-This branch is for dev purposes, and will be merged to dev eventually.
