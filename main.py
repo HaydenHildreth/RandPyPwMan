@@ -204,13 +204,17 @@ def update_info():
     get_values = item['values']
     selected_index = get_values[0]
     val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get()))
+
+    pw_copy = bytes(ippw.get(), 'utf-8')
+    enc = f.encrypt(pw_copy)
+
     values = []
     temp_sn = ipsn.get()
     temp_un = ipun.get()
     temp_pw = ippw.get()
     values.append(temp_sn)
     values.append(temp_un)
-    values.append(temp_pw)
+    values.append(enc)
     c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
     conn.commit()
     new.destroy()
