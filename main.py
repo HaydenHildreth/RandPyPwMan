@@ -9,7 +9,7 @@ from tkinter.ttk import *
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.4.5')
+window.title('RandPyPwGen v.0.4.7')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -107,13 +107,12 @@ def insert_info():
     username = ipun.get()
     password_str = ippw.get()
 
-    enc_test = password_str
-    enc_test = bytes(enc_test, 'utf-8')
-    test = f.encrypt(enc_test)
-    print(test)
+    # Encrypt PW
+    pw_copy = bytes(password_str, 'utf-8')
+    enc = f.encrypt(pw_copy)
 
     tvData.insert(parent='', index='end', values=(index, site_name, username, password_str))
-    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, password_str))
+    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, enc))
     index = index + 1
     conn.commit()
     new.destroy()
@@ -279,7 +278,9 @@ copyBtn.config(height=3)
 
 count = 0
 for i in records:
-    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], records[count][3]))
+    decrypted = f.decrypt(records[count][3])
+    decrypted = decrypted.decode('utf-8')
+    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], decrypted))
     count += 1
 
 
