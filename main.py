@@ -9,7 +9,7 @@ from tkinter.ttk import *
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.6.5')
+window.title('RandPyPwGen v.0.6.1')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -122,11 +122,7 @@ def cancel_button():
 
 
 def add_button():
-    pw_len_verify = int(len(password))
-    if pw_len_verify > 100 or pw_len_verify <= 0:
-        raise RuntimeError(tkinter.messagebox.showerror(title="Invalid usage", message="Generate a password first..."))
-    else:
-        new_window()
+    new_window()
 
 
 def copy():
