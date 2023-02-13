@@ -9,7 +9,7 @@ from tkinter.ttk import *
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.6.0')
+window.title('RandPyPwGen v.0.6.5')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -227,9 +227,9 @@ def cancel_edit():
     cur = tvData.focus()
     v = tvData.item(cur)
     d = v['values']
-    sn = d[0]
-    un = d[1]
-    pw = d[2]
+    sn = d[1]
+    un = d[2]
+    pw = d[3]
     ipsn.delete(0, 'end')
     ipun.delete(0, 'end')
     ippw.delete(0, 'end')
