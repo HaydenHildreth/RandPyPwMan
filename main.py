@@ -205,11 +205,8 @@ def update_info():
     enc = f.encrypt(pw_copy)
 
     values = []
-    temp_sn = ipsn.get()
-    temp_un = ipun.get()
-    temp_pw = ippw.get()
-    values.append(temp_sn)
-    values.append(temp_un)
+    values.append(ipsn.get())
+    values.append(ipun.get())
     values.append(enc)
     c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
     conn.commit()
