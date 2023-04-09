@@ -8,6 +8,11 @@ from cryptography.fernet import Fernet
 from tkinter.ttk import *
 
 
+"""
+Draw main window
+Create alphabet var of possible char types
+Initialize pw variable, len, and column var(s)
+"""
 window = tk.Tk()
 window.title('RandPyPwGen v.0.6.1')
 window.geometry('800x600')
@@ -20,6 +25,10 @@ site_name = ''
 username = ''
 password_str = ''
 
+
+"""
+See if db engine is installed and db folder exists
+"""
 try:
     conn = sqlite3.connect('db/data.db')
     c = conn.cursor()
@@ -30,6 +39,9 @@ except sqlite3.OperationalError:
     exit()
 
 
+"""
+See if encryption key exists
+"""
 try:
     conn2 = sqlite3.connect('db/unlock.db')
     c2 = conn2.cursor()
@@ -51,6 +63,7 @@ except sqlite3.OperationalError:
 # Make UI fit screen (grow/shrink with window size)
 
 
+# Called when the "Generate" button is clicked
 def click():
     global password
     global pw_len
@@ -67,6 +80,7 @@ def click():
         tkinter.messagebox.showerror(title="Invalid input", message="Number must be positive and under 101 characters")
 
 
+# Draws a new window, called when "Add" button is clicked
 def new_window():
     global site_name
     global username
@@ -99,6 +113,7 @@ def new_window():
     ippw.insert(0, password)
 
 
+# This function inserts data into the treeview, and the data table
 def insert_info():
     global index
     site_name = ipsn.get()
@@ -115,16 +130,19 @@ def insert_info():
     new.destroy()
 
 
+# This function clears out data in the input boxes of the new window screen
 def cancel_button():
     ipsn.delete(0, 'end')
     ipun.delete(0, 'end')
     ippw.delete(0, 'end')
 
 
+# This function calls the new window, called when "Add" button is clicked
 def add_button():
     new_window()
 
 
+# Copy selected treeview pw to clipboard, called when "Copy" button is clicked
 def copy():
     sel = tvData.selection()[0]
     item = tvData.item(sel)
@@ -133,6 +151,7 @@ def copy():
     pyperclip.copy(val)
 
 
+# Removes records from table, called when "Delete" button is clicked
 def deleteRecord():
     try:
         sel = tvData.selection()[0]
@@ -146,6 +165,7 @@ def deleteRecord():
         tkinter.messagebox.showerror(title="Cannot delete record", message="Please choose a record to delete.")
 
 
+# Opens a edit screen
 def editRecord():
     global ipsn
     global ipun
@@ -186,10 +206,12 @@ def editRecord():
         tkinter.messagebox.showerror(title="Cannot edit record", message="Please choose a record to edit.")
 
 
+# Closes out new window
 def exit_button():
     new.destroy()
 
 
+# This function sends updated information from the "Edit" button/function
 def update_info():
     global ipsn
     global ipun
@@ -213,6 +235,7 @@ def update_info():
     new.destroy()
 
 
+# Clears out the field in input boxes in edit screen
 def cancel_edit():
     global ipsn
     global ipun
@@ -231,6 +254,7 @@ def cancel_edit():
     ippw.insert(0, pw)
 
 
+# Draw graphics to main window
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -270,6 +294,7 @@ editBtn.config(height=3)
 copyBtn.config(height=3)
 
 
+# Decrypt pw for treeview
 count = 0
 for i in records:
     decrypted = f.decrypt(records[count][3])
@@ -278,10 +303,11 @@ for i in records:
     count += 1
 
 
+# Get all pw from data table
 last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
 last = c.fetchone()
 
-
+# Set index to last pw or 0
 if last is None:
     index = 0
 else:
