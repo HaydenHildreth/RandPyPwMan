@@ -19,19 +19,23 @@ columns = ('ID', 'Site name', 'Username', 'Password')
 site_name = ''
 username = ''
 password_str = ''
+group = ''
 
 try:
-    conn = sqlite3.connect('db/data.db')
+    conn = sqlite3.connect('./db/data.db')
     c = conn.cursor()
     c.execute("SELECT * FROM data")
     records = c.fetchall()
 except sqlite3.OperationalError:
+    # THIS ERROR COULD BE MADE BETTER, IS SQL LITE INSTALLED, OR IS INSTALL.PY NOT RAN? MAKE MORE INFORMATIONAL
+    # I.E. DATABASE FOLDER NOT FOUND, PLEASE RUN INSTALL.PY BEFORE EXECUTING PROGRAM
+    # OR SQLITE3 NOT FOUND, PLEASE SEE DOCUMENTATION AND INSTALL BEFORE USING PROGRAM
     tkinter.messagebox.showerror(title="SQLite not installed", message="Please install SQLite before use.")
     exit()
 
 
 try:
-    conn2 = sqlite3.connect('db/unlock.db')
+    conn2 = sqlite3.connect('./db/unlock.db')
     c2 = conn2.cursor()
     c2.execute("SELECT enc_key FROM master")
     records2 = c2.fetchall()
@@ -71,9 +75,11 @@ def new_window():
     global site_name
     global username
     global password_str
+    global group
     global ipsn
     global ipun
     global ippw
+    global ipgroup
     global new
     new = tk.Toplevel(window)
     new.title("Add new site...")
@@ -90,6 +96,10 @@ def new_window():
     lblpw.grid()
     ippw = tk.Entry(new, textvariable=password_str)
     ippw.grid()
+    lblgroup = Label(new, text="Group:")
+    lblgroup.grid()
+    ipgroup = tk.Entry(new, textvariable=group)
+    ipgroup.grid()
     btnSubmit = Button(new, text="Add account", command=insert_info)
     btnSubmit.grid()
     btnCancel = Button(new, text="Cancel", command=cancel_button)
@@ -104,12 +114,13 @@ def insert_info():
     site_name = ipsn.get()
     username = ipun.get()
     password_str = ippw.get()
+    group = ipgroup.get()
 
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
 
-    tvData.insert(parent='', index='end', values=(index, site_name, username, password_str))
-    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index, site_name, username, enc))
+    tvData.insert(parent='', index='end', values=(index, site_name, username, password_str, group))
+    c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (index, site_name, username, enc, group))
     index = index + 1
     conn.commit()
     new.destroy()
@@ -150,14 +161,18 @@ def editRecord():
     global ipsn
     global ipun
     global ippw
+    global ipgroup
     global new
     try:
         cur = tvData.focus()
         v = tvData.item(cur)
+        print(cur)
+        print(v)
         d = v['values']
         sn = d[1]
         un = d[2]
         pw = d[3]
+        # group = d[4]
         new = tk.Toplevel(window)
         new.title("Add new site...")
         new.geometry("200x200")
@@ -173,6 +188,10 @@ def editRecord():
         lblpw.grid()
         ippw = tk.Entry(new, textvariable=password_str)
         ippw.grid()
+        lblgroup = Label(new, text="Group:")
+        lblgroup.grid()
+        ipgroup = tk.Entry(new, textvariable=group)
+        ipgroup.grid()
         btnSubmit = Button(new, text="Update", command=update_info)
         btnSubmit.grid()
         btnCancel = Button(new, text="Cancel", command=cancel_edit)
@@ -182,6 +201,7 @@ def editRecord():
         ipsn.insert(0, sn)
         ipun.insert(0, un)
         ippw.insert(0, pw)
+        ipgroup.insert(0, group)
     except IndexError:
         tkinter.messagebox.showerror(title="Cannot edit record", message="Please choose a record to edit.")
 
@@ -194,12 +214,13 @@ def update_info():
     global ipsn
     global ipun
     global ippw
+    global ipgroup
     global new
     sel = tvData.focus()
     item = tvData.item(sel)
     get_values = item['values']
     selected_index = get_values[0]
-    val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get()))
+    val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get(), ipgroup.get()))
 
     pw_copy = bytes(ippw.get(), 'utf-8')
     enc = f.encrypt(pw_copy)
@@ -208,10 +229,12 @@ def update_info():
     temp_sn = ipsn.get()
     temp_un = ipun.get()
     temp_pw = ippw.get()
+    temp_group = ipgroup.get()
     values.append(temp_sn)
     values.append(temp_un)
     values.append(enc)
-    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
+    values.append(temp_group)
+    c.execute("UPDATE data SET site = (?), username = (?), password = (?), group_val = (?) WHERE id = (?)", (values[0], values[1], values[2], values[3], selected_index))
     conn.commit()
     new.destroy()
 
@@ -220,18 +243,22 @@ def cancel_edit():
     global ipsn
     global ipun
     global ippw
+    global ipgroup
     cur = tvData.focus()
     v = tvData.item(cur)
     d = v['values']
     sn = d[1]
     un = d[2]
     pw = d[3]
+    gr = d[4]
     ipsn.delete(0, 'end')
     ipun.delete(0, 'end')
     ippw.delete(0, 'end')
+    ipgroup.delete(0, 'end')
     ipsn.insert(0, sn)
     ipun.insert(0, un)
     ippw.insert(0, pw)
+    ipgroup.insert(0, gr)
 
 
 t = tk.Label(window, text="Please input desired password length:")
