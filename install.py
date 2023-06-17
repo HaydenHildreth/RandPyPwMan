@@ -1,7 +1,11 @@
 import sqlite3
 import bcrypt
+import os
 from cryptography.fernet import Fernet
 import tkinter as tk
+
+
+os.makedirs('./db', exist_ok=True)
 
 
 def set_master():
@@ -15,16 +19,17 @@ def set_master():
     window.destroy()
 
 
-conn = sqlite3.connect('db/data.db')
+conn = sqlite3.connect('./db/data.db')
 c = conn.cursor()
 
 c.execute("CREATE TABLE data(id INTEGER PRIMARY KEY,"
           "site varchar(100) NOT NULL,"
           "username varchar(100) NOT NULL,"
-          "password varchar(100) NOT NULL)")
+          "password varchar(100) NOT NULL,"
+          "group_val varchar(100) NOT NULL)")
 
 
-conn2 = sqlite3.connect('db/unlock.db')
+conn2 = sqlite3.connect('./db/unlock.db')
 c2 = conn2.cursor()
 
 c2.execute("CREATE TABLE master(key varchar(255), "
