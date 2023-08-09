@@ -9,13 +9,13 @@ from tkinter.ttk import *
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.6.1')
+window.title('RandPyPwGen v.0.6.2')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
 pw_len = 0
 entry_len = tk.StringVar()
-columns = ('ID', 'Site name', 'Username', 'Password')
+columns = ('ID', 'Site name', 'Username', 'Password', 'Group')
 site_name = ''
 username = ''
 password_str = ''
@@ -130,6 +130,7 @@ def cancel_button():
     ipsn.delete(0, 'end')
     ipun.delete(0, 'end')
     ippw.delete(0, 'end')
+    ipgroup.delete(0, 'end')
 
 
 def add_button():
@@ -164,15 +165,14 @@ def editRecord():
     global ipgroup
     global new
     try:
+        # index group = d[4] out of range error
         cur = tvData.focus()
         v = tvData.item(cur)
-        print(cur)
-        print(v)
         d = v['values']
         sn = d[1]
         un = d[2]
         pw = d[3]
-        # group = d[4]
+        groups = d[4]
         new = tk.Toplevel(window)
         new.title("Add new site...")
         new.geometry("200x200")
@@ -201,7 +201,7 @@ def editRecord():
         ipsn.insert(0, sn)
         ipun.insert(0, un)
         ippw.insert(0, pw)
-        ipgroup.insert(0, group)
+        ipgroup.insert(0, groups)
     except IndexError:
         tkinter.messagebox.showerror(title="Cannot edit record", message="Please choose a record to edit.")
 
@@ -234,7 +234,7 @@ def update_info():
     values.append(temp_un)
     values.append(enc)
     values.append(temp_group)
-    c.execute("UPDATE data SET site = (?), username = (?), password = (?), group_val = (?) WHERE id = (?)", (values[0], values[1], values[2], values[3], selected_index))
+    c.execute("UPDATE data SET site = (?), username = (?), password = (?), groups = (?) WHERE id = (?)", (values[0], values[1], values[2], values[3], selected_index))
     conn.commit()
     new.destroy()
 
@@ -285,6 +285,7 @@ tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
 tvData.heading('ID', text='ID')
+tvData.heading('Group', text='Group')
 tvScrollbar = Scrollbar()
 tvScrollbar.config(command=tvData.yview)
 tvData.config(yscrollcommand=tvScrollbar.set)
@@ -304,7 +305,7 @@ count = 0
 for i in records:
     decrypted = f.decrypt(records[count][3])
     decrypted = decrypted.decode('utf-8')
-    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], decrypted))
+    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], decrypted, records[count][4]))
     count += 1
 
 
