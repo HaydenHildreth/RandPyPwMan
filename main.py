@@ -49,7 +49,6 @@ except sqlite3.OperationalError:
 
 
 # TO DO:
-# Add scrollbar functionality
 # Add groups (Streaming, random, sports, etc... Groups of PWs)
 # Fix UI
 # Make UI fit screen (grow/shrink with window size)
@@ -261,6 +260,19 @@ def cancel_edit():
     ipgroup.insert(0, gr)
 
 
+def clear_button():
+    """
+    This function clears the password, and password length
+    """
+    global pw_len
+    global password
+    global password_str
+    pw_len = 0
+    password = ''
+    password_str = ''
+    print_pw.configure(text=f"Your password is {password}")  # Update password label
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -269,10 +281,13 @@ print_pw = tk.Label(window, text=f"Your password is: {password}")
 print_pw.grid(row=2, column=0, sticky=tk.E + tk.W)
 sendBtn = tk.Button(window, text="Generate", command=click)
 addBtn = tk.Button(window, text="Add", command=add_button)
+clearBtn = tk.Button(window, text="Clear", command=clear_button)
 sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
 addBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
+clearBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
 sendBtn.config(height=2)
 addBtn.config(height=2)
+clearBtn.config(height=2)
 tvData = Treeview(window, columns=columns, show='headings')
 tvData.grid(row=4, column=0, columnspan=5, sticky='NSEW')
 window.grid_rowconfigure(4, weight=1)
@@ -286,10 +301,10 @@ tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
 tvData.heading('ID', text='ID')
 tvData.heading('Group', text='Group')
-tvScrollbar = Scrollbar()
-tvScrollbar.config(command=tvData.yview)
-tvData.config(yscrollcommand=tvScrollbar.set)
-tvScrollbar.grid(row=4, column=4, sticky='NSE')
+tvScrollbarRight = Scrollbar()
+tvScrollbarRight.config(command=tvData.yview)
+tvData.config(yscrollcommand=tvScrollbarRight.set)
+tvScrollbarRight.grid(row=4, column=4, sticky='NSE')
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
