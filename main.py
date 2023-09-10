@@ -8,8 +8,13 @@ from cryptography.fernet import Fernet
 from tkinter.ttk import *
 
 
+"""
+MAIN PROG
+"""
+
+
 window = tk.Tk()
-window.title('RandPyPwGen v.0.6.2')
+window.title('RandPyPwGen v.0.6.3')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -303,8 +308,11 @@ tvData.heading('ID', text='ID')
 tvData.heading('Group', text='Group')
 tvScrollbarRight = Scrollbar()
 tvScrollbarRight.config(command=tvData.yview)
-tvData.config(yscrollcommand=tvScrollbarRight.set)
+tvScrollbarBottom = Scrollbar(orient='horizontal')
+tvScrollbarBottom.config(command=tvData.xview)
+tvData.config(yscrollcommand=tvScrollbarRight.set, xscrollcommand=tvScrollbarBottom.set)
 tvScrollbarRight.grid(row=4, column=4, sticky='NSE')
+tvScrollbarBottom.grid(row=4, column=0, columnspan=5, sticky='WSE')
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
