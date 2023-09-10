@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.6.2] - 09-05-2023
   
-This update should not affect current users, so feel free to upgrade without hesitation.
+Minor database changes. Reach out if you need assitance upgrading from a previous version.
 
 ### Added
 
