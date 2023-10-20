@@ -4,17 +4,13 @@ import tkinter.messagebox
 import pyperclip
 import sqlite3
 import tkinter as tk
+import webbrowser
 from cryptography.fernet import Fernet
 from tkinter.ttk import *
 
 
-"""
-MAIN PROG
-"""
-
-
 window = tk.Tk()
-window.title('RandPyPwGen v.0.6.3')
+window.title('RandPyPwGen v.0.6.4')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -244,6 +240,10 @@ def update_info():
 
 
 def cancel_edit():
+    """
+    This function clears the input boxes and puts the original un-edited
+    passwords back in the input boxes when the cancel button is clicked
+    """
     global ipsn
     global ipun
     global ippw
@@ -278,6 +278,27 @@ def clear_button():
     print_pw.configure(text=f"Your password is {password}")  # Update password label
 
 
+def open_help():
+    """
+    This function opens the GitHub repository in the default web browser
+    """
+    webbrowser.open("https://github.com/HaydenHildreth/RandPyPwMan")
+
+
+def import_passwords():
+    """
+    This function will be used to import passwords into the data table 
+    """
+    pass
+
+
+def create_group():
+    """
+    This function will create a group, which you could then assign to a password
+    """
+    pass
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -308,11 +329,8 @@ tvData.heading('ID', text='ID')
 tvData.heading('Group', text='Group')
 tvScrollbarRight = Scrollbar()
 tvScrollbarRight.config(command=tvData.yview)
-tvScrollbarBottom = Scrollbar(orient='horizontal')
-tvScrollbarBottom.config(command=tvData.xview)
-tvData.config(yscrollcommand=tvScrollbarRight.set, xscrollcommand=tvScrollbarBottom.set)
+tvData.config(yscrollcommand=tvScrollbarRight.set)
 tvScrollbarRight.grid(row=4, column=4, sticky='NSE')
-tvScrollbarBottom.grid(row=4, column=0, columnspan=5, sticky='WSE')
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
@@ -322,6 +340,20 @@ copyBtn.grid(row=5, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 deleteBtn.config(height=3)
 editBtn.config(height=3)
 copyBtn.config(height=3)
+
+
+# MENU SECTION
+menubar = tk.Menu(window)
+filemenu = tk.Menu(menubar, tearoff=0)
+filemenu.add_command(label="Import", command='')
+filemenu.add_separator()
+filemenu.add_command(label="Exit", command=window.quit)
+menubar.add_cascade(label="File", menu=filemenu)
+
+
+helpmenu = tk.Menu(menubar, tearoff=0)
+helpmenu.add_command(label="Help Index", command=open_help)
+menubar.add_cascade(label="Help", menu=helpmenu)
 
 
 count = 0
@@ -341,4 +373,5 @@ if last is None:
 else:
     index = last[0] + 1
 
+window.config(menu=menubar)
 window.mainloop()
