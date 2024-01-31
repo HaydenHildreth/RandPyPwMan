@@ -310,7 +310,19 @@ def search():
               "OR username like ? OR "
               "groups like ?",('%'+entry_search+'%','%'+entry_search+'%','%'+entry_search+'%',))
     search_records = c.fetchall()
+
+    # Clear treeview
+    tvData.delete(*tvData.get_children())
     print(search_records)
+
+    # Put search/filtered data to treeview
+    # It needs to decrypt because it is accessing db directly
+    count_search = 0
+    for j in search_records:
+        decrypted_search = f.decrypt(search_records[count_search][3])
+        decrypted_search = decrypted_search.decode('utf-8')
+        tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search, search_records[count_search][4]))
+        count_search += 1
 
 
 def set_tv_filter():
