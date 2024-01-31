@@ -16,6 +16,7 @@ alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + str
 password = ""
 pw_len = 0
 entry_len = tk.StringVar()
+entry_search = tk.StringVar()
 columns = ('ID', 'Site name', 'Username', 'Password', 'Group')
 site_name = ''
 username = ''
@@ -299,6 +300,23 @@ def create_group():
     pass
 
 
+def search():
+    global entry_search
+    global c
+    entry_search = input_search.get()
+
+    c = conn.cursor()
+    c.execute("SELECT * FROM data where site like ? "
+              "OR username like ? OR "
+              "groups like ?",('%'+entry_search+'%','%'+entry_search+'%','%'+entry_search+'%',))
+    search_records = c.fetchall()
+    print(search_records)
+
+
+def set_tv_filter():
+    pass
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -317,9 +335,17 @@ sendBtn.config(height=2)
 addBtn.config(height=2)
 clearBtn.config(height=2)
 add_group_btn.config(height=2)
+
+lbl_search = Label(window, text="Search:")
+lbl_search.grid(row=4, column=0, sticky=tk.E + tk.W)
+input_search = tk.Entry(window, textvariable=entry_search)
+input_search.grid(row=4, column=1, sticky=tk.E + tk.W)
+btn_search = Button(window, text="Search", command=search)
+btn_search.grid(row=4, column=2, sticky=tk.E + tk.W)
+
 tvData = Treeview(window, columns=columns, show='headings')
-tvData.grid(row=4, column=0, columnspan=5, sticky='NSEW')
-window.grid_rowconfigure(4, weight=1)
+tvData.grid(row=5, column=0, columnspan=5, sticky='NSEW')
+window.grid_rowconfigure(5, weight=1)
 window.grid_columnconfigure(0, weight=1)
 window.grid_columnconfigure(1, weight=1)
 window.grid_columnconfigure(2, weight=1)
@@ -335,15 +361,14 @@ tvScrollbarRight.config(command=tvData.yview)
 tvData.config(yscrollcommand=tvScrollbarRight.set)
 tvScrollbarBottom = Scrollbar(tvData, orient='horizontal')      # orient='horizontal'
 tvScrollbarBottom.config(command=tvData.xview)
-tvData.config(xscrollcommand=tvScrollbarBottom)
-tvScrollbarBottom.config(xscrollcommand=tvScrollbarBottom.set)
-tvScrollbarRight.grid(row=4, column=4, sticky='NSE')
+tvScrollbarRight.grid(row=5, column=4, sticky='NSE')
+tvScrollbarBottom.grid(row=5, column=1, sticky='N', columnspan=6)
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
-deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
+deleteBtn.grid(row=6, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
-editBtn.grid(row=5, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+editBtn.grid(row=6, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 copyBtn = tk.Button(window, text="Copy", command=copy)
-copyBtn.grid(row=5, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+copyBtn.grid(row=6, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 deleteBtn.config(height=3)
 editBtn.config(height=3)
 copyBtn.config(height=3)
