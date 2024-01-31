@@ -349,7 +349,7 @@ clearBtn.config(height=2)
 add_group_btn.config(height=2)
 
 lbl_search = Label(window, text="Search:")
-lbl_search.grid(row=4, column=0, sticky=tk.E + tk.W)
+lbl_search.grid(row=4, column=0, sticky=tk.E)
 input_search = tk.Entry(window, textvariable=entry_search)
 input_search.grid(row=4, column=1, sticky=tk.E + tk.W)
 btn_search = Button(window, text="Search", command=search)
