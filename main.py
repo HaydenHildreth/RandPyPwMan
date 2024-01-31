@@ -10,7 +10,7 @@ from tkinter.ttk import *
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.6.4')
+window.title('RandPyPwGen v.0.7.2')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -288,9 +288,34 @@ def open_help():
 
 def import_passwords():
     """
-    This function will be used to import passwords into the data table 
+    This function will be used to import passwords into the data table
+    it should be able to see the group from import_window() then it will
+    read the .CSV file and add it to the database and treeview. The index
+    of the last password should be found when this is clicked, in case the
+    user has added any passwords whilst the import window has been open.
     """
     pass
+
+
+def import_window():
+    """
+    Opens new window for importing passwords
+    """
+    source_list = ["", "Chrome", "Firefox", "Safari"]
+    new_import_window = tk.Toplevel(window)
+    source = tk.StringVar(new_import_window)
+    new_import_window.title("Import passwords")
+    new_import_window.geometry("200x200")
+    data_source = Label(new_import_window, text="Data source:")
+    data_source.grid()
+    # source.set(source_list[0])
+    source.set("Select an option")
+    entry_data_source = OptionMenu(new_import_window, source, *source_list)
+    entry_data_source.grid()
+    btn_import = Button(new_import_window, text="Import", command=import_passwords)
+    btn_import.grid()
+    btn_import_exit = Button(new_import_window, text="Exit", command=new_import_window.destroy)
+    btn_import_exit.grid()
 
 
 def create_group():
@@ -308,7 +333,8 @@ def search():
     c = conn.cursor()
     c.execute("SELECT * FROM data where site like ? "
               "OR username like ? OR "
-              "groups like ?",('%'+entry_search+'%','%'+entry_search+'%','%'+entry_search+'%',))
+              "groups like ?"
+              "ORDER BY id",('%'+entry_search+'%','%'+entry_search+'%','%'+entry_search+'%',))
     search_records = c.fetchall()
 
     # Clear treeview
@@ -352,7 +378,7 @@ lbl_search = Label(window, text="Search:")
 lbl_search.grid(row=4, column=0, sticky=tk.E)
 input_search = tk.Entry(window, textvariable=entry_search)
 input_search.grid(row=4, column=1, sticky=tk.E + tk.W)
-btn_search = Button(window, text="Search", command=search)
+btn_search = tk.Button(window, text="Search", command=search)
 btn_search.grid(row=4, column=2, sticky=tk.E + tk.W)
 
 tvData = Treeview(window, columns=columns, show='headings')
@@ -374,7 +400,7 @@ tvData.config(yscrollcommand=tvScrollbarRight.set)
 tvScrollbarBottom = Scrollbar(tvData, orient='horizontal')      # orient='horizontal'
 tvScrollbarBottom.config(command=tvData.xview)
 tvScrollbarRight.grid(row=5, column=4, sticky='NSE')
-tvScrollbarBottom.grid(row=5, column=1, sticky='N', columnspan=6)
+tvScrollbarBottom.grid(row=5, column=0, sticky='N', columnspan=6)
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=6, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
@@ -389,7 +415,7 @@ copyBtn.config(height=3)
 # MENU SECTION
 menubar = tk.Menu(window)
 filemenu = tk.Menu(menubar, tearoff=0)
-filemenu.add_command(label="Import", command='')
+filemenu.add_command(label="Import", command=import_window)
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="File", menu=filemenu)
