@@ -4,17 +4,19 @@ import tkinter.messagebox
 import pyperclip
 import sqlite3
 import tkinter as tk
+import webbrowser
 from cryptography.fernet import Fernet
 from tkinter.ttk import *
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.6.2')
+window.title('RandPyPwGen v.0.6.4')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
 pw_len = 0
 entry_len = tk.StringVar()
+entry_search = tk.StringVar()
 columns = ('ID', 'Site name', 'Username', 'Password', 'Group')
 site_name = ''
 username = ''
@@ -239,6 +241,10 @@ def update_info():
 
 
 def cancel_edit():
+    """
+    This function clears the input boxes and puts the original un-edited
+    passwords back in the input boxes when the cancel button is clicked
+    """
     global ipsn
     global ipun
     global ippw
@@ -273,6 +279,56 @@ def clear_button():
     print_pw.configure(text=f"Your password is {password}")  # Update password label
 
 
+def open_help():
+    """
+    This function opens the GitHub repository in the default web browser
+    """
+    webbrowser.open("https://github.com/HaydenHildreth/RandPyPwMan")
+
+
+def import_passwords():
+    """
+    This function will be used to import passwords into the data table 
+    """
+    pass
+
+
+def create_group():
+    """
+    This function will create a group, which you could then assign to a password
+    """
+    pass
+
+
+def search():
+    global entry_search
+    global c
+    entry_search = input_search.get()
+
+    c = conn.cursor()
+    c.execute("SELECT * FROM data where site like ? "
+              "OR username like ? OR "
+              "groups like ?",('%'+entry_search+'%','%'+entry_search+'%','%'+entry_search+'%',))
+    search_records = c.fetchall()
+
+    # Clear treeview
+    tvData.delete(*tvData.get_children())
+    print(search_records)
+
+    # Put search/filtered data to treeview
+    # It needs to decrypt because it is accessing db directly
+    count_search = 0
+    for j in search_records:
+        decrypted_search = f.decrypt(search_records[count_search][3])
+        decrypted_search = decrypted_search.decode('utf-8')
+        tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search, search_records[count_search][4]))
+        count_search += 1
+
+
+def set_tv_filter():
+    pass
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -282,15 +338,26 @@ print_pw.grid(row=2, column=0, sticky=tk.E + tk.W)
 sendBtn = tk.Button(window, text="Generate", command=click)
 addBtn = tk.Button(window, text="Add", command=add_button)
 clearBtn = tk.Button(window, text="Clear", command=clear_button)
+add_group_btn = tk.Button(window, text="Add/Remove group", command='')
 sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
 addBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
 clearBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
+add_group_btn.grid(row=3, column=3, sticky=tk.E + tk.W)
 sendBtn.config(height=2)
 addBtn.config(height=2)
 clearBtn.config(height=2)
+add_group_btn.config(height=2)
+
+lbl_search = Label(window, text="Search:")
+lbl_search.grid(row=4, column=0, sticky=tk.E)
+input_search = tk.Entry(window, textvariable=entry_search)
+input_search.grid(row=4, column=1, sticky=tk.E + tk.W)
+btn_search = Button(window, text="Search", command=search)
+btn_search.grid(row=4, column=2, sticky=tk.E + tk.W)
+
 tvData = Treeview(window, columns=columns, show='headings')
-tvData.grid(row=4, column=0, columnspan=5, sticky='NSEW')
-window.grid_rowconfigure(4, weight=1)
+tvData.grid(row=5, column=0, columnspan=5, sticky='NSEW')
+window.grid_rowconfigure(5, weight=1)
 window.grid_columnconfigure(0, weight=1)
 window.grid_columnconfigure(1, weight=1)
 window.grid_columnconfigure(2, weight=1)
@@ -304,16 +371,33 @@ tvData.heading('Group', text='Group')
 tvScrollbarRight = Scrollbar()
 tvScrollbarRight.config(command=tvData.yview)
 tvData.config(yscrollcommand=tvScrollbarRight.set)
-tvScrollbarRight.grid(row=4, column=4, sticky='NSE')
+tvScrollbarBottom = Scrollbar(tvData, orient='horizontal')      # orient='horizontal'
+tvScrollbarBottom.config(command=tvData.xview)
+tvScrollbarRight.grid(row=5, column=4, sticky='NSE')
+tvScrollbarBottom.grid(row=5, column=1, sticky='N', columnspan=6)
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
-deleteBtn.grid(row=5, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
+deleteBtn.grid(row=6, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
-editBtn.grid(row=5, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+editBtn.grid(row=6, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 copyBtn = tk.Button(window, text="Copy", command=copy)
-copyBtn.grid(row=5, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+copyBtn.grid(row=6, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 deleteBtn.config(height=3)
 editBtn.config(height=3)
 copyBtn.config(height=3)
+
+
+# MENU SECTION
+menubar = tk.Menu(window)
+filemenu = tk.Menu(menubar, tearoff=0)
+filemenu.add_command(label="Import", command='')
+filemenu.add_separator()
+filemenu.add_command(label="Exit", command=window.quit)
+menubar.add_cascade(label="File", menu=filemenu)
+
+
+helpmenu = tk.Menu(menubar, tearoff=0)
+helpmenu.add_command(label="Help Index", command=open_help)
+menubar.add_cascade(label="Help", menu=helpmenu)
 
 
 count = 0
@@ -333,4 +417,5 @@ if last is None:
 else:
     index = last[0] + 1
 
+window.config(menu=menubar)
 window.mainloop()

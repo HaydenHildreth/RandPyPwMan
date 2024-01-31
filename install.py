@@ -1,6 +1,7 @@
 import sqlite3
 import bcrypt
 from cryptography.fernet import Fernet
+import os
 import tkinter as tk
 
 
@@ -15,6 +16,7 @@ def set_master():
     window.destroy()
 
 
+os.mkdir('./db/')
 conn = sqlite3.connect('db/data.db')
 c = conn.cursor()
 
