@@ -1,5 +1,4 @@
 *.db
 *.xml
 *.pyc
-*.pyc
 .idea/workspace.xml
