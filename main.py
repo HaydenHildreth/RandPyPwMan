@@ -339,7 +339,6 @@ def search():
 
     # Clear treeview
     tvData.delete(*tvData.get_children())
-    print(search_records)
 
     # Put search/filtered data to treeview
     # It needs to decrypt because it is accessing db directly
