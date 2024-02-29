@@ -7,6 +7,7 @@ import tkinter as tk
 import webbrowser
 from cryptography.fernet import Fernet
 from tkinter.ttk import *
+from tkinter import filedialog
 
 
 window = tk.Tk()
@@ -314,6 +315,7 @@ def import_window():
     """
     global source
     global entry_data_source
+    global filename
     source_list = ["", "Chrome", "Firefox", "Safari"]
     new_import_window = tk.Toplevel(window)
     source = tk.StringVar(new_import_window)
@@ -325,10 +327,19 @@ def import_window():
     source.set("Select an option")
     entry_data_source = OptionMenu(new_import_window, source, *source_list)
     entry_data_source.grid()
+    file_btn = Button(new_import_window, text="Browse files", command=browse_files)
+    file_btn.grid()
     btn_import = Button(new_import_window, text="Import password", command=import_passwords)
     btn_import.grid()
     btn_import_exit = Button(new_import_window, text="Exit", command=new_import_window.destroy)
     btn_import_exit.grid()
+
+
+def browse_files():
+    global filename
+    filename = filedialog.askopenfilename(initialdir="/", title="Select a file", filetypes=(("CSV files", "*.csv"),))
+    print(filename)
+    pass
 
 
 
