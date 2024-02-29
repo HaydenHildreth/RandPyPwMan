@@ -294,6 +294,17 @@ def import_passwords():
     of the last password should be found when this is clicked, in case the
     user has added any passwords whilst the import window has been open.
     """
+    global c
+    global source
+    last_import = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+    last_import = c.fetchone()
+    if last_import is None:
+        last_index = 0
+    else:
+        last_index = last_import[0] + 1
+    print(last_index)
+    source = entry_data_source.get()
+    print(source)
     pass
 
 
@@ -301,6 +312,8 @@ def import_window():
     """
     Opens new window for importing passwords
     """
+    global source
+    global entry_data_source
     source_list = ["", "Chrome", "Firefox", "Safari"]
     new_import_window = tk.Toplevel(window)
     source = tk.StringVar(new_import_window)
@@ -312,10 +325,11 @@ def import_window():
     source.set("Select an option")
     entry_data_source = OptionMenu(new_import_window, source, *source_list)
     entry_data_source.grid()
-    btn_import = Button(new_import_window, text="Import", command=import_passwords)
+    btn_import = Button(new_import_window, text="Import password", command=import_passwords)
     btn_import.grid()
     btn_import_exit = Button(new_import_window, text="Exit", command=new_import_window.destroy)
     btn_import_exit.grid()
+
 
 
 def create_group():
