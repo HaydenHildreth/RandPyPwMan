@@ -303,9 +303,9 @@ def import_passwords():
         last_index = 0
     else:
         last_index = last_import[0] + 1
-    print(last_index)
-    source = entry_data_source.get()
-    print(source)
+    # print(last_index)
+    import_source = source.get()
+    # print(import_source)
     pass
 
 
