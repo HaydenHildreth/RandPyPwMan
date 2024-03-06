@@ -8,6 +8,7 @@ import webbrowser
 from cryptography.fernet import Fernet
 from tkinter.ttk import *
 from tkinter import filedialog
+import csv
 
 
 window = tk.Tk()
@@ -297,6 +298,7 @@ def import_passwords():
     """
     global c
     global source
+    global filename
     last_import = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
     last_import = c.fetchone()
     if last_import is None:
@@ -306,6 +308,13 @@ def import_passwords():
     # print(last_index)
     import_source = source.get()
     # print(import_source)
+
+    # FOR LOOP TO READ .CSV OF FILE
+    file = open(filename, "r")
+    reader = csv.reader(file)
+    for line in reader:
+        t_reader = line[1], line[2]
+        print(t_reader)
     pass
 
 
