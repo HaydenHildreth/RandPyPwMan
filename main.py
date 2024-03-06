@@ -313,7 +313,7 @@ def import_passwords():
     file = open(filename, "r")
     reader = csv.reader(file)
     for line in reader:
-        t_reader = line[1], line[2]
+        t_reader = line[0], line[1], line[2]
         print(t_reader)
     pass
 
