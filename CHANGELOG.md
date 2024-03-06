@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 01-30-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Added search functionality to sort and filter passwords
+ 
+### Fixed
+ 
+- [Issue #26](https://github.com/HaydenHildreth/RandPyPwMan/issues/26)
+  This issue is one of the items I worked on besides search feature.
+
+### Notes
+
+- Screen is a bit cluttered / UI is a bit ugly. Not a priority at this point though.
 
 ## [0.6.2] - 09-05-2023
   
