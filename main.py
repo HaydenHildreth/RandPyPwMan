@@ -12,7 +12,7 @@ import csv
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.7.2')
+window.title('RandPyPwGen v.0.7.6')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -299,6 +299,7 @@ def import_passwords():
     global c
     global source
     global filename
+    global new_import_window
     last_import = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
     last_import = c.fetchone()
     if last_import is None:
@@ -309,24 +310,33 @@ def import_passwords():
     import_source = source.get()
     # print(import_source)
 
-    # FOR LOOP TO READ .CSV OF FILE
+    # VARIABLE TO OPEN FILE
     file = open(filename, "r")
     reader = csv.reader(file)
 
     match import_source:
         case "Chrome":
-            print('chrome')
             for line in reader:
                 t_reader = line[0], line[2], line[3]
-                print(t_reader)
-            pass
+                pw_copy_insert = bytes(line[3], 'utf-8')
+                enc_insert = f.encrypt(pw_copy_insert)
+
+                tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  line[3], ''))
+                c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (last_index, line[0],  line[2],  enc_insert, ''))
+                last_index += 1
+                conn.commit()
+                new_import_window.destroy()
         case "Firefox":
-            print('firefox')
             for line in reader:
                 t_reader = line[0], line[1], line[2]
-                print(t_reader)
-            pass
-    pass
+                pw_copy_insert = bytes(line[2], 'utf-8')
+                enc_insert = f.encrypt(pw_copy_insert)
+
+                tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], line[2], ''))
+                c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (last_index, line[0], line[1], enc_insert, ''))
+                last_index += 1
+                conn.commit()
+                new_import_window.destroy()
 
 
 def import_window():
@@ -336,7 +346,8 @@ def import_window():
     global source
     global entry_data_source
     global filename
-    source_list = ["", "Chrome", "Firefox", "Safari"]
+    global new_import_window
+    source_list = ["", "Chrome", "Firefox"]
     new_import_window = tk.Toplevel(window)
     source = tk.StringVar(new_import_window)
     new_import_window.title("Import passwords")
@@ -360,7 +371,6 @@ def browse_files():
     filename = filedialog.askopenfilename(initialdir="/", title="Select a file", filetypes=(("CSV files", "*.csv"),))
     print(filename)
     pass
-
 
 
 def create_group():
