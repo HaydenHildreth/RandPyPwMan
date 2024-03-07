@@ -312,9 +312,20 @@ def import_passwords():
     # FOR LOOP TO READ .CSV OF FILE
     file = open(filename, "r")
     reader = csv.reader(file)
-    for line in reader:
-        t_reader = line[0], line[1], line[2]
-        print(t_reader)
+
+    match import_source:
+        case "Chrome":
+            print('chrome')
+            for line in reader:
+                t_reader = line[0], line[2], line[3]
+                print(t_reader)
+            pass
+        case "Firefox":
+            print('firefox')
+            for line in reader:
+                t_reader = line[0], line[1], line[2]
+                print(t_reader)
+            pass
     pass
 
 
