@@ -7,10 +7,12 @@ import tkinter as tk
 import webbrowser
 from cryptography.fernet import Fernet
 from tkinter.ttk import *
+from tkinter import filedialog
+import csv
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.7.0')
+window.title('RandPyPwGen v.0.7.6')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -288,8 +290,86 @@ def open_help():
 
 def import_passwords():
     """
-    This function will be used to import passwords into the data table 
+    This function will be used to import passwords into the data table
+    it should be able to see the group from import_window() then it will
+    read the .CSV file and add it to the database and treeview. The index
+    of the last password should be found when this is clicked, in case the
+    user has added any passwords whilst the import window has been open.
     """
+    global c
+    global source
+    global filename
+    global new_import_window
+    last_import = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+    last_import = c.fetchone()
+    if last_import is None:
+        last_index = 0
+    else:
+        last_index = last_import[0] + 1
+    # print(last_index)
+    import_source = source.get()
+    # print(import_source)
+
+    # VARIABLE TO OPEN FILE
+    file = open(filename, "r")
+    reader = csv.reader(file)
+
+    match import_source:
+        case "Chrome":
+            for line in reader:
+                t_reader = line[0], line[2], line[3]
+                pw_copy_insert = bytes(line[3], 'utf-8')
+                enc_insert = f.encrypt(pw_copy_insert)
+
+                tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  line[3], ''))
+                c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (last_index, line[0],  line[2],  enc_insert, ''))
+                last_index += 1
+                conn.commit()
+                new_import_window.destroy()
+        case "Firefox":
+            for line in reader:
+                t_reader = line[0], line[1], line[2]
+                pw_copy_insert = bytes(line[2], 'utf-8')
+                enc_insert = f.encrypt(pw_copy_insert)
+
+                tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], line[2], ''))
+                c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (last_index, line[0], line[1], enc_insert, ''))
+                last_index += 1
+                conn.commit()
+                new_import_window.destroy()
+
+
+def import_window():
+    """
+    Opens new window for importing passwords
+    """
+    global source
+    global entry_data_source
+    global filename
+    global new_import_window
+    source_list = ["", "Chrome", "Firefox"]
+    new_import_window = tk.Toplevel(window)
+    source = tk.StringVar(new_import_window)
+    new_import_window.title("Import passwords")
+    new_import_window.geometry("200x200")
+    data_source = Label(new_import_window, text="Data source:")
+    data_source.grid()
+    # source.set(source_list[0])
+    source.set("Select an option")
+    entry_data_source = OptionMenu(new_import_window, source, *source_list)
+    entry_data_source.grid()
+    file_btn = Button(new_import_window, text="Browse files", command=browse_files)
+    file_btn.grid()
+    btn_import = Button(new_import_window, text="Import password", command=import_passwords)
+    btn_import.grid()
+    btn_import_exit = Button(new_import_window, text="Exit", command=new_import_window.destroy)
+    btn_import_exit.grid()
+
+
+def browse_files():
+    global filename
+    filename = filedialog.askopenfilename(initialdir="/", title="Select a file", filetypes=(("CSV files", "*.csv"),))
+    print(filename)
     pass
 
 
@@ -308,12 +388,12 @@ def search():
     c = conn.cursor()
     c.execute("SELECT * FROM data where site like ? "
               "OR username like ? OR "
-              "groups like ?",('%'+entry_search+'%','%'+entry_search+'%','%'+entry_search+'%',))
+              "groups like ?"
+              "ORDER BY id",('%'+entry_search+'%','%'+entry_search+'%','%'+entry_search+'%',))
     search_records = c.fetchall()
 
     # Clear treeview
     tvData.delete(*tvData.get_children())
-    print(search_records)
 
     # Put search/filtered data to treeview
     # It needs to decrypt because it is accessing db directly
@@ -352,7 +432,7 @@ lbl_search = Label(window, text="Search:")
 lbl_search.grid(row=4, column=0, sticky=tk.E)
 input_search = tk.Entry(window, textvariable=entry_search)
 input_search.grid(row=4, column=1, sticky=tk.E + tk.W)
-btn_search = Button(window, text="Search", command=search)
+btn_search = tk.Button(window, text="Search", command=search)
 btn_search.grid(row=4, column=2, sticky=tk.E + tk.W)
 
 tvData = Treeview(window, columns=columns, show='headings')
@@ -374,7 +454,7 @@ tvData.config(yscrollcommand=tvScrollbarRight.set)
 tvScrollbarBottom = Scrollbar(tvData, orient='horizontal')      # orient='horizontal'
 tvScrollbarBottom.config(command=tvData.xview)
 tvScrollbarRight.grid(row=5, column=4, sticky='NSE')
-tvScrollbarBottom.grid(row=5, column=1, sticky='N', columnspan=6)
+tvScrollbarBottom.grid(row=5, column=0, sticky='N', columnspan=6)
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=6, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
@@ -389,7 +469,7 @@ copyBtn.config(height=3)
 # MENU SECTION
 menubar = tk.Menu(window)
 filemenu = tk.Menu(menubar, tearoff=0)
-filemenu.add_command(label="Import", command='')
+filemenu.add_command(label="Import", command=import_window)
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="File", menu=filemenu)

@@ -1,6 +1,25 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.7.6] - 01-30-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Added ability to import passwords from both Chrome and Firefox
+ 
+### Fixed
+ 
+- [Issue #24](https://github.com/HaydenHildreth/RandPyPwMan/issues/24)
+  This issue is fixed, however another new issue is now open.
+- [NEW ISSUE #52](https://github.com/HaydenHildreth/RandPyPwMan/issues/52)
+  Cleanup of new functionality by adding error handling.
+
+### Notes
+
+- Screen is a bit cluttered / UI is a bit ugly. Not a priority at this point though.
+
 ## [0.7.0] - 01-30-2024
   
 No database changes. Feel free to upgrade without any needed changes.
