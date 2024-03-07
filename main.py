@@ -451,10 +451,10 @@ tvData.heading('Group', text='Group')
 tvScrollbarRight = Scrollbar()
 tvScrollbarRight.config(command=tvData.yview)
 tvData.config(yscrollcommand=tvScrollbarRight.set)
-tvScrollbarBottom = Scrollbar(tvData, orient='horizontal')      # orient='horizontal'
-tvScrollbarBottom.config(command=tvData.xview)
+# tvScrollbarBottom = Scrollbar(tvData, orient='horizontal')      # orient='horizontal'
+# tvScrollbarBottom.config(command=tvData.xview)
 tvScrollbarRight.grid(row=5, column=4, sticky='NSE')
-tvScrollbarBottom.grid(row=5, column=0, sticky='N', columnspan=6)
+# tvScrollbarBottom.grid(row=5, column=0, sticky='N', columnspan=6)
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=6, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
