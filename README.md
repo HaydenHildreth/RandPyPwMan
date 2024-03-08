@@ -6,7 +6,9 @@ It's a simple and easy to use password generator and password manager that's ope
 ## Screenshots
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot.png)
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman1.PNG)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman2.PNG)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman2.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman4.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman5.png)
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman3.PNG)
 
 ## How to use it?
