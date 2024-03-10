@@ -12,7 +12,7 @@ import csv
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.7.6')
+window.title('RandPyPwGen v.0.7.7')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -409,6 +409,10 @@ def set_tv_filter():
     pass
 
 
+def delete_hotkey(self):
+    deleteRecord()
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -465,6 +469,9 @@ deleteBtn.config(height=3)
 editBtn.config(height=3)
 copyBtn.config(height=3)
 
+
+# Hotkey to bind delete key to remove function
+window.bind("<Delete>", delete_hotkey)
 
 # MENU SECTION
 menubar = tk.Menu(window)
