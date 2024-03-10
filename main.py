@@ -12,7 +12,7 @@ import csv
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.7.6')
+window.title('RandPyPwGen v.0.7.8')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -150,12 +150,16 @@ def copy():
 
 def deleteRecord():
     try:
-        sel = tvData.selection()[0]
-        v = tvData.item(sel)
-        tvData.delete(sel)
-        d = v['values']
-        iid = d[0]
-        c.execute("DELETE FROM data WHERE id = ?", (iid,))
+        sel = tvData.selection()
+        selection_len = len(sel)
+        # sel_loop = sel
+        # v = tvData.item(sel)
+        for j in range(selection_len):
+            v = tvData.item(sel[j])
+            tvData.delete(sel[j])
+            d = v['values']
+            iid = d[0]
+            c.execute("DELETE FROM data WHERE id = ?", (iid,))
         conn.commit()
     except IndexError:
         tkinter.messagebox.showerror(title="Cannot delete record", message="Please choose a record to delete.")
@@ -409,6 +413,10 @@ def set_tv_filter():
     pass
 
 
+def delete_hotkey(self):
+    deleteRecord()
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -465,6 +473,9 @@ deleteBtn.config(height=3)
 editBtn.config(height=3)
 copyBtn.config(height=3)
 
+
+# Hotkey to bind delete key to remove function
+window.bind("<Delete>", delete_hotkey)
 
 # MENU SECTION
 menubar = tk.Menu(window)
