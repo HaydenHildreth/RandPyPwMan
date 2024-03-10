@@ -1,7 +1,23 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [0.7.6] - 01-30-2024
+## [0.7.8] - 03-09-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Added ability to use a hotkey to delete all selected values at once
+ 
+### Fixed
+ 
+- [Issue #18](https://github.com/HaydenHildreth/RandPyPwMan/issues/18)
+
+### Notes
+
+- May want to add a "are you sure you want to delete" screen.
+
+## [0.7.6] - 03-06-2024
   
 No database changes. Feel free to upgrade without any needed changes.
 
