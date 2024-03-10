@@ -12,7 +12,7 @@ import csv
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.7.7')
+window.title('RandPyPwGen v.0.7.8')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -150,12 +150,16 @@ def copy():
 
 def deleteRecord():
     try:
-        sel = tvData.selection()[0]
-        v = tvData.item(sel)
-        tvData.delete(sel)
-        d = v['values']
-        iid = d[0]
-        c.execute("DELETE FROM data WHERE id = ?", (iid,))
+        sel = tvData.selection()
+        selection_len = len(sel)
+        # sel_loop = sel
+        # v = tvData.item(sel)
+        for j in range(selection_len):
+            v = tvData.item(sel[j])
+            tvData.delete(sel[j])
+            d = v['values']
+            iid = d[0]
+            c.execute("DELETE FROM data WHERE id = ?", (iid,))
         conn.commit()
     except IndexError:
         tkinter.messagebox.showerror(title="Cannot delete record", message="Please choose a record to delete.")
