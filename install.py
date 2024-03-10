@@ -47,4 +47,4 @@ btn_create.grid(column=0, row=1, columnspan=2)
 
 window.mainloop()
 
-import splashscreen
+import main
