@@ -25,6 +25,7 @@ Make sure you have Python 3 or higher installed. You will also need to install s
 
 ## Major Release Notes
 - #### See ![CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
+- In version 0.7.8 I've added the ability to use a hotkey to delete selected password(s). See commit logs or CHANGELOG.md for more info.
 - In version 0.7.6 I've added the ability to import passwords from browsers. See commit logs or CHANGELOG.md for more info.
 - In version 0.7.0 I've added search functionality.
     - In version 0.6.2 I've added CHANGELOG.md. Visit this file for more detailed information regarding version changes. Major changes will still be present in this section of the README.md.
