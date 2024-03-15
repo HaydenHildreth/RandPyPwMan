@@ -162,7 +162,7 @@ def insert_info():
     last_insert = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
     last_insert = c.fetchone()
     index_insert = last_insert[0] + 1
-    print(index_insert)
+
 
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
@@ -355,9 +355,8 @@ def import_passwords():
         last_index = 0
     else:
         last_index = last_import[0] + 1
-    # print(last_index)
+
     import_source = source.get()
-    # print(import_source)
 
     # VARIABLE TO OPEN FILE
     file = open(filename, "r")
@@ -418,8 +417,6 @@ def import_window():
 def browse_files():
     global filename
     filename = filedialog.askopenfilename(initialdir="/", title="Select a file", filetypes=(("CSV files", "*.csv"),))
-    print(filename)
-    pass
 
 
 def create_group():
