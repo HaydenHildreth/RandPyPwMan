@@ -12,10 +12,12 @@ No database changes. Feel free to upgrade without any needed changes.
 ### Fixed
  
 - Issue with logic in insert_info() function introduced over the past builds.
+- Issue with splashscreen logic when implemented into main program.
 
 ### Notes
 
 - You can still resize the ID column if you choose to do so.
+- Splashscreen.py will now be utilized again (this will only affect dev builds)
 
 
 ## [0.7.8] - 03-09-2024
