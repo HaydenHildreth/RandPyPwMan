@@ -17,7 +17,7 @@ No database changes. Feel free to upgrade without any needed changes.
 ### Notes
 
 - You can still resize the ID column if you choose to do so.
-- Splashscreen.py will now be utilized again (this will only affect dev builds)
+- Splashscreen.py will now be utilized again (this will only affect dev builds).
 
 
 ## [0.7.8] - 03-09-2024
