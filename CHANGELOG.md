@@ -1,6 +1,23 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.7.9] - 03-14-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Limit default width of ID column.
+ 
+### Fixed
+ 
+- Issue with logic in insert_info() function introduced over the past builds.
+
+### Notes
+
+- You can still resize the ID column if you choose to do so.
+
+
 ## [0.7.8] - 03-09-2024
   
 No database changes. Feel free to upgrade without any needed changes.

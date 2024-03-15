@@ -52,7 +52,7 @@ splashscreen.mainloop()
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.7.8')
+window.title('RandPyPwGen v.0.7.9')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -153,18 +153,23 @@ def new_window():
 
 
 def insert_info():
-    global index
     site_name = ipsn.get()
     username = ipun.get()
     password_str = ippw.get()
     group = ipgroup.get()
 
+
+    last_insert = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+    last_insert = c.fetchone()
+    index_insert = last_insert[0] + 1
+    print(index_insert)
+
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
 
-    tvData.insert(parent='', index='end', values=(index, site_name, username, password_str, group))
-    c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (index, site_name, username, enc, group))
-    index = index + 1
+    tvData.insert(parent='', index='end', values=(index_insert, site_name, username, password_str, group))
+    c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (index_insert, site_name, username, enc, group))
+    index_insert = index_insert + 1
     conn.commit()
     new.destroy()
 
@@ -491,6 +496,7 @@ window.grid_columnconfigure(1, weight=1)
 window.grid_columnconfigure(2, weight=1)
 window.grid_columnconfigure(3, weight=1)
 window.grid_columnconfigure(4, weight=1)
+tvData.column(0, width=50)
 tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
