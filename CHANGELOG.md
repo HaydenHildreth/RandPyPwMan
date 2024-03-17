@@ -1,6 +1,24 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.7.10] - 03-17-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Find_last_index() function.
+ 
+### Fixed
+ 
+- Logic to find the last index. This stops repeated code by referencing the same function throughout program.
+
+### Notes
+
+- No notes for this one. Small change. Full build (v0.8.0) coming after next significant change/feature.
+
+
+
 ## [0.7.9] - 03-14-2024
   
 No database changes. Feel free to upgrade without any needed changes.
