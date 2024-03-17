@@ -12,7 +12,7 @@ import csv
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.7.9')
+window.title('RandPyPwGen v.0.7.10')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -50,12 +50,6 @@ try:
 except sqlite3.OperationalError:
     tkinter.messagebox.showerror(title="Encryption key not found", message="Please run install.py again.")
     exit()
-
-
-# TO DO:
-# Add groups (Streaming, random, sports, etc... Groups of PWs)
-# Fix UI
-# Make UI fit screen (grow/shrink with window size)
 
 
 def click():
@@ -118,11 +112,8 @@ def insert_info():
     password_str = ippw.get()
     group = ipgroup.get()
 
-
-    last_insert = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
-    last_insert = c.fetchone()
+    last_insert = find_last_index()
     index_insert = last_insert[0] + 1
-
 
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
@@ -177,7 +168,6 @@ def editRecord():
     global ipgroup
     global new
     try:
-        # index group = d[4] out of range error
         cur = tvData.focus()
         v = tvData.item(cur)
         d = v['values']
@@ -309,8 +299,7 @@ def import_passwords():
     global source
     global filename
     global new_import_window
-    last_import = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
-    last_import = c.fetchone()
+    last_import = find_last_index()
     if last_import is None:
         last_index = 0
     else:
@@ -419,6 +408,12 @@ def delete_hotkey(self):
     deleteRecord()
 
 
+def find_last_index():
+    last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+    last = c.fetchone()
+    return last
+
+
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -502,8 +497,9 @@ for i in records:
     count += 1
 
 
-last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
-last = c.fetchone()
+#last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+#last = c.fetchone()
+last = find_last_index()
 
 
 if last is None:
