@@ -17,11 +17,6 @@ Make sure you have Python 3 or higher installed. You will also need to install s
 ## Known problems
 - Very ugly
     - Planning to fix UI/UX soon
-    
-## Coming soon
-- Importing of passwords from other software
-- Password groups
-    - Media, education, etc...
 
 ## Major Release Notes
 - #### See ![CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
