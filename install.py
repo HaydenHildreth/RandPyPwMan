@@ -23,8 +23,7 @@ c = conn.cursor()
 c.execute("CREATE TABLE data(id INTEGER PRIMARY KEY,"
           "site varchar(100) NOT NULL,"
           "username varchar(100) NOT NULL,"
-          "password varchar(100) NOT NULL,"
-          "groups varchar(100) NOT NULL)")
+          "password varchar(100) NOT NULL")
 
 
 conn2 = sqlite3.connect('db/unlock.db')

@@ -1,6 +1,25 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.7.11] - 03-19-2024
+  
+Minor database changes. Please run 0.8.0.py before updating your program.
+
+### Added
+
+- Removed group fields.
+- Update folder for future updates
+- Update script for v0.8.0
+ 
+### Fixed
+ 
+- [Issue #27](https://github.com/HaydenHildreth/RandPyPwMan/issues/27).
+
+### Notes
+
+- Building to v0.8.0 for release.
+
+
 ## [0.7.10] - 03-17-2024
   
 No database changes. Feel free to upgrade without any needed changes.

@@ -12,18 +12,18 @@ import csv
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.7.10')
+window.title('RandPyPwGen v.0.7.11')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
 pw_len = 0
 entry_len = tk.StringVar()
 entry_search = tk.StringVar()
-columns = ('ID', 'Site name', 'Username', 'Password', 'Group')
+columns = ('ID', 'Site name', 'Username', 'Password')
 site_name = ''
 username = ''
 password_str = ''
-group = ''
+
 
 try:
     conn = sqlite3.connect('./db/data.db')
@@ -72,11 +72,9 @@ def new_window():
     global site_name
     global username
     global password_str
-    global group
     global ipsn
     global ipun
     global ippw
-    global ipgroup
     global new
     new = tk.Toplevel(window)
     new.title("Add new site...")
@@ -93,10 +91,6 @@ def new_window():
     lblpw.grid()
     ippw = tk.Entry(new, textvariable=password_str)
     ippw.grid()
-    lblgroup = Label(new, text="Group:")
-    lblgroup.grid()
-    ipgroup = tk.Entry(new, textvariable=group)
-    ipgroup.grid()
     btnSubmit = Button(new, text="Add account", command=insert_info)
     btnSubmit.grid()
     btnCancel = Button(new, text="Cancel", command=cancel_button)
@@ -110,7 +104,6 @@ def insert_info():
     site_name = ipsn.get()
     username = ipun.get()
     password_str = ippw.get()
-    group = ipgroup.get()
 
     last_insert = find_last_index()
     index_insert = last_insert[0] + 1
@@ -118,8 +111,8 @@ def insert_info():
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
 
-    tvData.insert(parent='', index='end', values=(index_insert, site_name, username, password_str, group))
-    c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (index_insert, site_name, username, enc, group))
+    tvData.insert(parent='', index='end', values=(index_insert, site_name, username, password_str))
+    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index_insert, site_name, username, enc))
     index_insert = index_insert + 1
     conn.commit()
     new.destroy()
@@ -129,7 +122,6 @@ def cancel_button():
     ipsn.delete(0, 'end')
     ipun.delete(0, 'end')
     ippw.delete(0, 'end')
-    ipgroup.delete(0, 'end')
 
 
 def add_button():
@@ -165,7 +157,6 @@ def editRecord():
     global ipsn
     global ipun
     global ippw
-    global ipgroup
     global new
     try:
         cur = tvData.focus()
@@ -174,7 +165,6 @@ def editRecord():
         sn = d[1]
         un = d[2]
         pw = d[3]
-        groups = d[4]
         new = tk.Toplevel(window)
         new.title("Add new site...")
         new.geometry("200x200")
@@ -190,10 +180,6 @@ def editRecord():
         lblpw.grid()
         ippw = tk.Entry(new, textvariable=password_str)
         ippw.grid()
-        lblgroup = Label(new, text="Group:")
-        lblgroup.grid()
-        ipgroup = tk.Entry(new, textvariable=group)
-        ipgroup.grid()
         btnSubmit = Button(new, text="Update", command=update_info)
         btnSubmit.grid()
         btnCancel = Button(new, text="Cancel", command=cancel_edit)
@@ -203,7 +189,6 @@ def editRecord():
         ipsn.insert(0, sn)
         ipun.insert(0, un)
         ippw.insert(0, pw)
-        ipgroup.insert(0, groups)
     except IndexError:
         tkinter.messagebox.showerror(title="Cannot edit record", message="Please choose a record to edit.")
 
@@ -216,13 +201,12 @@ def update_info():
     global ipsn
     global ipun
     global ippw
-    global ipgroup
     global new
     sel = tvData.focus()
     item = tvData.item(sel)
     get_values = item['values']
     selected_index = get_values[0]
-    val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get(), ipgroup.get()))
+    val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get()))
 
     pw_copy = bytes(ippw.get(), 'utf-8')
     enc = f.encrypt(pw_copy)
@@ -231,12 +215,10 @@ def update_info():
     temp_sn = ipsn.get()
     temp_un = ipun.get()
     temp_pw = ippw.get()
-    temp_group = ipgroup.get()
     values.append(temp_sn)
     values.append(temp_un)
     values.append(enc)
-    values.append(temp_group)
-    c.execute("UPDATE data SET site = (?), username = (?), password = (?), groups = (?) WHERE id = (?)", (values[0], values[1], values[2], values[3], selected_index))
+    c.execute("UPDATE data SET site = (?), username = (?), password = (?), groups = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
     conn.commit()
     new.destroy()
 
@@ -249,22 +231,19 @@ def cancel_edit():
     global ipsn
     global ipun
     global ippw
-    global ipgroup
+
     cur = tvData.focus()
     v = tvData.item(cur)
     d = v['values']
     sn = d[1]
     un = d[2]
     pw = d[3]
-    gr = d[4]
     ipsn.delete(0, 'end')
     ipun.delete(0, 'end')
     ippw.delete(0, 'end')
-    ipgroup.delete(0, 'end')
     ipsn.insert(0, sn)
     ipun.insert(0, un)
     ippw.insert(0, pw)
-    ipgroup.insert(0, gr)
 
 
 def clear_button():
@@ -318,8 +297,8 @@ def import_passwords():
                 pw_copy_insert = bytes(line[3], 'utf-8')
                 enc_insert = f.encrypt(pw_copy_insert)
 
-                tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  line[3], ''))
-                c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (last_index, line[0],  line[2],  enc_insert, ''))
+                tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  line[3]))
+                c.execute("INSERT INTO data VALUES (?,?,?,?)", (last_index, line[0],  line[2],  enc_insert))
                 last_index += 1
                 conn.commit()
                 new_import_window.destroy()
@@ -329,8 +308,8 @@ def import_passwords():
                 pw_copy_insert = bytes(line[2], 'utf-8')
                 enc_insert = f.encrypt(pw_copy_insert)
 
-                tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], line[2], ''))
-                c.execute("INSERT INTO data VALUES (?,?,?,?,?)", (last_index, line[0], line[1], enc_insert, ''))
+                tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], line[2]))
+                c.execute("INSERT INTO data VALUES (?,?,?,?)", (last_index, line[0], line[1], enc_insert))
                 last_index += 1
                 conn.commit()
                 new_import_window.destroy()
@@ -382,9 +361,8 @@ def search():
 
     c = conn.cursor()
     c.execute("SELECT * FROM data where site like ? "
-              "OR username like ? OR "
-              "groups like ?"
-              "ORDER BY id",('%'+entry_search+'%','%'+entry_search+'%','%'+entry_search+'%',))
+              "OR username like ? "
+              "ORDER BY id",('%'+entry_search+'%','%'+entry_search+'%',))
     search_records = c.fetchall()
 
     # Clear treeview
@@ -396,7 +374,7 @@ def search():
     for j in search_records:
         decrypted_search = f.decrypt(search_records[count_search][3])
         decrypted_search = decrypted_search.decode('utf-8')
-        tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search, search_records[count_search][4]))
+        tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search))
         count_search += 1
 
 
@@ -427,11 +405,9 @@ add_group_btn = tk.Button(window, text="Add/Remove group", command='')
 sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
 addBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
 clearBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
-add_group_btn.grid(row=3, column=3, sticky=tk.E + tk.W)
 sendBtn.config(height=2)
 addBtn.config(height=2)
 clearBtn.config(height=2)
-add_group_btn.config(height=2)
 
 lbl_search = Label(window, text="Search:")
 lbl_search.grid(row=4, column=0, sticky=tk.E)
@@ -453,7 +429,6 @@ tvData.heading('Site name', text='Site name')
 tvData.heading('Username', text='Username')
 tvData.heading('Password', text='Password')
 tvData.heading('ID', text='ID')
-tvData.heading('Group', text='Group')
 tvScrollbarRight = Scrollbar()
 tvScrollbarRight.config(command=tvData.yview)
 tvData.config(yscrollcommand=tvScrollbarRight.set)
@@ -493,12 +468,10 @@ count = 0
 for i in records:
     decrypted = f.decrypt(records[count][3])
     decrypted = decrypted.decode('utf-8')
-    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], decrypted, records[count][4]))
+    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], decrypted))
     count += 1
 
 
-#last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
-#last = c.fetchone()
 last = find_last_index()
 
 
