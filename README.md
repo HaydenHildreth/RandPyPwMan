@@ -17,14 +17,10 @@ Make sure you have Python 3 or higher installed. You will also need to install s
 ## Known problems
 - Very ugly
     - Planning to fix UI/UX soon
-    
-## Coming soon
-- Importing of passwords from other software
-- Password groups
-    - Media, education, etc...
 
 ## Major Release Notes
 - #### See ![CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
+- In version 0.8.0 I've removed the group field, change the insert and search functionality and more. See CHANGELOG.md.
 - In version 0.7.8 I've added the ability to use a hotkey to delete selected password(s). See commit logs or CHANGELOG.md for more info.
 - In version 0.7.6 I've added the ability to import passwords from browsers. See commit logs or CHANGELOG.md for more info.
 - In version 0.7.0 I've added search functionality.

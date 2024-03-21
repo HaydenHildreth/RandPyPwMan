@@ -1,6 +1,62 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 03-19-2024
+  
+Minor database changes. Please run 0.8.0.py before updating your program.
+
+### Added
+
+- Removed group fields.
+- Update folder for future updates
+- Update script for v0.8.0
+ 
+### Fixed
+ 
+- [Issue #27](https://github.com/HaydenHildreth/RandPyPwMan/issues/27).
+
+### Notes
+
+- Building to v0.8.0 for release.
+
+
+## [0.7.10] - 03-17-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Find_last_index() function.
+ 
+### Fixed
+ 
+- Logic to find the last index. This stops repeated code by referencing the same function throughout program.
+
+### Notes
+
+- No notes for this one. Small change. Full build (v0.8.0) coming after next significant change/feature.
+
+
+
+## [0.7.9] - 03-14-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Limit default width of ID column.
+ 
+### Fixed
+ 
+- Issue with logic in insert_info() function introduced over the past builds.
+- Issue with splashscreen logic when implemented into main program.
+
+### Notes
+
+- You can still resize the ID column if you choose to do so.
+- Splashscreen.py will now be utilized again (this will only affect dev builds).
+
+
 ## [0.7.8] - 03-09-2024
   
 No database changes. Feel free to upgrade without any needed changes.
