@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [0.7.11] - 03-19-2024
+## [0.8.0] - 03-19-2024
   
 Minor database changes. Please run 0.8.0.py before updating your program.
 
