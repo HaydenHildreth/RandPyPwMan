@@ -9,6 +9,51 @@ from cryptography.fernet import Fernet
 from tkinter.ttk import *
 from tkinter import filedialog
 import csv
+import bcrypt
+import os
+from tkinter import messagebox
+
+
+# SPLASHSCREEN
+def unlock():
+    global master
+    global tb_ss
+
+    master = tb_ss.get()
+    master = bytes(master, 'utf-8')
+
+    ss_conn = sqlite3.connect('db/unlock.db')
+    ss_c = ss_conn.cursor()
+
+    ss_c.execute("SELECT * FROM master")
+    fetch = ss_c.fetchone()
+    ss_key = fetch[0]
+
+    if bcrypt.checkpw(master, ss_key):
+        splashscreen.destroy()
+    else:
+        tk.messagebox.showerror(title="Incorrect password...", message="Incorrect master key.")
+
+
+# Prevent user from prematurelaty exiting splashscreen
+def on_closing():
+        exit()
+
+
+splashscreen = tk.Tk()
+splashscreen.title('RandPyPwGen login')
+splashscreen.geometry('200x50')
+
+key = b''
+master = b''
+lbl_ss = tk.Label(splashscreen, text='master key:')
+tb_ss = tk.Entry(splashscreen, textvariable=master, show='*')
+btn_ss = tk.Button(splashscreen, text='Unlock', command=unlock)
+lbl_ss.grid(row=0, column=0)
+tb_ss.grid(row=0, column=1)
+btn_ss.grid(column=0, row=1, columnspan=2)
+splashscreen.protocol("WM_DELETE_WINDOW", on_closing)
+splashscreen.mainloop()
 
 
 window = tk.Tk()

@@ -23,7 +23,7 @@ c = conn.cursor()
 c.execute("CREATE TABLE data(id INTEGER PRIMARY KEY,"
           "site varchar(100) NOT NULL,"
           "username varchar(100) NOT NULL,"
-          "password varchar(100) NOT NULL")
+          "password varchar(100) NOT NULL)")
 
 
 conn2 = sqlite3.connect('db/unlock.db')
@@ -46,4 +46,4 @@ btn_create.grid(column=0, row=1, columnspan=2)
 
 window.mainloop()
 
-import splashscreen
+import main
