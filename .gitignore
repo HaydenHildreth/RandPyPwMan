@@ -3,3 +3,4 @@
 *.pyc
 .idea/workspace.xml
 *.xml
+*.iml

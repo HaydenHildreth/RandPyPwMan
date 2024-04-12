@@ -1,7 +1,102 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [0.7.6] - 01-30-2024
+## [0.8.5] - 04-11-2024
+  
+No database changes. Major overhaul to how to run/access program, and its installation.
+
+### Added
+
+- Requirements.txt
+- Splashscreen to main program
+- Updated README.md instructions
+- Updated logic for last index and inserting data into tables
+ 
+### Fixed
+
+- [Issue #11](https://github.com/HaydenHildreth/RandPyPwMan/issues/11).
+- [Issue #15](https://github.com/HaydenHildreth/RandPyPwMan/issues/15).
+- [Issue #29](https://github.com/HaydenHildreth/RandPyPwMan/issues/28).
+- Issue with SQL script in install.py.
+
+### Notes
+
+- Getting pretty close to v1.0.0.
+
+
+## [0.8.0] - 03-19-2024
+  
+Minor database changes. Please run 0.8.0.py before updating your program.
+
+### Added
+
+- Removed group fields.
+- Update folder for future updates
+- Update script for v0.8.0
+ 
+### Fixed
+ 
+- [Issue #27](https://github.com/HaydenHildreth/RandPyPwMan/issues/27).
+
+### Notes
+
+- Building to v0.8.0 for release.
+
+
+## [0.7.10] - 03-17-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Find_last_index() function.
+ 
+### Fixed
+ 
+- Logic to find the last index. This stops repeated code by referencing the same function throughout program.
+
+### Notes
+
+- No notes for this one. Small change. Full build (v0.8.0) coming after next significant change/feature.
+
+
+
+## [0.7.9] - 03-14-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Limit default width of ID column.
+ 
+### Fixed
+ 
+- Issue with logic in insert_info() function introduced over the past builds.
+- Issue with splashscreen logic when implemented into main program.
+
+### Notes
+
+- You can still resize the ID column if you choose to do so.
+- Splashscreen.py will now be utilized again (this will only affect dev builds).
+
+
+## [0.7.8] - 03-09-2024
+  
+No database changes. Feel free to upgrade without any needed changes.
+
+### Added
+
+- Added ability to use a hotkey to delete all selected values at once
+ 
+### Fixed
+ 
+- [Issue #18](https://github.com/HaydenHildreth/RandPyPwMan/issues/18)
+
+### Notes
+
+- May want to add a "are you sure you want to delete" screen.
+
+## [0.7.6] - 03-06-2024
   
 No database changes. Feel free to upgrade without any needed changes.
 
