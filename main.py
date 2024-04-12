@@ -151,14 +151,15 @@ def insert_info():
     password_str = ippw.get()
 
     last_insert = find_last_index()
-    index_insert = last_insert[0] + 1
+    print(type(last_insert))
+    print(last_insert)
+    index_insert = last_insert + 1
 
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
 
     tvData.insert(parent='', index='end', values=(index_insert, site_name, username, password_str))
     c.execute("INSERT INTO data VALUES (?,?,?,?)", (index_insert, site_name, username, enc))
-    index_insert = index_insert + 1
     conn.commit()
     new.destroy()
 
@@ -263,7 +264,7 @@ def update_info():
     values.append(temp_sn)
     values.append(temp_un)
     values.append(enc)
-    c.execute("UPDATE data SET site = (?), username = (?), password = (?), groups = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
+    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
     conn.commit()
     new.destroy()
 
@@ -432,8 +433,14 @@ def delete_hotkey(self):
 
 
 def find_last_index():
-    last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+    last = c.execute("SELECT id FROM data ORDER BY id DESC LIMIT 1")
     last = c.fetchone()
+    if last == None:
+        last = 0
+    else:
+        last = last[0]
+        print(last)
+
     return last
 
 
@@ -519,11 +526,12 @@ for i in records:
 
 last = find_last_index()
 
-
-if last is None:
-    index = 0
-else:
-    index = last[0] + 1
+# print('if')
+# print(last)
+# if last is None:
+ #    index = 0
+# else:
+ #   index = last[0] + 1
 
 window.config(menu=menubar)
 window.mainloop()
