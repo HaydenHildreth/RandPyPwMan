@@ -12,21 +12,21 @@ It's a simple and easy to use password generator and password manager that's ope
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman3.PNG)
 
 ## How to use it?
-Make sure you have Python 3 or higher installed. You will also need to install sqlite3 for a database engine. Make sure you've added sqlite3 to your system PATH (if Windows).
+Make sure you have Python 3 or higher installed. You will also need to install sqlite3 for a database engine. Make sure you've added sqlite3 to your system PATH (if Windows). You will also need to have git and pip installed to follow the instructions below.
 
-Then clone the repository by using:
+* Then clone the repository by using:
 `git clone https://github.com/HaydenHildreth/RandPyPwMan.git`
 
-Open your terminal and change direcotry to the correct folder:
+* Open your terminal and change direcotry to the correct folder:
 `cd <path-to-repo>\`
 
-Install dependencies:
+* Install dependencies:
 `pip install -r requirements.txt`
 
-Run install script:
+* Run install script:
 `python install.py`
 
-Run main script:
+* Run main script:
 `python main.py`
 
 
