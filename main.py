@@ -151,8 +151,6 @@ def insert_info():
     password_str = ippw.get()
 
     last_insert = find_last_index()
-    print(type(last_insert))
-    print(last_insert)
     index_insert = last_insert + 1
 
     pw_copy = bytes(password_str, 'utf-8')
@@ -439,7 +437,6 @@ def find_last_index():
         last = 0
     else:
         last = last[0]
-        print(last)
 
     return last
 
@@ -526,12 +523,6 @@ for i in records:
 
 last = find_last_index()
 
-# print('if')
-# print(last)
-# if last is None:
- #    index = 0
-# else:
- #   index = last[0] + 1
 
 window.config(menu=menubar)
 window.mainloop()
