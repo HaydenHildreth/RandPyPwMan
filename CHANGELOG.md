@@ -1,6 +1,29 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.8.5] - 04-11-2024
+  
+No database changes. Major overhaul to how to run/access program, and its installation.
+
+### Added
+
+- Requirements.txt
+- Splashscreen to main program
+- Updated README.md instructions
+- Updated logic for last index and inserting data into tables
+ 
+### Fixed
+
+- [Issue #11](https://github.com/HaydenHildreth/RandPyPwMan/issues/11).
+- [Issue #15](https://github.com/HaydenHildreth/RandPyPwMan/issues/15).
+- [Issue #29](https://github.com/HaydenHildreth/RandPyPwMan/issues/28).
+- Issue with SQL script in install.py.
+
+### Notes
+
+- Getting pretty close to v1.0.0.
+
+
 ## [0.8.0] - 03-19-2024
   
 Minor database changes. Please run 0.8.0.py before updating your program.
