@@ -9,10 +9,55 @@ from cryptography.fernet import Fernet
 from tkinter.ttk import *
 from tkinter import filedialog
 import csv
+import bcrypt
+import os
+from tkinter import messagebox
+
+
+# SPLASHSCREEN
+def unlock():
+    global master
+    global tb_ss
+
+    master = tb_ss.get()
+    master = bytes(master, 'utf-8')
+
+    ss_conn = sqlite3.connect('db/unlock.db')
+    ss_c = ss_conn.cursor()
+
+    ss_c.execute("SELECT * FROM master")
+    fetch = ss_c.fetchone()
+    ss_key = fetch[0]
+
+    if bcrypt.checkpw(master, ss_key):
+        splashscreen.destroy()
+    else:
+        tk.messagebox.showerror(title="Incorrect password...", message="Incorrect master key.")
+
+
+# Prevent user from prematurelaty exiting splashscreen
+def on_closing():
+        exit()
+
+
+splashscreen = tk.Tk()
+splashscreen.title('RandPyPwGen login')
+splashscreen.geometry('200x50')
+
+key = b''
+master = b''
+lbl_ss = tk.Label(splashscreen, text='master key:')
+tb_ss = tk.Entry(splashscreen, textvariable=master, show='*')
+btn_ss = tk.Button(splashscreen, text='Unlock', command=unlock)
+lbl_ss.grid(row=0, column=0)
+tb_ss.grid(row=0, column=1)
+btn_ss.grid(column=0, row=1, columnspan=2)
+splashscreen.protocol("WM_DELETE_WINDOW", on_closing)
+splashscreen.mainloop()
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.8.0')
+window.title('RandPyPwGen v.0.8.5')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -106,14 +151,13 @@ def insert_info():
     password_str = ippw.get()
 
     last_insert = find_last_index()
-    index_insert = last_insert[0] + 1
+    index_insert = last_insert + 1
 
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
 
     tvData.insert(parent='', index='end', values=(index_insert, site_name, username, password_str))
     c.execute("INSERT INTO data VALUES (?,?,?,?)", (index_insert, site_name, username, enc))
-    index_insert = index_insert + 1
     conn.commit()
     new.destroy()
 
@@ -218,7 +262,7 @@ def update_info():
     values.append(temp_sn)
     values.append(temp_un)
     values.append(enc)
-    c.execute("UPDATE data SET site = (?), username = (?), password = (?), groups = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
+    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
     conn.commit()
     new.destroy()
 
@@ -387,8 +431,13 @@ def delete_hotkey(self):
 
 
 def find_last_index():
-    last = c.execute("SELECT * FROM data ORDER BY id DESC LIMIT 1")
+    last = c.execute("SELECT id FROM data ORDER BY id DESC LIMIT 1")
     last = c.fetchone()
+    if last == None:
+        last = 0
+    else:
+        last = last[0]
+
     return last
 
 
@@ -474,11 +523,6 @@ for i in records:
 
 last = find_last_index()
 
-
-if last is None:
-    index = 0
-else:
-    index = last[0] + 1
 
 window.config(menu=menubar)
 window.mainloop()
