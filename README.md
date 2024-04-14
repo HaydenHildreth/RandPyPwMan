@@ -12,7 +12,7 @@ It's a simple and easy to use password generator and password manager that's ope
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman3.PNG)
 
 ## How to use it?
-Make sure you have [Python 3.10](https://www.python.org/downloads/windows/) or higher installed. You will also need to install [sqlite3](https://www.sqlite.org/download.html) for a database engine. [Make sure you've added sqlite3 to your system PATH (if Windows)](https://dev.to/dendihandian/installing-sqlite3-in-windows-44eb). Windows users can copy/download the repository and skip cloning the repository, or install git and follow the instructions below.
+Make sure you have [Python 3.10](https://www.python.org/downloads/windows/) or higher installed. You will also need to install [sqlite3](https://www.sqlite.org/download.html) for a database engine. [Make sure you've added sqlite3 to your system PATH (if Windows)](https://dev.to/dendihandian/installing-sqlite3-in-windows-44eb). Windows users can copy/download the repository and skip cloning the repository, or [install git](https://git-scm.com/download/win) and follow the instructions below.
 
 * Then clone the repository by using:
 ```
