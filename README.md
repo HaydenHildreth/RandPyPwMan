@@ -12,22 +12,32 @@ It's a simple and easy to use password generator and password manager that's ope
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman3.PNG)
 
 ## How to use it?
-Make sure you have Python 3 or higher installed. You will also need to install sqlite3 for a database engine. Make sure you've added sqlite3 to your system PATH (if Windows). You will also need to have git and pip installed to follow the instructions below.
+Make sure you have Python 3.10 or higher installed. You will also need to install [sqlite3](https://www.sqlite.org/download.html) for a database engine. [Make sure you've added sqlite3 to your system PATH (if Windows)](https://dev.to/dendihandian/installing-sqlite3-in-windows-44eb). Windows users can copy/download the repository and skip cloning the repository, or install git and follow the instructions below.
 
 * Then clone the repository by using:
-`git clone https://github.com/HaydenHildreth/RandPyPwMan.git`
+```
+git clone https://github.com/HaydenHildreth/RandPyPwMan.git
+```
 
 * Open your terminal and change direcotry to the correct folder:
-`cd <path-to-repo>\`
+```
+cd <path-to-repo>\
+```
 
 * Install dependencies:
-`pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
 
 * Run install script:
-`python install.py`
+```
+python install.py
+```
 
 * Run main script:
-`python main.py`
+```
+python main.py
+```
 
 
 ## Known problems
@@ -35,7 +45,7 @@ Make sure you have Python 3 or higher installed. You will also need to install s
     - Planning to fix UI/UX soon
 
 ## Major Release Notes
-- #### See ![CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
+- #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
 - In version 0.8.5 I've made many changes, but there is new install and program usage logic. See CHANGELOG.md.
 - In version 0.8.0 I've removed the group field, change the insert and search functionality and more. See CHANGELOG.md.
 - In version 0.7.8 I've added the ability to use a hotkey to delete selected password(s). See commit logs or CHANGELOG.md for more info.
