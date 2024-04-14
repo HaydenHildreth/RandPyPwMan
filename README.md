@@ -14,20 +14,30 @@ It's a simple and easy to use password generator and password manager that's ope
 ## How to use it?
 Make sure you have Python 3 or higher installed. You will also need to install sqlite3 for a database engine. Make sure you've added sqlite3 to your system PATH (if Windows).
 
-Then clone the repository by using:
-`git clone https://github.com/HaydenHildreth/RandPyPwMan.git`
+* Then clone the repository by using:
+```
+git clone https://github.com/HaydenHildreth/RandPyPwMan.git
+```
 
-Open your terminal and change direcotry to the correct folder:
-`cd <path-to-repo>\`
+* Open your terminal and change direcotry to the correct folder:
+```
+cd <path-to-repo>\
+```
 
-Install dependencies:
-`pip install -r requirements.txt`
+* Install dependencies:
+```
+pip install -r requirements.txt
+```
 
-Run install script:
-`python install.py`
+* Run install script:
+```
+python install.py
+```
 
-Run main script:
-`python main.py`
+* Run main script:
+```
+python main.py
+```
 
 
 ## Known problems
