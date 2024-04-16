@@ -326,7 +326,7 @@ def import_passwords():
     if last_import is None:
         last_index = 0
     else:
-        last_index = last_import[0] + 1
+        last_index = last_import + 1
 
     import_source = source.get()
 
