@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [0.8.5] - 04-15-2024
+## [0.8.6] - 04-15-2024
   
 No database changes.
 
