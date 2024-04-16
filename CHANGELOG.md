@@ -15,6 +15,7 @@ No database changes.
 
 ### Notes
 
+- Bug was introduced in v0.7.10.
 
 
 ## [0.8.5] - 04-11-2024
