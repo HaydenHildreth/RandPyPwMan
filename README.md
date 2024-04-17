@@ -39,11 +39,6 @@ python install.py
 python main.py
 ```
 
-
-## Known problems
-- Very ugly
-    - Planning to fix UI/UX soon
-
 ## Major Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
 - In version 0.8.5 I've made many changes, but there is new install and program usage logic. See CHANGELOG.md.
