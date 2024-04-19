@@ -1,6 +1,23 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.8.6] - 04-15-2024
+  
+No database changes.
+
+### Added
+
+- Hotfix for importing
+ 
+### Fixed
+
+- Issue with importing passwords
+
+### Notes
+
+- Bug was introduced in v0.7.10.
+
+
 ## [0.8.5] - 04-11-2024
   
 No database changes. Major overhaul to how to run/access program, and its installation.
