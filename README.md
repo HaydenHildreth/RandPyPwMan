@@ -12,9 +12,39 @@ It's a simple and easy to use password generator and password manager that's ope
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman3.PNG)
 
 ## How to use it?
-Make sure you have [Python 3.10](https://www.python.org/downloads/) or higher installed. You will also need to install [sqlite3](https://www.sqlite.org/download.html) for a database engine. [Make sure you've added sqlite3 to your system PATH (if Windows)](https://dev.to/dendihandian/installing-sqlite3-in-windows-44eb). Windows users can copy/download the repository and skip cloning the repository, or [install git](https://git-scm.com/download/win) and follow the instructions below.
+### Windows
+Make sure you have [Python 3.10](https://www.python.org/downloads/) or higher installed. You will also need to install [sqlite3](https://www.sqlite.org/download.html) for a database engine. [Make sure you've added sqlite3 to your system PATH](https://dev.to/dendihandian/installing-sqlite3-in-windows-44eb). Users can copy/download the repository and skip cloning the repository, or [install git](https://git-scm.com/download/win) and follow the instructions below.
 
-* Then clone the repository by using:
+* Then clone the repository by using (alternatively you can simply download the files):
+```
+git clone https://github.com/HaydenHildreth/RandPyPwMan.git
+```
+
+* Open your terminal and change direcotry to the correct folder:
+```
+cd <path-to-repo>\
+```
+
+* Install dependencies:
+```
+pip install -r requirements.txt
+```
+
+* Run install script:
+```
+python install.py
+```
+
+* Run main script:
+```
+python main.py
+```
+
+### MacOS
+Finish/have Tyler do documentation. @TylerMichaelsen
+
+### Linux
+* Clone the repository by using (alternatively you can simply download the files):
 ```
 git clone https://github.com/HaydenHildreth/RandPyPwMan.git
 ```
