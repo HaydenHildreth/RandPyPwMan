@@ -41,10 +41,35 @@ python main.py
 ```
 
 ### MacOS
-Finish/have Tyler do documentation. @TylerMichaelsen
+Finish/have Tyler do documentation/review. @TylerMichaelsen (https://github.com/TylerMichaelsen)
+
+* Clone the repository:
+```
+git clone https://github.com/HaydenHildreth/RandPyPwMan.git
+```
+
+* Open your terminal and change direcotry to the correct folder:
+```
+cd <path-to-repo>\
+```
+
+* Install dependencies:
+```
+brew install -r requirements.txt
+```
+
+* Run install script:
+```
+python install.py
+```
+
+* Run main script:
+```
+python main.py
+```
 
 ### Linux
-* Clone the repository by using (alternatively you can simply download the files):
+* Clone the repository:
 ```
 git clone https://github.com/HaydenHildreth/RandPyPwMan.git
 ```
