@@ -1,6 +1,6 @@
 # RandPyPwMan
 
-## What is RandPyPwMan - WIP [Work in progress]
+## What is RandPyPwMan
 It's a simple and easy to use password generator and password manager that's open-source and made in Python 3 using Tkinter. Do not get too attached to the name as it will likely be changing before the final release. Program screenshots are available in main branch README.
 
 ## Screenshots
