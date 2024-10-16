@@ -42,6 +42,7 @@ python main.py
 
 ### MacOS
 Finish/have Tyler do documentation/review. @TylerMichaelsen (https://github.com/TylerMichaelsen)
+* Ensure Python 3.10 or higher is installed
 
 * Clone the repository:
 ```
@@ -69,6 +70,8 @@ python main.py
 ```
 
 ### Linux
+* Ensure Python 3.10 or higher is installed
+
 * Clone the repository:
 ```
 git clone https://github.com/HaydenHildreth/RandPyPwMan.git
