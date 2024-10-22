@@ -1,7 +1,7 @@
 # RandPyPwMan
 
-## What is RandPyPwMan - WIP [Work in progress]
-It's a simple and easy to use password generator and password manager that's open-source and made in Python 3 using Tkinter. Do not get too attached to the name as it will likely be changing before the final release. Program screenshots are available in main branch README.
+## What is RandPyPwMan
+It is a simple and easy to use password generator/manager that is open-source and made in Python 3 using Tkinter. It is cross-platform, and able to ran on most major Operating Systems. Program screenshots are available below, or you can view the screenshot folder in the repository.
 
 ## Screenshots
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot.png)
@@ -12,14 +12,71 @@ It's a simple and easy to use password generator and password manager that's ope
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/pwman3.PNG)
 
 ## How to use it?
-Make sure you have [Python 3.10](https://www.python.org/downloads/) or higher installed. You will also need to install [sqlite3](https://www.sqlite.org/download.html) for a database engine. [Make sure you've added sqlite3 to your system PATH (if Windows)](https://dev.to/dendihandian/installing-sqlite3-in-windows-44eb). Windows users can copy/download the repository and skip cloning the repository, or [install git](https://git-scm.com/download/win) and follow the instructions below.
+### Windows
+Make sure you have [Python 3.10](https://www.python.org/downloads/) or higher installed. You will also need to install [sqlite3](https://www.sqlite.org/download.html) for a database engine. [Make sure you've added sqlite3 to your system PATH](https://dev.to/dendihandian/installing-sqlite3-in-windows-44eb). Users can copy/download the repository and skip cloning the repository, or [install git](https://git-scm.com/download/win) and follow the instructions below.
 
-* Then clone the repository by using:
+* Then clone the repository by using (alternatively you can simply download the files):
 ```
 git clone https://github.com/HaydenHildreth/RandPyPwMan.git
 ```
 
-* Open your terminal and change direcotry to the correct folder:
+* Open your terminal and change directory to the correct folder:
+```
+cd <path-to-repo>\
+```
+
+* Install dependencies:
+```
+pip install -r requirements.txt
+```
+
+* Run install script:
+```
+python install.py
+```
+
+* Run main script:
+```
+python main.py
+```
+
+### MacOS (Finish/have Tyler do documentation/review. @TylerMichaelsen (https://github.com/TylerMichaelsen)
+* Ensure Python 3.10 or higher is installed
+
+* Clone the repository:
+```
+git clone https://github.com/HaydenHildreth/RandPyPwMan.git
+```
+
+* Open your terminal and change directory to the correct folder:
+```
+cd <path-to-repo>\
+```
+
+* Install dependencies:
+```
+brew install -r requirements.txt
+```
+
+* Run install script:
+```
+python install.py
+```
+
+* Run main script:
+```
+python main.py
+```
+
+### Linux
+* Ensure Python 3.10 or higher is installed
+
+* Clone the repository:
+```
+git clone https://github.com/HaydenHildreth/RandPyPwMan.git
+```
+
+* Open your terminal and change directory to the correct folder:
 ```
 cd <path-to-repo>\
 ```
