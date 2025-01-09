@@ -426,8 +426,8 @@ def set_tv_filter():
     pass
 
 
-def delete_hotkey(self):
-    deleteRecord()
+# def delete_hotkey(self):
+    # deleteRecord()
 
 
 def find_last_index():
@@ -497,7 +497,7 @@ copyBtn.config(height=3)
 
 
 # Hotkey to bind delete key to remove function
-window.bind("<Delete>", delete_hotkey)
+# window.bind("<Delete>", delete_hotkey)
 
 # MENU SECTION
 menubar = tk.Menu(window)
