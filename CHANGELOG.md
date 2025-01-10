@@ -15,6 +15,7 @@ No database changes.
 ### Fixed
 
 - [Issue #71](https://github.com/HaydenHildreth/RandPyPwMan/issues/71)
+- Documentation (specifically the README.md and installation instructions)
 
 ### Notes
 
