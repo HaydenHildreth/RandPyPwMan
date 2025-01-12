@@ -98,6 +98,7 @@ python main.py
 
 ## Major Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
+- In version 0.9.0 I've improved the documentation immensely, added files to help new contributors, and removed a few features temporarily. See CHANGELOG.md.
 - In version 0.8.5 I've made many changes, but there is new install and program usage logic. See CHANGELOG.md.
 - In version 0.8.0 I've removed the group field, change the insert and search functionality and more. See CHANGELOG.md.
 - In version 0.7.8 I've added the ability to use a hotkey to delete selected password(s). See commit logs or CHANGELOG.md for more info.

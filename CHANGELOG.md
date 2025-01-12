@@ -1,6 +1,26 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 01-10-2025
+  
+No database changes.
+
+### Added
+
+- The documentation has been improved tremendously, it is far more detailed and the installation process is much more seamless. I've also added other instructions for additional Operating Systems such as MacOS and Linux.
+- [CONTRIBUTORS.md](https://github.com/HaydenHildreth/RandPyPwMan/blob/CONTRIBUTING.md) (Users who have contributed to this project in one way or another)
+- [CONTRIBUTING.md](https://github.com/HaydenHildreth/RandPyPwMan/blob/CONTRIBUTORS.md) (If you'd like to contribute please read this before making a Pull Request)
+- Removed delete hotkey until further notice
+ 
+### Fixed
+
+- [Issue #71](https://github.com/HaydenHildreth/RandPyPwMan/issues/71)
+- Documentation (specifically the README.md and installation instructions)
+
+### Notes
+
+- Probably not going to add delete hotkey back until after v1.0.0.
+
 ## [0.8.6] - 04-15-2024
   
 No database changes.
