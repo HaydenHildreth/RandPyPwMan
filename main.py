@@ -546,7 +546,7 @@ filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="File", menu=filemenu)
 helpmenu = tk.Menu(menubar, tearoff=0)
-helpmenu.add_command(label="Help Index", command=open_help)
+helpmenu.add_command(label="Help index", command=open_help)
 menubar.add_cascade(label="Help", menu=helpmenu)
 
 
