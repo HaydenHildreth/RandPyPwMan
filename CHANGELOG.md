@@ -1,6 +1,23 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.9.1] - 01-12-2025
+  
+No database changes.
+
+### Added
+
+- Clear search button and function
+ 
+### Fixed
+
+- [Issue #77](https://github.com/HaydenHildreth/RandPyPwMan/issues/77)
+- Minor capitalization changes to some of file menu
+
+### Notes
+
+- None
+
 ## [0.9.0] - 01-10-2025
   
 No database changes.
