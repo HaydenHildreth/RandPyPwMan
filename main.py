@@ -57,7 +57,7 @@ splashscreen.mainloop()
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.9.0')
+window.title('RandPyPwGen v.0.9.1')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -300,7 +300,8 @@ def clear_button():
     pw_len = 0
     password = ''
     password_str = ''
-    print_pw.configure(text=f"Your password is {password}")  # Update password label
+    # Update password label
+    print_pw.configure(text=f"Your password is {password}") 
 
 
 def open_help():
@@ -399,6 +400,9 @@ def create_group():
 
 
 def search():
+    """
+    THIS FUNCTION ALLOWS SEARCHING OF PASSWORDS, USERNAME AND SITES FROM DATABASE
+    """
     global entry_search
     global c
     entry_search = input_search.get()
@@ -422,10 +426,6 @@ def search():
         count_search += 1
 
 
-def set_tv_filter():
-    pass
-
-
 # def delete_hotkey(self):
     # deleteRecord()
 
@@ -441,6 +441,39 @@ def find_last_index():
     return last
 
 
+def clear_search():
+    """
+    THIS FUNCTION CLEARS OUT THE SEARCH AND RESETS THE SEARCH INPUT BOX
+    """
+    # CLEAR OUT TREVIEW
+    global entry_search
+    global c
+    global input_search
+    entry_search = input_search.get()
+
+    c = conn.cursor()
+    c.execute("SELECT * FROM data")
+    search_records = c.fetchall()
+
+    # Clear treeview
+    tvData.delete(*tvData.get_children())
+
+    # Put search/filtered data to treeview
+    # It needs to decrypt because it is accessing db directly
+    count_search = 0
+    for j in search_records:
+        decrypted_search = f.decrypt(search_records[count_search][3])
+        decrypted_search = decrypted_search.decode('utf-8')
+        tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search))
+        count_search += 1
+
+    # CLEAR OUT INPUT BOX
+    input_search.delete(0, 'end')
+
+
+
+
+# PASSWORD GENERATION SECTION
 t = tk.Label(window, text="Please input desired password length:")
 t.grid(row=1, column=0, sticky=tk.E + tk.W)
 input_text = tk.Entry(window, textvariable=entry_len)
@@ -458,13 +491,19 @@ sendBtn.config(height=2)
 addBtn.config(height=2)
 clearBtn.config(height=2)
 
+
+# SEARCH SECTION
 lbl_search = Label(window, text="Search:")
 lbl_search.grid(row=4, column=0, sticky=tk.E)
 input_search = tk.Entry(window, textvariable=entry_search)
 input_search.grid(row=4, column=1, sticky=tk.E + tk.W)
 btn_search = tk.Button(window, text="Search", command=search)
 btn_search.grid(row=4, column=2, sticky=tk.E + tk.W)
+btn_clear_search = tk.Button(window, text="Clear", command=clear_search)
+btn_clear_search.grid(row=4, column=3, sticky=tk.E + tk.W)
 
+
+# TREEVIEW SECTION
 tvData = Treeview(window, columns=columns, show='headings')
 tvData.grid(row=5, column=0, columnspan=5, sticky='NSEW')
 window.grid_rowconfigure(5, weight=1)
@@ -499,20 +538,19 @@ copyBtn.config(height=3)
 # Hotkey to bind delete key to remove function
 # window.bind("<Delete>", delete_hotkey)
 
-# MENU SECTION
+# FILE MENU SECTION
 menubar = tk.Menu(window)
 filemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import", command=import_window)
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="File", menu=filemenu)
-
-
 helpmenu = tk.Menu(menubar, tearoff=0)
-helpmenu.add_command(label="Help Index", command=open_help)
+helpmenu.add_command(label="Help index", command=open_help)
 menubar.add_cascade(label="Help", menu=helpmenu)
 
 
+# UNENCRYPT PASSWORDS
 count = 0
 for i in records:
     decrypted = f.decrypt(records[count][3])
