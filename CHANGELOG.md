@@ -12,11 +12,11 @@ No database changes.
 ### Fixed
 
 - [Issue #77](https://github.com/HaydenHildreth/RandPyPwMan/issues/77)
-- Minor capitalization changes to some of file menu
+- Minor capitalization changes to some of file menu and a label
 
 ### Notes
 
-- None
+- I will work to improve the layout of buttons before v1.0.0. I would also like to include some scaling in that as well.
 
 ## [0.9.0] - 01-10-2025
   
