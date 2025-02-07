@@ -20,7 +20,7 @@ def unlock():
     global tb_ss
 
     master = tb_ss.get()
-    master = bytes(master, 'utf-8')
+    master = bytes(master_unlock, 'utf-8')
 
     ss_conn = sqlite3.connect('db/unlock.db')
     ss_c = ss_conn.cursor()
@@ -469,8 +469,45 @@ def clear_search():
 
     # CLEAR OUT INPUT BOX
     input_search.delete(0, 'end')
-
-
+    
+    
+def change_master_pw():
+    """
+    THIS FUNCTION WILL CHANGE THE MASTER PASSWORD OF THE DATABASE (PASSWORD TO UNLOCK DATABASE)
+    """
+    
+    def change_master():
+        """
+        I REALLY HATE NESTED FUNCTIONS BUT THIS IS THE ONLY
+        WAY I COULD FIGURE OUT HOW TO DO THIS
+        
+        THIS FUNCTION CHANGES THE PASSWORD AND UPDATES THE DBs
+        """
+        change_master_password = tb_master_password.get()
+        change_master_password = bytes(change_master_password, 'utf-8')
+        print("new pw ", change_master_password)
+        hash_master_new = bcrypt.hashpw(master_password_change, bcrypt.gensalt())
+        enc_key_change = Fernet.generate_key()
+        print("new pw ", hash_master_new, " enc key new ", enc_key_change)
+        c_master.execute("UPDATE master SET key = (?), enc_key = (?)", (hash_master_new, enc_key_change,))
+        conn_master.commit()
+        window_change_master.destroy()
+    
+    # CONNECTION TO UNLOCK DATABASE
+    conn_master = sqlite3.connect('./db/unlock.db')
+    c_master = conn_master.cursor()
+    
+    # MAKE GUI FOR THIS
+    window_change_master = tk.Tk()
+    window_change_master.title('RandPyPwMan setup')
+    master_password_change = b''
+    
+    lbl_password = tk.Label(window_change_master, text='Enter master password:')
+    tb_master_password = tk.Entry(window_change_master, textvariable=master_password_change)
+    lbl_password.grid(column=0, row=0)
+    tb_master_password.grid(column=1, row=0)
+    btn_create = tk.Button(window_change_master, text='Set master password', command=change_master)
+    btn_create.grid(column=0, row=1, columnspan=2)
 
 
 # PASSWORD GENERATION SECTION
@@ -542,6 +579,7 @@ copyBtn.config(height=3)
 menubar = tk.Menu(window)
 filemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import", command=import_window)
+filemenu.add_command(label="Change master password", command=change_master_pw)
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="File", menu=filemenu)
