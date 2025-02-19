@@ -493,7 +493,7 @@ def change_master_pw():
     c2.execute("SELECT * from master")
 
     window = tk.Tk()
-    window.title('RandPyPwMan setup')
+    window.title('RandPyPwMan password change')
     password = b''
 
     lbl_password = tk.Label(window, text='Enter master password:')
