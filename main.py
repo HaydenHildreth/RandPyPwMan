@@ -57,7 +57,7 @@ splashscreen.mainloop()
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.9.1')
+window.title('RandPyPwGen v.0.9.2')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -469,7 +469,42 @@ def clear_search():
 
     # CLEAR OUT INPUT BOX
     input_search.delete(0, 'end')
+    
+    
+def change_master_pw():
+    """
+    THIS FUNCTION WILL CHANGE THE MASTER PASSWORD OF THE DATABASE (PASSWORD TO UNLOCK DATABASE)
+    """
+    
+    def set_master():
+        global password
+        password = tb_password.get()
+        password = bytes(password, 'utf-8')
+        hash_master = bcrypt.hashpw(password, bcrypt.gensalt())
+        enc_key = Fernet.generate_key()
+        c2.execute("UPDATE master SET key = (?), enc_key = (?)", (hash_master, enc_key,))
+        conn2.commit()
+        window.destroy()
 
+
+    conn2 = sqlite3.connect('db/unlock.db')
+    c2 = conn2.cursor()
+
+    c2.execute("SELECT * from master")
+
+    window = tk.Tk()
+    window.title('RandPyPwMan password change')
+    password = b''
+
+    lbl_password = tk.Label(window, text='Enter master password:')
+    tb_password = tk.Entry(window, textvariable=password)
+    lbl_password.grid(column=0, row=0)
+    tb_password.grid(column=1, row=0)
+    btn_create = tk.Button(window, text='Set master password', command=set_master)
+    btn_create.grid(column=0, row=1, columnspan=2)
+
+
+    window.mainloop()
 
 
 
@@ -542,6 +577,7 @@ copyBtn.config(height=3)
 menubar = tk.Menu(window)
 filemenu = tk.Menu(menubar, tearoff=0)
 filemenu.add_command(label="Import", command=import_window)
+filemenu.add_command(label="Change master password", command=change_master_pw)
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="File", menu=filemenu)
