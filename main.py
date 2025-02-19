@@ -20,7 +20,7 @@ def unlock():
     global tb_ss
 
     master = tb_ss.get()
-    master = bytes(master_unlock, 'utf-8')
+    master = bytes(master, 'utf-8')
 
     ss_conn = sqlite3.connect('db/unlock.db')
     ss_c = ss_conn.cursor()
@@ -476,38 +476,36 @@ def change_master_pw():
     THIS FUNCTION WILL CHANGE THE MASTER PASSWORD OF THE DATABASE (PASSWORD TO UNLOCK DATABASE)
     """
     
-    def change_master():
-        """
-        I REALLY HATE NESTED FUNCTIONS BUT THIS IS THE ONLY
-        WAY I COULD FIGURE OUT HOW TO DO THIS
-        
-        THIS FUNCTION CHANGES THE PASSWORD AND UPDATES THE DBs
-        """
-        change_master_password = tb_master_password.get()
-        change_master_password = bytes(change_master_password, 'utf-8')
-        print("new pw ", change_master_password)
-        hash_master_new = bcrypt.hashpw(master_password_change, bcrypt.gensalt())
-        enc_key_change = Fernet.generate_key()
-        print("new pw ", hash_master_new, " enc key new ", enc_key_change)
-        c_master.execute("UPDATE master SET key = (?), enc_key = (?)", (hash_master_new, enc_key_change,))
-        conn_master.commit()
-        window_change_master.destroy()
-    
-    # CONNECTION TO UNLOCK DATABASE
-    conn_master = sqlite3.connect('./db/unlock.db')
-    c_master = conn_master.cursor()
-    
-    # MAKE GUI FOR THIS
-    window_change_master = tk.Tk()
-    window_change_master.title('RandPyPwMan setup')
-    master_password_change = b''
-    
-    lbl_password = tk.Label(window_change_master, text='Enter master password:')
-    tb_master_password = tk.Entry(window_change_master, textvariable=master_password_change)
+    def set_master():
+        global password
+        password = tb_password.get()
+        password = bytes(password, 'utf-8')
+        hash_master = bcrypt.hashpw(password, bcrypt.gensalt())
+        enc_key = Fernet.generate_key()
+        c2.execute("UPDATE master SET key = (?), enc_key = (?)", (hash_master, enc_key,))
+        conn2.commit()
+        window.destroy()
+
+
+    conn2 = sqlite3.connect('db/unlock.db')
+    c2 = conn2.cursor()
+
+    c2.execute("SELECT * from master")
+
+    window = tk.Tk()
+    window.title('RandPyPwMan setup')
+    password = b''
+
+    lbl_password = tk.Label(window, text='Enter master password:')
+    tb_password = tk.Entry(window, textvariable=password)
     lbl_password.grid(column=0, row=0)
-    tb_master_password.grid(column=1, row=0)
-    btn_create = tk.Button(window_change_master, text='Set master password', command=change_master)
+    tb_password.grid(column=1, row=0)
+    btn_create = tk.Button(window, text='Set master password', command=set_master)
     btn_create.grid(column=0, row=1, columnspan=2)
+
+
+    window.mainloop()
+
 
 
 # PASSWORD GENERATION SECTION
