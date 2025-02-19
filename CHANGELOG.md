@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.9.2] - 02-19-2025
+  
+No database changes.
+
+### Added
+
+- Ability to change master password
+ 
+### Fixed
+
+- [Issue #80](https://github.com/HaydenHildreth/RandPyPwMan/issues/80)
+
+### Notes
+
+- None
+
 ## [0.9.1] - 01-12-2025
   
 No database changes.
