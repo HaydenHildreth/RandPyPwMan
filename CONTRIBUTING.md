@@ -8,4 +8,4 @@ Feel free to open a pull request if you would like to help add features, or work
 Feel free to open PRs regarding any bugs you may find in the software, or any existing bugs/issues within the "Issues" tab of this repository.
 
 # New Features
-Feel free to open PRs regarding any new features you think would work well within the software, or any new feature that might be in the "Issues" tab of this repository. Not every feature can, or will be added. But there are many ideas that I believe would work well within this program.
+Feel free to open Issues/PRs regarding any new features you think would work well within the software, or any new feature that might be in the "Issues" tab of this repository. Not every feature can, or will be added. But there are many ideas that I believe would work well within this program.
