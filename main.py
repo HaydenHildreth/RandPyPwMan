@@ -57,7 +57,7 @@ splashscreen.mainloop()
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.0.9.2')
+window.title('RandPyPwGen v.0.9.3')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -68,6 +68,10 @@ columns = ('ID', 'Site name', 'Username', 'Password')
 site_name = ''
 username = ''
 password_str = ''
+
+# Global variable to track password visibility state
+passwords_visible = True
+stored_passwords = {}  # Dictionary to store actual passwords when hidden
 
 
 try:
@@ -156,7 +160,14 @@ def insert_info():
     pw_copy = bytes(password_str, 'utf-8')
     enc = f.encrypt(pw_copy)
 
-    tvData.insert(parent='', index='end', values=(index_insert, site_name, username, password_str))
+    # Add to treeview considering current visibility state
+    if passwords_visible:
+        tvData.insert(parent='', index='end', values=(index_insert, site_name, username, password_str))
+    else:
+        stored_passwords[index_insert] = password_str
+        masked_password = '*' * min(len(password_str), 12)
+        tvData.insert(parent='', index='end', values=(index_insert, site_name, username, masked_password))
+    
     c.execute("INSERT INTO data VALUES (?,?,?,?)", (index_insert, site_name, username, enc))
     conn.commit()
     new.destroy()
@@ -176,21 +187,32 @@ def copy():
     sel = tvData.selection()[0]
     item = tvData.item(sel)
     v = item['values']
-    val = v[3]
-    pyperclip.copy(val)
+    item_id = v[0]
+    
+    # Get the actual password (either from display or stored passwords)
+    if passwords_visible:
+        password_to_copy = v[3]
+    else:
+        password_to_copy = stored_passwords.get(item_id, v[3])
+    
+    pyperclip.copy(password_to_copy)
 
 
 def deleteRecord():
     try:
         sel = tvData.selection()
         selection_len = len(sel)
-        # sel_loop = sel
-        # v = tvData.item(sel)
         for j in range(selection_len):
             v = tvData.item(sel[j])
+            item_id = v['values'][0]
             tvData.delete(sel[j])
             d = v['values']
             iid = d[0]
+            
+            # Remove from stored passwords if present
+            if item_id in stored_passwords:
+                del stored_passwords[item_id]
+            
             c.execute("DELETE FROM data WHERE id = ?", (iid,))
         conn.commit()
     except IndexError:
@@ -206,11 +228,18 @@ def editRecord():
         cur = tvData.focus()
         v = tvData.item(cur)
         d = v['values']
+        item_id = d[0]
         sn = d[1]
         un = d[2]
-        pw = d[3]
+        
+        # Get actual password (either from display or stored passwords)
+        if passwords_visible:
+            pw = d[3]
+        else:
+            pw = stored_passwords.get(item_id, d[3])
+        
         new = tk.Toplevel(window)
-        new.title("Add new site...")
+        new.title("Edit record...")
         new.geometry("200x200")
         lblsn = Label(new, text="Site name:")
         lblsn.grid()
@@ -250,15 +279,24 @@ def update_info():
     item = tvData.item(sel)
     get_values = item['values']
     selected_index = get_values[0]
-    val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), ippw.get()))
+    
+    new_password = ippw.get()
+    
+    # Update treeview considering current visibility state
+    if passwords_visible:
+        val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), new_password))
+    else:
+        stored_passwords[selected_index] = new_password
+        masked_password = '*' * min(len(new_password), 12)
+        val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), masked_password))
 
-    pw_copy = bytes(ippw.get(), 'utf-8')
+    pw_copy = bytes(new_password, 'utf-8')
     enc = f.encrypt(pw_copy)
 
     values = []
     temp_sn = ipsn.get()
     temp_un = ipun.get()
-    temp_pw = ippw.get()
+    temp_pw = new_password
     values.append(temp_sn)
     values.append(temp_un)
     values.append(enc)
@@ -279,9 +317,16 @@ def cancel_edit():
     cur = tvData.focus()
     v = tvData.item(cur)
     d = v['values']
+    item_id = d[0]
     sn = d[1]
     un = d[2]
-    pw = d[3]
+    
+    # Get actual password (either from display or stored passwords)
+    if passwords_visible:
+        pw = d[3]
+    else:
+        pw = stored_passwords.get(item_id, d[3])
+    
     ipsn.delete(0, 'end')
     ipun.delete(0, 'end')
     ippw.delete(0, 'end')
@@ -342,7 +387,14 @@ def import_passwords():
                 pw_copy_insert = bytes(line[3], 'utf-8')
                 enc_insert = f.encrypt(pw_copy_insert)
 
-                tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  line[3]))
+                # Add to treeview considering current visibility state
+                if passwords_visible:
+                    tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  line[3]))
+                else:
+                    stored_passwords[last_index] = line[3]
+                    masked_password = '*' * min(len(line[3]), 12)
+                    tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  masked_password))
+                
                 c.execute("INSERT INTO data VALUES (?,?,?,?)", (last_index, line[0],  line[2],  enc_insert))
                 last_index += 1
                 conn.commit()
@@ -353,7 +405,14 @@ def import_passwords():
                 pw_copy_insert = bytes(line[2], 'utf-8')
                 enc_insert = f.encrypt(pw_copy_insert)
 
-                tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], line[2]))
+                # Add to treeview considering current visibility state
+                if passwords_visible:
+                    tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], line[2]))
+                else:
+                    stored_passwords[last_index] = line[2]
+                    masked_password = '*' * min(len(line[2]), 12)
+                    tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], masked_password))
+                
                 c.execute("INSERT INTO data VALUES (?,?,?,?)", (last_index, line[0], line[1], enc_insert))
                 last_index += 1
                 conn.commit()
@@ -368,28 +427,43 @@ def import_window():
     global entry_data_source
     global filename
     global new_import_window
+    global btn_import  # <-- make it global so browse_files() can access it
+    
     source_list = ["", "Chrome", "Firefox"]
     new_import_window = tk.Toplevel(window)
     source = tk.StringVar(new_import_window)
     new_import_window.title("Import passwords")
     new_import_window.geometry("200x200")
+    
     data_source = Label(new_import_window, text="Data source:")
     data_source.grid()
-    # source.set(source_list[0])
     source.set("Select an option")
+    
     entry_data_source = OptionMenu(new_import_window, source, *source_list)
     entry_data_source.grid()
+    
     file_btn = Button(new_import_window, text="Browse files", command=browse_files)
     file_btn.grid()
-    btn_import = Button(new_import_window, text="Import password", command=import_passwords)
+    
+    # Import button starts disabled
+    btn_import = Button(new_import_window, text="Import password", command=import_passwords, state="disabled")
     btn_import.grid()
+    
     btn_import_exit = Button(new_import_window, text="Exit", command=new_import_window.destroy)
     btn_import_exit.grid()
 
 
 def browse_files():
     global filename
-    filename = filedialog.askopenfilename(initialdir="/", title="Select a file", filetypes=(("CSV files", "*.csv"),))
+    filename = filedialog.askopenfilename(
+        initialdir="/",
+        title="Select a file",
+        filetypes=(("CSV files", "*.csv"),)
+    )
+    
+    # If user selected a file, enable the import button
+    if filename:
+        btn_import.config(state="normal")
 
 
 def create_group():
@@ -413,8 +487,9 @@ def search():
               "ORDER BY id",('%'+entry_search+'%','%'+entry_search+'%',))
     search_records = c.fetchall()
 
-    # Clear treeview
+    # Clear treeview and stored passwords
     tvData.delete(*tvData.get_children())
+    stored_passwords.clear()
 
     # Put search/filtered data to treeview
     # It needs to decrypt because it is accessing db directly
@@ -422,7 +497,15 @@ def search():
     for j in search_records:
         decrypted_search = f.decrypt(search_records[count_search][3])
         decrypted_search = decrypted_search.decode('utf-8')
-        tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search))
+        
+        if passwords_visible:
+            tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search))
+        else:
+            record_id = search_records[count_search][0]
+            stored_passwords[record_id] = decrypted_search
+            masked_password = '*' * min(len(decrypted_search), 12)
+            tvData.insert(parent='', index='end', values=(record_id, search_records[count_search][1], search_records[count_search][2], masked_password))
+        
         count_search += 1
 
 
@@ -445,28 +528,9 @@ def clear_search():
     """
     THIS FUNCTION CLEARS OUT THE SEARCH AND RESETS THE SEARCH INPUT BOX
     """
-    # CLEAR OUT TREVIEW
-    global entry_search
-    global c
-    global input_search
-    entry_search = input_search.get()
-
-    c = conn.cursor()
-    c.execute("SELECT * FROM data")
-    search_records = c.fetchall()
-
-    # Clear treeview
-    tvData.delete(*tvData.get_children())
-
-    # Put search/filtered data to treeview
-    # It needs to decrypt because it is accessing db directly
-    count_search = 0
-    for j in search_records:
-        decrypted_search = f.decrypt(search_records[count_search][3])
-        decrypted_search = decrypted_search.decode('utf-8')
-        tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search))
-        count_search += 1
-
+    # Use the refresh function to maintain visibility state
+    refresh_treeview_with_visibility()
+    
     # CLEAR OUT INPUT BOX
     input_search.delete(0, 'end')
     
@@ -477,34 +541,141 @@ def change_master_pw():
     """
     
     def set_master():
-        global password
-        password = tb_password.get()
-        password = bytes(password, 'utf-8')
-        hash_master = bcrypt.hashpw(password, bcrypt.gensalt())
-        enc_key = Fernet.generate_key()
-        c2.execute("UPDATE master SET key = (?), enc_key = (?)", (hash_master, enc_key,))
+        global password, f, key
+        new_password = tb_password.get()
+        new_password = bytes(new_password, 'utf-8')
+        hash_master = bcrypt.hashpw(new_password, bcrypt.gensalt())
+        
+        # Generate new encryption key
+        new_enc_key = Fernet.generate_key()
+        new_f = Fernet(new_enc_key)
+        
+        # Get all existing passwords and decrypt them with old key
+        c.execute("SELECT id, password FROM data")
+        all_passwords = c.fetchall()
+        
+        # Re-encrypt all passwords with new key
+        for record in all_passwords:
+            record_id = record[0]
+            old_encrypted_password = record[1]
+            
+            try:
+                # Decrypt with old key
+                decrypted_password = f.decrypt(old_encrypted_password)
+                
+                # Re-encrypt with new key
+                new_encrypted_password = new_f.encrypt(decrypted_password)
+                
+                # Update database with new encrypted password
+                c.execute("UPDATE data SET password = ? WHERE id = ?", (new_encrypted_password, record_id))
+            except Exception as e:
+                tkinter.messagebox.showerror(title="Error", message=f"Failed to re-encrypt password for record {record_id}: {str(e)}")
+                return
+        
+        # Update master password and encryption key
+        c2.execute("UPDATE master SET key = ?, enc_key = ?", (hash_master, new_enc_key))
+        conn.commit()
         conn2.commit()
-        window.destroy()
+        
+        # Update global encryption objects
+        key = new_enc_key
+        f = new_f
+        
+        tkinter.messagebox.showinfo(title="Success", message="Master password changed successfully!")
+        change_pw_window.destroy()
 
-
+    # Connect to unlock database
     conn2 = sqlite3.connect('db/unlock.db')
     c2 = conn2.cursor()
-
     c2.execute("SELECT * from master")
 
-    window = tk.Tk()
-    window.title('RandPyPwMan password change')
+    # Create password change window
+    change_pw_window = tk.Tk()
+    change_pw_window.title('RandPyPwMan password change')
+    change_pw_window.geometry('300x100')
     password = b''
 
-    lbl_password = tk.Label(window, text='Enter master password:')
-    tb_password = tk.Entry(window, textvariable=password)
-    lbl_password.grid(column=0, row=0)
-    tb_password.grid(column=1, row=0)
-    btn_create = tk.Button(window, text='Set master password', command=set_master)
-    btn_create.grid(column=0, row=1, columnspan=2)
+    lbl_password = tk.Label(change_pw_window, text='Enter new master password:')
+    tb_password = tk.Entry(change_pw_window, show='*')
+    lbl_password.grid(column=0, row=0, padx=10, pady=5)
+    tb_password.grid(column=1, row=0, padx=10, pady=5)
+    btn_create = tk.Button(change_pw_window, text='Change master password', command=set_master)
+    btn_create.grid(column=0, row=1, columnspan=2, padx=10, pady=10)
+    btn_cancel = tk.Button(change_pw_window, text='Cancel', command=change_pw_window.destroy)
+    btn_cancel.grid(column=0, row=2, columnspan=2, padx=10, pady=5)
+
+    change_pw_window.mainloop()
+    
+    
+def toggle_password_visibility():
+    """
+    Choose to show password, or hide them. This button will switch between the two states
+    """
+    global passwords_visible
+    global stored_passwords
+    
+    passwords_visible = not passwords_visible
+    
+    # Get all items in treeview
+    all_items = tvData.get_children()
+    
+    if passwords_visible:
+        # Show passwords
+        for item in all_items:
+            item_values = tvData.item(item)['values']
+            item_id = item_values[0]
+            if item_id in stored_passwords:
+                # Replace asterisks with actual password
+                tvData.item(item, values=(item_values[0], item_values[1], item_values[2], stored_passwords[item_id]))
+        
+        # Update button text
+        toggle_btn.config(text="Hide Passwords")
+        
+    else:
+        # Hide passwords with asterisks
+        stored_passwords.clear()  # Clear previous stored passwords
+        
+        for item in all_items:
+            item_values = tvData.item(item)['values']
+            item_id = item_values[0]
+            actual_password = str(item_values[3])  # Convert to string to ensure it's a string
+            
+            # Store actual password
+            stored_passwords[item_id] = actual_password
+            
+            # Replace password with asterisks
+            masked_password = '*' * min(len(actual_password), 12)  # Now len() will work
+            tvData.item(item, values=(item_values[0], item_values[1], item_values[2], masked_password))
 
 
-    window.mainloop()
+def refresh_treeview_with_visibility():
+    """
+    Helper function to refresh treeview while maintaining password visibility state
+    """
+    global passwords_visible
+    global stored_passwords
+    
+    # Clear treeview
+    tvData.delete(*tvData.get_children())
+    stored_passwords.clear()
+    
+    # Get all records from database
+    c.execute("SELECT * FROM data")
+    all_records = c.fetchall()
+    
+    # Add records to treeview
+    for record in all_records:
+        decrypted = f.decrypt(record[3])
+        decrypted = decrypted.decode('utf-8')
+        
+        if passwords_visible:
+            # Show actual password
+            tvData.insert(parent='', index='end', values=(record[0], record[1], record[2], decrypted))
+        else:
+            # Store actual password and show masked version
+            stored_passwords[record[0]] = decrypted
+            masked_password = '*' * min(len(decrypted), 12)
+            tvData.insert(parent='', index='end', values=(record[0], record[1], record[2], masked_password))
 
 
 
@@ -559,15 +730,20 @@ tvData.config(yscrollcommand=tvScrollbarRight.set)
 # tvScrollbarBottom.config(command=tvData.xview)
 tvScrollbarRight.grid(row=5, column=4, sticky='NSE')
 # tvScrollbarBottom.grid(row=5, column=0, sticky='N', columnspan=6)
+
+# BUTTONS SECTION WITH TOGGLE PASSWORD VISIBILITY
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
 deleteBtn.grid(row=6, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
 editBtn = tk.Button(window, text="Edit", command=editRecord)
 editBtn.grid(row=6, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 copyBtn = tk.Button(window, text="Copy", command=copy)
 copyBtn.grid(row=6, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
+toggle_btn = tk.Button(window, text="Hide Passwords", command=toggle_password_visibility)
+toggle_btn.grid(row=6, column=3, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
 deleteBtn.config(height=3)
 editBtn.config(height=3)
 copyBtn.config(height=3)
+toggle_btn.config(height=3)
 
 
 # Hotkey to bind delete key to remove function
@@ -586,7 +762,7 @@ helpmenu.add_command(label="Help index", command=open_help)
 menubar.add_cascade(label="Help", menu=helpmenu)
 
 
-# UNENCRYPT PASSWORDS
+# UNENCRYPT PASSWORDS AND POPULATE TREEVIEW
 count = 0
 for i in records:
     decrypted = f.decrypt(records[count][3])

@@ -98,6 +98,7 @@ python main.py
 
 ## Major Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
+- In version 0.9.3 I've added hiding of passwords, and have added logic to prevent errors from user error. Also, this build features a major bug fix. See CHANGELOG.md.
 - In version 0.9.2 I've added the ability for the user to update their master password via the file menu. See CHANGELOG.md.
 - In version 0.9.0 I've improved the documentation immensely, added files to help new contributors, and removed a few features temporarily. See CHANGELOG.md.
 - In version 0.8.5 I've made many changes, but there is new install and program usage logic. See CHANGELOG.md.
