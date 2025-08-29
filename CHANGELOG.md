@@ -1,6 +1,23 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.9.3] - 08-29-2025
+  
+No database changes.
+
+### Added
+
+- Ability hide passwords via button press. Instead of displaying passwords, it will now show *s if this is enabled. [Issue #86](https://github.com/HaydenHildreth/RandPyPwMan/issues/86)
+- Feature that prevents the clicking of the "Import Passwords" button prematurely. Now, the user will need to choose a file from the File Explorer before they're able to click that button. [Issue #87](https://github.com/HaydenHildreth/RandPyPwMan/issues/87)
+ 
+### Fixed
+
+- Issue with updating master password, that caused the database to not be able to decrypt passwords. [Issue #84](https://github.com/HaydenHildreth/RandPyPwMan/issues/84)
+
+### Notes
+
+- Next version is likely to be v1.0.0
+
 ## [0.9.2] - 02-19-2025
   
 No database changes.
