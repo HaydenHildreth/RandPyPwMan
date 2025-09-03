@@ -14,7 +14,7 @@ No database changes. Welcome to initial release of RandPyPwMan!
 ### Fixed
 
 - Minor error handling logic updates, as well as new logic that wasn't present before. [Issue #49](https://github.com/HaydenHildreth/RandPyPwMan/issues/49)
-- README.md images. [Issue #73](https://github.com/HaydenHildreth/RandPyPwMan/issues/73)
+- README.md images being severely out-of-date. [Issue #73](https://github.com/HaydenHildreth/RandPyPwMan/issues/73)
 - README.md documentation. [Issue #11](https://github.com/HaydenHildreth/RandPyPwMan/issues/11)
 
 ### Notes
