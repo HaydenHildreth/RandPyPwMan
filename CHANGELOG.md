@@ -1,6 +1,26 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 09-03-2025
+  
+No database changes. Welcome to initial release of RandPyPwMan!
+
+### Added
+
+- Error handling in almost all possible cases. [Issue #49](https://github.com/HaydenHildreth/RandPyPwMan/issues/49)
+- Updated images so user can see what program truly looks like in newest release build. [Issue #73](https://github.com/HaydenHildreth/RandPyPwMan/issues/73)
+- Updated README.md to be completely up-to-date for release build. [Issue #11](https://github.com/HaydenHildreth/RandPyPwMan/issues/11)
+ 
+### Fixed
+
+- Minor error handling logic updates, as well as new logic that wasn't present before. [Issue #49](https://github.com/HaydenHildreth/RandPyPwMan/issues/49)
+- README.md images. [Issue #73](https://github.com/HaydenHildreth/RandPyPwMan/issues/73)
+- README.md documentation. [Issue #11](https://github.com/HaydenHildreth/RandPyPwMan/issues/11)
+
+### Notes
+
+- Thank you to all users and my friends! There have been many people who have supported the project, helped test, and give feedback. Without you this would not be possible.
+
 ## [0.9.3] - 08-29-2025
   
 No database changes.
