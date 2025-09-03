@@ -11,10 +11,11 @@ from tkinter import filedialog
 import csv
 import bcrypt
 import os
+import sys
 from tkinter import messagebox
 
 
-# SPLASHSCREEN
+# SPLASHSCREEN + PATH validation
 def unlock():
     global master
     global tb_ss
@@ -22,17 +23,161 @@ def unlock():
     master = tb_ss.get()
     master = bytes(master, 'utf-8')
 
-    ss_conn = sqlite3.connect('db/unlock.db')
-    ss_c = ss_conn.cursor()
+    try:
+        # Check if database folder exists
+        if not os.path.exists('db/'):
+            tk.messagebox.showerror(
+                title="Database folder not found", 
+                message="Database folder not found. Please run install.py before executing the program."
+            )
+            exit()
+        
+        # Check if unlock database file exists
+        if not os.path.exists('db/unlock.db'):
+            tk.messagebox.showerror(
+                title="Encryption key not found", 
+                message="Encryption key not found. Please run install.py before executing the program."
+            )
+            exit()
 
-    ss_c.execute("SELECT * FROM master")
-    fetch = ss_c.fetchone()
-    ss_key = fetch[0]
+        ss_conn = sqlite3.connect('db/unlock.db')
+        ss_c = ss_conn.cursor()
+        
+        # Check if master table exists
+        ss_c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='master'")
+        if not ss_c.fetchone():
+            # Unable to retrieve data
+            tk.messagebox.showerror(
+                title="Database not initialized", 
+                message="Unable to retrieve data. Please run install.py to set up the database properly."
+            )
+            exit()
 
-    if bcrypt.checkpw(master, ss_key):
-        splashscreen.destroy()
+        ss_c.execute("SELECT * FROM master")
+        fetch = ss_c.fetchone()
+        
+        if not fetch:
+            tk.messagebox.showerror(
+                title="No master password found", 
+                message="No master password configured. Please run install.py to set up the database properly."
+            )
+            exit()
+            
+        ss_key = fetch[0]
+
+        if bcrypt.checkpw(master, ss_key):
+            splashscreen.destroy()
+        else:
+            # Wrong password
+            tk.messagebox.showerror(title="Incorrect password...", message="Incorrect master key.")
+            
+    except sqlite3.OperationalError as e:
+        tk.messagebox.showerror(
+            title="Database Error", 
+            message=f"Unable to access unlock database. Please run install.py.\n\nError: {str(e)}"
+        )
+        exit()
+    except Exception as e:
+        tk.messagebox.showerror(
+            title="Unexpected Error", 
+            message=f"An unexpected error occurred during unlock.\n\nError: {str(e)}"
+        )
+        exit()
+
+# Check if database folder and database files exist
+def check_database_setup():
+    if not os.path.exists('./db/'):
+        tkinter.messagebox.showerror(
+            title="Database folder not found", 
+            message="Database folder not found. Please run install.py before executing the program."
+        )
+        sys.exit(1)
+    
+    if not os.path.exists('./db/data.db'):
+        tkinter.messagebox.showerror(
+            title="Data file not found", 
+            message="Data file not found. Data not configured correctly or corrupted. Please run install.py again to set up the program."
+        )
+        sys.exit(1)
+    
+    if not os.path.exists('./db/unlock.db'):
+        tkinter.messagebox.showerror(
+            title="Encryption key not found", 
+            message="Encryption key not found. Please run install.py before executing the program."
+        )
+        sys.exit(1)
+
+# Check database setup first
+check_database_setup()
+
+try:
+    conn = sqlite3.connect('./db/data.db')
+    c = conn.cursor()
+    # Check if the data table exists
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='data'")
+    if not c.fetchone():
+        raise sqlite3.OperationalError("Table 'data' does not exist")
+    
+    c.execute("SELECT * FROM data")
+    records = c.fetchall()
+except sqlite3.OperationalError as e:
+    if "no such table" in str(e).lower() or "does not exist" in str(e).lower():
+        tkinter.messagebox.showerror(
+            title="Database not properly initialized", 
+            message="Database tables not found. Please run install.py to set up the database properly."
+        )
     else:
-        tk.messagebox.showerror(title="Incorrect password...", message="Incorrect master key.")
+        tkinter.messagebox.showerror(
+            title="Database error", 
+            message=f"Database error occurred: {str(e)}"
+        )
+    sys.exit(1)
+except Exception as e:
+    tkinter.messagebox.showerror(
+        title="Unexpected error", 
+        message=f"An unexpected error occurred: {str(e)}"
+    )
+    sys.exit(1)
+
+
+try:
+    conn2 = sqlite3.connect('./db/unlock.db')
+    c2 = conn2.cursor()
+    # Check if the master table exists
+    c2.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='master'")
+    if not c2.fetchone():
+        raise sqlite3.OperationalError("Table 'master' does not exist")
+    
+    c2.execute("SELECT enc_key FROM master")
+    records2 = c2.fetchall()
+    conv = records2[0]
+    conv2 = conv[0]
+    key = conv2
+    f = Fernet(key)
+except sqlite3.OperationalError as e:
+    if "no such table" in str(e).lower() or "does not exist" in str(e).lower():
+        tkinter.messagebox.showerror(
+            title="Encryption key database not initialized", 
+            message="Master password database not found. Please run install.py to set up the database properly."
+        )
+    else:
+        tkinter.messagebox.showerror(
+            title="Encryption key error", 
+            message="Encryption key not found. Please run install.py again."
+        )
+    sys.exit(1)
+except IndexError:
+    tkinter.messagebox.showerror(
+        title="Encryption key error", 
+        message="No encryption key found in database. Please run install.py again."
+    )
+    sys.exit(1)
+except Exception as e:
+    tkinter.messagebox.showerror(
+        title="Unexpected error", 
+        message=f"An unexpected error occurred while setting up encryption: {str(e)}"
+    )
+    sys.exit(1)
 
 
 # Prevent user from prematurelaty exiting splashscreen
@@ -69,36 +214,10 @@ site_name = ''
 username = ''
 password_str = ''
 
+
 # Global variable to track password visibility state
 passwords_visible = True
-stored_passwords = {}  # Dictionary to store actual passwords when hidden
-
-
-try:
-    conn = sqlite3.connect('./db/data.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM data")
-    records = c.fetchall()
-except sqlite3.OperationalError:
-    # THIS ERROR COULD BE MADE BETTER, IS SQL LITE INSTALLED, OR IS INSTALL.PY NOT RAN? MAKE MORE INFORMATIONAL
-    # I.E. DATABASE FOLDER NOT FOUND, PLEASE RUN INSTALL.PY BEFORE EXECUTING PROGRAM
-    # OR SQLITE3 NOT FOUND, PLEASE SEE DOCUMENTATION AND INSTALL BEFORE USING PROGRAM
-    tkinter.messagebox.showerror(title="SQLite not installed", message="Please install SQLite before use.")
-    exit()
-
-
-try:
-    conn2 = sqlite3.connect('./db/unlock.db')
-    c2 = conn2.cursor()
-    c2.execute("SELECT enc_key FROM master")
-    records2 = c2.fetchall()
-    conv = records2[0]
-    conv2 = conv[0]
-    key = conv2
-    f = Fernet(key)
-except sqlite3.OperationalError:
-    tkinter.messagebox.showerror(title="Encryption key not found", message="Please run install.py again.")
-    exit()
+stored_passwords = {}  # Dictionary to store passwords while hidden
 
 
 def click():
@@ -189,7 +308,7 @@ def copy():
     v = item['values']
     item_id = v[0]
     
-    # Get the actual password (either from display or stored passwords)
+    # Get the actual password
     if passwords_visible:
         password_to_copy = v[3]
     else:
@@ -232,7 +351,7 @@ def editRecord():
         sn = d[1]
         un = d[2]
         
-        # Get actual password (either from display or stored passwords)
+        # Get actual password
         if passwords_visible:
             pw = d[3]
         else:
@@ -282,7 +401,7 @@ def update_info():
     
     new_password = ippw.get()
     
-    # Update treeview considering current visibility state
+    # Update treeview considering current visibility setting
     if passwords_visible:
         val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), new_password))
     else:
@@ -321,7 +440,7 @@ def cancel_edit():
     sn = d[1]
     un = d[2]
     
-    # Get actual password (either from display or stored passwords)
+    # Get actual password
     if passwords_visible:
         pw = d[3]
     else:
@@ -387,7 +506,7 @@ def import_passwords():
                 pw_copy_insert = bytes(line[3], 'utf-8')
                 enc_insert = f.encrypt(pw_copy_insert)
 
-                # Add to treeview considering current visibility state
+                # Add to treeview considering current visibility setting
                 if passwords_visible:
                     tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  line[3]))
                 else:
@@ -405,7 +524,7 @@ def import_passwords():
                 pw_copy_insert = bytes(line[2], 'utf-8')
                 enc_insert = f.encrypt(pw_copy_insert)
 
-                # Add to treeview considering current visibility state
+                # Add to treeview considering current visibility setting
                 if passwords_visible:
                     tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], line[2]))
                 else:
@@ -466,13 +585,6 @@ def browse_files():
         btn_import.config(state="normal")
 
 
-def create_group():
-    """
-    This function will create a group, which you could then assign to a password
-    """
-    pass
-
-
 def search():
     """
     THIS FUNCTION ALLOWS SEARCHING OF PASSWORDS, USERNAME AND SITES FROM DATABASE
@@ -509,11 +621,17 @@ def search():
         count_search += 1
 
 
+# Do I still want this feature?
 # def delete_hotkey(self):
     # deleteRecord()
 
 
 def find_last_index():
+    """
+    THIS FUNCTION FINDS THE LAST INDEX. IT IS USEFUL FOR DETERMINING 
+    HOW MANY PASSWORDS ARE IN DB UPON STARTUP, AS WELL AS KEEPING
+    TRACK OF HOW MANY PASSWORDS ARE STORED FOR INDEXING PURPOSES
+    """
     last = c.execute("SELECT id FROM data ORDER BY id DESC LIMIT 1")
     last = c.fetchone()
     if last == None:
@@ -528,7 +646,7 @@ def clear_search():
     """
     THIS FUNCTION CLEARS OUT THE SEARCH AND RESETS THE SEARCH INPUT BOX
     """
-    # Use the refresh function to maintain visibility state
+    # Use the refresh function to maintain visibility setting
     refresh_treeview_with_visibility()
     
     # CLEAR OUT INPUT BOX
@@ -609,7 +727,7 @@ def change_master_pw():
     
 def toggle_password_visibility():
     """
-    Choose to show password, or hide them. This button will switch between the two states
+    THIS FUNCTION CHANGES THE VISIBILITY SETTING. THIS WILL TOGGLE BETWEEN THE TWO SETTINGS
     """
     global passwords_visible
     global stored_passwords
@@ -650,7 +768,8 @@ def toggle_password_visibility():
 
 def refresh_treeview_with_visibility():
     """
-    Helper function to refresh treeview while maintaining password visibility state
+    THIS FUNCTION FACILITATES THE UPDATING/REFRESHING OF THE TREEVIEW WHEN USER
+    TOGGLES THE VISIBILITY STATE
     """
     global passwords_visible
     global stored_passwords
@@ -676,7 +795,6 @@ def refresh_treeview_with_visibility():
             stored_passwords[record[0]] = decrypted
             masked_password = '*' * min(len(decrypted), 12)
             tvData.insert(parent='', index='end', values=(record[0], record[1], record[2], masked_password))
-
 
 
 # PASSWORD GENERATION SECTION
@@ -726,10 +844,12 @@ tvData.heading('ID', text='ID')
 tvScrollbarRight = Scrollbar()
 tvScrollbarRight.config(command=tvData.yview)
 tvData.config(yscrollcommand=tvScrollbarRight.set)
+# NO IDEA WHY I CANNOT GET THIS TO WORK, BUT IT FITS OK IN CURRENT VIEW AS LONG AS ADDITIONAL COLUMNS AREN'T ADDED
 # tvScrollbarBottom = Scrollbar(tvData, orient='horizontal')      # orient='horizontal'
 # tvScrollbarBottom.config(command=tvData.xview)
 tvScrollbarRight.grid(row=5, column=4, sticky='NSE')
 # tvScrollbarBottom.grid(row=5, column=0, sticky='N', columnspan=6)
+
 
 # BUTTONS SECTION WITH TOGGLE PASSWORD VISIBILITY
 deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
@@ -748,6 +868,7 @@ toggle_btn.config(height=3)
 
 # Hotkey to bind delete key to remove function
 # window.bind("<Delete>", delete_hotkey)
+
 
 # FILE MENU SECTION
 menubar = tk.Menu(window)
