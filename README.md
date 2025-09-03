@@ -4,11 +4,13 @@
 It is a simple and easy to use password generator/manager that is open-source and made in Python 3 using Tkinter. It is cross-platform, and able to ran on most major Operating Systems. Program screenshots are available below, or you can view the screenshot folder in the repository.
 
 ## Screenshots
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot6.png)
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot1.png)
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot2.png)
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot3.png)
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot4.png)
 ![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot5.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot7.png)
 
 ## How to use it?
 ### Windows
