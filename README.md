@@ -4,13 +4,13 @@
 It is a simple and easy to use password generator/manager that is open-source and made in Python 3 using Tkinter. It is cross-platform, and able to ran on most major Operating Systems. Program screenshots are available below, or you can view the screenshot folder in the repository.
 
 ## Screenshots
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot6.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot1.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot2.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot3.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot4.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot5.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/dev/screenshots/screenshot7.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot6.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot1.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot2.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot3.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot4.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot5.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot7.png)
 
 ## How to use it?
 ### Windows
@@ -41,7 +41,7 @@ python install.py
 python main.py
 ```
 
-### MacOS (Finish/have Tyler do documentation/review. @TylerMichaelsen (https://github.com/TylerMichaelsen)
+### MacOS
 * Ensure Python 3.10 or higher is installed
 
 * Clone the repository:
@@ -99,6 +99,7 @@ python main.py
 
 ## Major Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
+- In version 1.0.0 I've added much more additional error checking. The program has better capacity to handle misuse from input user. See CHANGELOG.md.
 - In version 0.9.3 I've added hiding of passwords, and have added logic to prevent errors from user error. Also, this build features a major bug fix. See CHANGELOG.md.
 - In version 0.9.2 I've added the ability for the user to update their master password via the file menu. See CHANGELOG.md.
 - In version 0.9.0 I've improved the documentation immensely, added files to help new contributors, and removed a few features temporarily. See CHANGELOG.md.
