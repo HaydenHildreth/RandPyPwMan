@@ -202,7 +202,7 @@ splashscreen.mainloop()
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.1.0.0')
+window.title('RandPyPwGen v.1.0.1')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -621,11 +621,6 @@ def search():
         count_search += 1
 
 
-# Do I still want this feature?
-# def delete_hotkey(self):
-    # deleteRecord()
-
-
 def find_last_index():
     """
     THIS FUNCTION FINDS THE LAST INDEX. IT IS USEFUL FOR DETERMINING 
@@ -795,6 +790,68 @@ def refresh_treeview_with_visibility():
             stored_passwords[record[0]] = decrypted
             masked_password = '*' * min(len(decrypted), 12)
             tvData.insert(parent='', index='end', values=(record[0], record[1], record[2], masked_password))
+    
+    
+def delete_hotkey(event):
+    """
+    THIS FUNCTION FACILITATES DELETING OF RECORDS VIA THE HOTKEY OF
+    DELETE ON USER'S KEYBOARD. ONLY FUNCTIONS WHEN THE TREEVIEW
+    IS IN FOCUS.
+    """
+    
+    # Check if the treeview has focus and there's a selection
+    if window.focus_get() == tvData and tvData.selection():
+        try:
+            sel = tvData.selection()
+            if not sel:
+                return
+            
+            # Get the selected item details for confirmation message
+            first_item = tvData.item(sel[0])
+            site_name = first_item['values'][1]
+            
+            # Create confirmation message
+            if len(sel) == 1:
+                message = f"Are you sure you want to delete the password for '{site_name}'?"
+                title = "Confirm Delete"
+            else:
+                message = f"Are you sure you want to delete {len(sel)} selected password records?"
+                title = "Confirm Delete Multiple"
+            
+            # Show confirmation dialog
+            result = tkinter.messagebox.askyesno(
+                title=title,
+                message=message,
+                icon='warning'
+            )
+            
+            if result:  # Clicked Yes
+                # Delete records
+                for item in sel:
+                    v = tvData.item(item)
+                    item_id = v['values'][0]
+                    tvData.delete(item)
+                    
+                    # Remove from stored passwords if present
+                    if item_id in stored_passwords:
+                        del stored_passwords[item_id]
+                    
+                    # Remove from database
+                    c.execute("DELETE FROM data WHERE id = ?", (item_id,))
+                
+                conn.commit()
+                
+                # Show success message
+                if len(sel) == 1:
+                    tkinter.messagebox.showinfo("Deleted", f"Password for '{site_name}' has been deleted.")
+                else:
+                    tkinter.messagebox.showinfo("Deleted", f"{len(sel)} password records have been deleted.")
+                    
+        except Exception as e:
+            tkinter.messagebox.showerror(
+                title="Error", 
+                message=f"An error occurred while deleting the record(s): {str(e)}"
+            )
 
 
 # PASSWORD GENERATION SECTION
@@ -866,8 +923,8 @@ copyBtn.config(height=3)
 toggle_btn.config(height=3)
 
 
-# Hotkey to bind delete key to remove function
-# window.bind("<Delete>", delete_hotkey)
+# Bind Delete key hotkey to the window - only when on Treeview
+window.bind("<Delete>", delete_hotkey)
 
 
 # FILE MENU SECTION
