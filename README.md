@@ -99,7 +99,7 @@ python main.py
 
 ## Major Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
-- IN version 1.0.1 I've added a hotkey to delete passwords from the software. I've also made minor verbiage changes to several window titles. See CHANGELOG.md.
+- In version 1.0.1 I've added a hotkey to delete passwords from the software. I've also made minor verbiage changes to several window titles. See CHANGELOG.md.
 - In version 1.0.0 I've added much more additional error checking. The program has better capacity to handle misuse from input user. See CHANGELOG.md.
 - In version 0.9.3 I've added hiding of passwords, and have added logic to prevent errors from user error. Also, this build features a major bug fix. See CHANGELOG.md.
 - In version 0.9.2 I've added the ability for the user to update their master password via the file menu. See CHANGELOG.md.
