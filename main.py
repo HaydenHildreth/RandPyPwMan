@@ -704,7 +704,7 @@ def change_master_pw():
 
     # Create password change window
     change_pw_window = tk.Tk()
-    change_pw_window.title('RandPyPwMan password change')
+    change_pw_window.title('Change password')
     change_pw_window.geometry('300x100')
     password = b''
 
@@ -813,10 +813,10 @@ def delete_hotkey(event):
             # Create confirmation message
             if len(sel) == 1:
                 message = f"Are you sure you want to delete the password for '{site_name}'?"
-                title = "Confirm Delete"
+                title = "Confirm deletion"
             else:
                 message = f"Are you sure you want to delete {len(sel)} selected password records?"
-                title = "Confirm Delete Multiple"
+                title = "Confirm deletion of multiple"
             
             # Show confirmation dialog
             result = tkinter.messagebox.askyesno(
