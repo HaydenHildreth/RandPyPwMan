@@ -1,6 +1,26 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 09-11-2025
+  
+No database changes.
+
+### Added
+
+Added delete_hotkey function. Added keyboard binding. Updated verbiage.
+
+- Delete_hotkey function. This function handles the logic and can work with a singular, or multiple passwords at a given time. Function only works if the Treeview is in focus. [Issue #76](https://github.com/HaydenHildreth/RandPyPwMan/issues/76)
+- Keyboard binding for DELETE key. [Issue #76](https://github.com/HaydenHildreth/RandPyPwMan/issues/76)
+- Updated the verbiage of several times titles of windows throughout the program.
+ 
+### Fixed
+
+- Verbiage of window titles throughout program.
+
+### Notes
+
+- I will likely add more keybinds in the future, but this was still useful as a feature, and to learn more.
+
 ## [1.0.0] - 09-03-2025
   
 No database changes. Welcome to initial release of RandPyPwMan!
