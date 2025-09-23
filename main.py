@@ -1,956 +1,1099 @@
-import string
-import secrets
-import tkinter.messagebox
-import pyperclip
-import sqlite3
-import tkinter as tk
-import webbrowser
-from cryptography.fernet import Fernet
-from tkinter.ttk import *
-from tkinter import filedialog
-import csv
-import bcrypt
+#!/usr/bin/env python3
+"""
+RandPyPwGen version 1.99.1
+Modular, secure, easy to use password manager
+Written by Hayden Hildreth
+"""
+
 import os
 import sys
-from tkinter import messagebox
+import csv
+import string
+import secrets
+import sqlite3
+import webbrowser
+from pathlib import Path
+from typing import Optional, List, Tuple, Dict, Any
+import bcrypt
+import pyperclip
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog
+from cryptography.fernet import Fernet
 
 
-# SPLASHSCREEN + PATH validation
-def unlock():
-    global master
-    global tb_ss
-
-    master = tb_ss.get()
-    master = bytes(master, 'utf-8')
-
-    try:
-        # Check if database folder exists
-        if not os.path.exists('db/'):
-            tk.messagebox.showerror(
-                title="Database folder not found", 
-                message="Database folder not found. Please run install.py before executing the program."
-            )
-            exit()
+class DatabaseManager:
+    """Handles all database operations and encryption"""
+    
+    def __init__(self, db_path: str = "./db"):
+        self.db_path = Path(db_path)
+        self.data_db = self.db_path / "data.db"
+        self.unlock_db = self.db_path / "unlock.db"
+        self.fernet: Optional[Fernet] = None
+        self._ensure_db_setup()
+    
+    def _ensure_db_setup(self):
+        """Ensure database directory and files exist"""
+        if not self.db_path.exists() or not self.data_db.exists() or not self.unlock_db.exists():
+            if not self._setup_databases():
+                sys.exit(1)
         
-        # Check if unlock database file exists
-        if not os.path.exists('db/unlock.db'):
-            tk.messagebox.showerror(
-                title="Encryption key not found", 
-                message="Encryption key not found. Please run install.py before executing the program."
-            )
-            exit()
-
-        ss_conn = sqlite3.connect('db/unlock.db')
-        ss_c = ss_conn.cursor()
-        
-        # Check if master table exists
-        ss_c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='master'")
-        if not ss_c.fetchone():
-            # Unable to retrieve data
-            tk.messagebox.showerror(
-                title="Database not initialized", 
-                message="Unable to retrieve data. Please run install.py to set up the database properly."
-            )
-            exit()
-
-        ss_c.execute("SELECT * FROM master")
-        fetch = ss_c.fetchone()
-        
-        if not fetch:
-            tk.messagebox.showerror(
-                title="No master password found", 
-                message="No master password configured. Please run install.py to set up the database properly."
-            )
-            exit()
+        # Load encryption key
+        self._load_encryption_key()
+    
+    def _setup_databases(self) -> bool:
+        """Setup databases if they don't exist"""
+        try:
+            # Create directory
+            self.db_path.mkdir(exist_ok=True)
             
-        ss_key = fetch[0]
+            # Setup data database
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            c.execute("""CREATE TABLE IF NOT EXISTS data(
+                id INTEGER PRIMARY KEY,
+                site varchar(100) NOT NULL,
+                username varchar(100) NOT NULL,
+                password varchar(100) NOT NULL
+            )""")
+            conn.commit()
+            conn.close()
+            
+            # Setup unlock database
+            conn2 = sqlite3.connect(self.unlock_db)
+            c2 = conn2.cursor()
+            c2.execute("""CREATE TABLE IF NOT EXISTS master(
+                key varchar(255),
+                enc_key varchar(255)
+            )""")
+            conn2.commit()
+            conn2.close()
+            
+            # Check if master password exists
+            if not self._has_master_password():
+                return self._setup_master_password()
+            
+            return True
+            
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to setup databases: {str(e)}")
+            return False
+    
+    def _has_master_password(self) -> bool:
+        """Check if master password is configured"""
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("SELECT * FROM master")
+            result = c.fetchone()
+            conn.close()
+            return result is not None
+        except:
+            return False
+    
+    def _setup_master_password(self) -> bool:
+        """Setup initial master password"""
+        class MasterPasswordSetup:
+            def __init__(self, db_manager):
+                self.db_manager = db_manager
+                self.success = False
+                self.password_entry = None
+                self.window = tk.Tk()
+                self.window.title('RandPyPwGen Setup')
+                self.window.geometry('400x200')
+                self.window.resizable(False, False)
+                
+                # Center window
+                self.window.update_idletasks()
+                x = (self.window.winfo_screenwidth() // 2) - (400 // 2)
+                y = (self.window.winfo_screenheight() // 2) - (200 // 2)
+                self.window.geometry(f'400x200+{x}+{y}')
+                
+                self._create_widgets()
+                self.window.protocol("WM_DELETE_WINDOW", self._on_close)
+            
+            def _create_widgets(self):
+                # Use regular tk widgets instead of ttk to rule out ttk issues
+                main_frame = tk.Frame(self.window, padx=20, pady=20)
+                main_frame.pack(fill=tk.BOTH, expand=True)
+                
+                title_label = tk.Label(main_frame, text="Welcome to RandPyPwGen Setup", 
+                                     font=("Arial", 12, "bold"))
+                title_label.pack(pady=(0, 20))
+                
+                instruction_label = tk.Label(main_frame, text="Enter master password:")
+                instruction_label.pack(pady=(0, 10))
+                
+                # Use regular Entry widget
+                self.password_entry = tk.Entry(main_frame, show='*', width=30, font=("Arial", 10))
+                self.password_entry.pack(pady=(0, 20))
+                self.password_entry.focus_set()
+                
+                # Button frame
+                button_frame = tk.Frame(main_frame)
+                button_frame.pack()
+                
+                setup_btn = tk.Button(button_frame, text="Setup", command=self._setup_password,
+                                    font=("Arial", 10), padx=20)
+                setup_btn.pack(side=tk.LEFT, padx=(0, 10))
+                
+                exit_btn = tk.Button(button_frame, text="Exit", command=self._on_close,
+                                   font=("Arial", 10), padx=20)
+                exit_btn.pack(side=tk.LEFT)
+                
+                # Bind Enter key
+                self.window.bind('<Return>', lambda e: self._setup_password())
+                self.password_entry.bind('<Return>', lambda e: self._setup_password())
+            
+            def _setup_password(self):
+                # Debug information
+                print("Setup password called")
+                if self.password_entry is None:
+                    print("ERROR: password_entry is None!")
+                    messagebox.showerror("Error", "Internal error: password entry not found")
+                    return
+                
+                try:
+                    password = self.password_entry.get()
+                    print(f"Raw password: '{password}' (length: {len(password)})")
+                    
+                    # Don't strip yet, check what we actually get
+                    if not password:
+                        print("Password is empty or None")
+                        messagebox.showerror("Error", "Password cannot be empty!")
+                        self.password_entry.focus_set()
+                        return
+                    
+                    password = password.strip()
+                    print(f"Stripped password: '{password}' (length: {len(password)})")
+                    
+                    if not password:
+                        print("Password is empty after stripping")
+                        messagebox.showerror("Error", "Password cannot be empty!")
+                        self.password_entry.focus_set()
+                        return
+                    
+                    if len(password) < 4:
+                        print(f"Password too short: {len(password)} characters")
+                        messagebox.showerror("Error", "Password must be at least 4 characters long!")
+                        self.password_entry.focus_set()
+                        return
+                    
+                    print("Password validation passed, attempting to save...")
+                    
+                    password_bytes = password.encode('utf-8')
+                    hash_master = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+                    enc_key = Fernet.generate_key()
+                    
+                    conn = sqlite3.connect(self.db_manager.unlock_db)
+                    c = conn.cursor()
+                    c.execute("INSERT INTO master VALUES (?,?)", (hash_master, enc_key))
+                    conn.commit()
+                    conn.close()
+                    
+                    print("Password saved successfully!")
+                    messagebox.showinfo("Success", "Master password set successfully!")
+                    self.success = True
+                    self.window.destroy()
+                    
+                except Exception as e:
+                    print(f"Exception in _setup_password: {e}")
+                    messagebox.showerror("Error", f"Failed to set master password: {str(e)}")
+            
+            def _on_close(self):
+                print("Setup window closed")
+                self.window.destroy()
+            
+            def run(self):
+                print("Starting setup window mainloop")
+                self.window.mainloop()
+                print(f"Setup window closed, success = {self.success}")
+                return self.success
+        
+        setup = MasterPasswordSetup(self)
+        return setup.run()
+    
+    def _load_encryption_key(self):
+        """Load the encryption key from database"""
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("SELECT enc_key FROM master")
+            result = c.fetchone()
+            conn.close()
+            
+            if result:
+                self.fernet = Fernet(result[0])
+            else:
+                raise Exception("No encryption key found")
+                
+        except Exception as e:
+            messagebox.showerror("Encryption Error", f"Failed to load encryption key: {str(e)}")
+            sys.exit(1)
+    
+    def verify_master_password(self, password: str) -> bool:
+        """Verify the master password"""
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("SELECT key FROM master")
+            result = c.fetchone()
+            conn.close()
+            
+            if result:
+                return bcrypt.checkpw(password.encode('utf-8'), result[0])
+            return False
+            
+        except Exception as e:
+            messagebox.showerror("Authentication Error", f"Failed to verify password: {str(e)}")
+            return False
+    
+    def get_all_records(self) -> List[Tuple]:
+        """Get all password records from database"""
+        try:
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            c.execute("SELECT * FROM data ORDER BY id")
+            records = c.fetchall()
+            conn.close()
+            return records
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to retrieve records: {str(e)}")
+            return []
+    
+    def search_records(self, search_term: str) -> List[Tuple]:
+        """Search for records by site name or username"""
+        try:
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            c.execute("""SELECT * FROM data WHERE site LIKE ? OR username LIKE ? ORDER BY id""",
+                     (f'%{search_term}%', f'%{search_term}%'))
+            records = c.fetchall()
+            conn.close()
+            return records
+        except Exception as e:
+            messagebox.showerror("Search Error", f"Failed to search records: {str(e)}")
+            return []
+    
+    def add_record(self, site: str, username: str, password: str) -> Optional[int]:
+        """Add a new password record"""
+        try:
+            encrypted_password = self.fernet.encrypt(password.encode('utf-8'))
+            
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            c.execute("INSERT INTO data (site, username, password) VALUES (?, ?, ?)",
+                     (site, username, encrypted_password))
+            record_id = c.lastrowid
+            conn.commit()
+            conn.close()
+            return record_id
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to add record: {str(e)}")
+            return None
+    
+    def update_record(self, record_id: int, site: str, username: str, password: str) -> bool:
+        """Update an existing password record"""
+        try:
+            encrypted_password = self.fernet.encrypt(password.encode('utf-8'))
+            
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            c.execute("UPDATE data SET site=?, username=?, password=? WHERE id=?",
+                     (site, username, encrypted_password, record_id))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to update record: {str(e)}")
+            return False
+    
+    def delete_record(self, record_id: int) -> bool:
+        """Delete a password record"""
+        try:
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            c.execute("DELETE FROM data WHERE id=?", (record_id,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to delete record: {str(e)}")
+            return False
+    
+    def decrypt_password(self, encrypted_password: bytes) -> str:
+        """Decrypt a password"""
+        try:
+            return self.fernet.decrypt(encrypted_password).decode('utf-8')
+        except Exception as e:
+            raise Exception(f"Failed to decrypt password: {str(e)}")
+    
+    def change_master_password(self, new_password: str) -> bool:
+        """Change the master password and re-encrypt all data"""
+        try:
+            # Generate new encryption key
+            new_enc_key = Fernet.generate_key()
+            new_fernet = Fernet(new_enc_key)
+            
+            # Get all records and re-encrypt
+            records = self.get_all_records()
+            
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            
+            for record in records:
+                record_id, site, username, encrypted_password = record
+                # Decrypt with old key
+                decrypted = self.decrypt_password(encrypted_password)
+                # Re-encrypt with new key
+                new_encrypted = new_fernet.encrypt(decrypted.encode('utf-8'))
+                # Update record
+                c.execute("UPDATE data SET password=? WHERE id=?", (new_encrypted, record_id))
+            
+            conn.commit()
+            conn.close()
+            
+            # Update master password and encryption key
+            new_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+            
+            conn2 = sqlite3.connect(self.unlock_db)
+            c2 = conn2.cursor()
+            c2.execute("UPDATE master SET key=?, enc_key=?", (new_hash, new_enc_key))
+            conn2.commit()
+            conn2.close()
+            
+            # Update current encryption key
+            self.fernet = new_fernet
+            
+            return True
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to change master password: {str(e)}")
+            return False
 
-        if bcrypt.checkpw(master, ss_key):
-            splashscreen.destroy()
+
+class PasswordGenerator:
+    """Handles password generation"""
+    
+    def __init__(self):
+        self.alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
+    
+    def generate(self, length: int) -> str:
+        """Generate a random password of specified length"""
+        if length <= 0 or length > 100:
+            raise ValueError("Password length must be between 1 and 100")
+        
+        return ''.join(secrets.choice(self.alphabet) for _ in range(length))
+
+
+class LoginFrame(ttk.Frame):
+    """Login frame for master password authentication"""
+    
+    def __init__(self, parent, db_manager, on_success_callback):
+        super().__init__(parent, padding="20")
+        self.db_manager = db_manager
+        self.on_success_callback = on_success_callback
+        self._create_widgets()
+    
+    def _create_widgets(self):
+        # Title
+        ttk.Label(self, text="RandPyPwGen", font=("Arial", 16, "bold")).grid(
+            row=0, column=0, columnspan=2, pady=(0, 20))
+        
+        # Master password input
+        ttk.Label(self, text="Master Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        
+        self.password_var = tk.StringVar()
+        self.password_entry = ttk.Entry(self, textvariable=self.password_var, show='*', width=30)
+        self.password_entry.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        self.password_entry.focus()
+        
+        # Buttons
+        button_frame = ttk.Frame(self)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=(20, 0))
+        
+        ttk.Button(button_frame, text="Unlock", command=self._authenticate).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Exit", command=self.quit).pack(side=tk.LEFT)
+        
+        # Bind Enter key
+        self.password_entry.bind('<Return>', lambda e: self._authenticate())
+    
+    def _authenticate(self):
+        password = self.password_var.get()
+        if self.db_manager.verify_master_password(password):
+            self.on_success_callback()
         else:
-            # Wrong password
-            tk.messagebox.showerror(title="Incorrect password...", message="Incorrect master key.")
-            
-    except sqlite3.OperationalError as e:
-        tk.messagebox.showerror(
-            title="Database Error", 
-            message=f"Unable to access unlock database. Please run install.py.\n\nError: {str(e)}"
-        )
-        exit()
-    except Exception as e:
-        tk.messagebox.showerror(
-            title="Unexpected Error", 
-            message=f"An unexpected error occurred during unlock.\n\nError: {str(e)}"
-        )
-        exit()
+            messagebox.showerror("Authentication Failed", "Incorrect master password.")
+            self.password_var.set("")
+            self.password_entry.focus()
 
-# Check if database folder and database files exist
-def check_database_setup():
-    if not os.path.exists('./db/'):
-        tkinter.messagebox.showerror(
-            title="Database folder not found", 
-            message="Database folder not found. Please run install.py before executing the program."
-        )
-        sys.exit(1)
+
+class MainFrame(ttk.Frame):
+    """Main application frame"""
     
-    if not os.path.exists('./db/data.db'):
-        tkinter.messagebox.showerror(
-            title="Data file not found", 
-            message="Data file not found. Data not configured correctly or corrupted. Please run install.py again to set up the program."
-        )
-        sys.exit(1)
+    def __init__(self, parent, db_manager):
+        super().__init__(parent)
+        self.db_manager = db_manager
+        self.password_generator = PasswordGenerator()
+        self.passwords_visible = True
+        self.stored_passwords: Dict[int, str] = {}
+        
+        self._create_widgets()
+        self._populate_treeview()
     
-    if not os.path.exists('./db/unlock.db'):
-        tkinter.messagebox.showerror(
-            title="Encryption key not found", 
-            message="Encryption key not found. Please run install.py before executing the program."
-        )
-        sys.exit(1)
-
-# Check database setup first
-check_database_setup()
-
-try:
-    conn = sqlite3.connect('./db/data.db')
-    c = conn.cursor()
-    # Check if the data table exists
-    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='data'")
-    if not c.fetchone():
-        raise sqlite3.OperationalError("Table 'data' does not exist")
+    def _create_widgets(self):
+        # Configure grid weights
+        self.grid_rowconfigure(2, weight=1)  # Treeview row
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
+        
+        self._create_password_generation_section()
+        self._create_search_section()
+        self._create_treeview_section()
+        self._create_button_section()
+        self._create_menu()
     
-    c.execute("SELECT * FROM data")
-    records = c.fetchall()
-except sqlite3.OperationalError as e:
-    if "no such table" in str(e).lower() or "does not exist" in str(e).lower():
-        tkinter.messagebox.showerror(
-            title="Database not properly initialized", 
-            message="Database tables not found. Please run install.py to set up the database properly."
-        )
-    else:
-        tkinter.messagebox.showerror(
-            title="Database error", 
-            message=f"Database error occurred: {str(e)}"
-        )
-    sys.exit(1)
-except Exception as e:
-    tkinter.messagebox.showerror(
-        title="Unexpected error", 
-        message=f"An unexpected error occurred: {str(e)}"
-    )
-    sys.exit(1)
-
-
-try:
-    conn2 = sqlite3.connect('./db/unlock.db')
-    c2 = conn2.cursor()
-    # Check if the master table exists
-    c2.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='master'")
-    if not c2.fetchone():
-        raise sqlite3.OperationalError("Table 'master' does not exist")
+    def _create_password_generation_section(self):
+        """Create password generation widgets"""
+        gen_frame = ttk.LabelFrame(self, text="Password Generation", padding="10")
+        gen_frame.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
+        gen_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(gen_frame, text="Password Length:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        
+        self.length_var = tk.StringVar()
+        length_entry = ttk.Entry(gen_frame, textvariable=self.length_var, width=10)
+        length_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 10))
+        
+        ttk.Button(gen_frame, text="Generate", command=self._generate_password).grid(
+            row=0, column=2, padx=(0, 10))
+        ttk.Button(gen_frame, text="Add to DB", command=self._show_add_dialog).grid(
+            row=0, column=3, padx=(0, 10))
+        ttk.Button(gen_frame, text="Clear", command=self._clear_password).grid(
+            row=0, column=4)
+        
+        self.generated_password_var = tk.StringVar()
+        self.password_label = ttk.Label(gen_frame, textvariable=self.generated_password_var,
+                                       font=("Courier", 10), foreground="blue")
+        self.password_label.grid(row=1, column=0, columnspan=5, sticky=(tk.W, tk.E), pady=(10, 0))
     
-    c2.execute("SELECT enc_key FROM master")
-    records2 = c2.fetchall()
-    conv = records2[0]
-    conv2 = conv[0]
-    key = conv2
-    f = Fernet(key)
-except sqlite3.OperationalError as e:
-    if "no such table" in str(e).lower() or "does not exist" in str(e).lower():
-        tkinter.messagebox.showerror(
-            title="Encryption key database not initialized", 
-            message="Master password database not found. Please run install.py to set up the database properly."
-        )
-    else:
-        tkinter.messagebox.showerror(
-            title="Encryption key error", 
-            message="Encryption key not found. Please run install.py again."
-        )
-    sys.exit(1)
-except IndexError:
-    tkinter.messagebox.showerror(
-        title="Encryption key error", 
-        message="No encryption key found in database. Please run install.py again."
-    )
-    sys.exit(1)
-except Exception as e:
-    tkinter.messagebox.showerror(
-        title="Unexpected error", 
-        message=f"An unexpected error occurred while setting up encryption: {str(e)}"
-    )
-    sys.exit(1)
-
-
-# Prevent user from prematurelaty exiting splashscreen
-def on_closing():
-        exit()
-
-
-splashscreen = tk.Tk()
-splashscreen.title('RandPyPwGen login')
-splashscreen.geometry('200x50')
-
-key = b''
-master = b''
-lbl_ss = tk.Label(splashscreen, text='master key:')
-tb_ss = tk.Entry(splashscreen, textvariable=master, show='*')
-btn_ss = tk.Button(splashscreen, text='Unlock', command=unlock)
-lbl_ss.grid(row=0, column=0)
-tb_ss.grid(row=0, column=1)
-btn_ss.grid(column=0, row=1, columnspan=2)
-splashscreen.protocol("WM_DELETE_WINDOW", on_closing)
-splashscreen.mainloop()
-
-
-window = tk.Tk()
-window.title('RandPyPwGen v.1.0.1')
-window.geometry('800x600')
-alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
-password = ""
-pw_len = 0
-entry_len = tk.StringVar()
-entry_search = tk.StringVar()
-columns = ('ID', 'Site name', 'Username', 'Password')
-site_name = ''
-username = ''
-password_str = ''
-
-
-# Global variable to track password visibility state
-passwords_visible = True
-stored_passwords = {}  # Dictionary to store passwords while hidden
-
-
-def click():
-    global password
-    global pw_len
-    try:
-        pw_len = int(entry_len.get())
-        if pw_len > 100 or pw_len <= 0:
-            raise RuntimeError
-
-        password = ''.join(secrets.choice(alphabet) for i in range(pw_len))
-        print_pw.configure(text=f"Your password is {password}")
-    except ValueError:
-        tkinter.messagebox.showerror(title="Invalid input", message="Enter an integer...")
-    except RuntimeError:
-        tkinter.messagebox.showerror(title="Invalid input", message="Number must be positive and under 101 characters")
-
-
-def new_window():
-    global site_name
-    global username
-    global password_str
-    global ipsn
-    global ipun
-    global ippw
-    global new
-    new = tk.Toplevel(window)
-    new.title("Add new site...")
-    new.geometry("200x200")
-    lblsn = Label(new, text="Site name:")
-    lblsn.grid()
-    ipsn = tk.Entry(new, textvariable=site_name)
-    ipsn.grid()
-    lblun = Label(new, text="Username:")
-    lblun.grid()
-    ipun = tk.Entry(new, textvariable=username)
-    ipun.grid()
-    lblpw = Label(new, text="Password:")
-    lblpw.grid()
-    ippw = tk.Entry(new, textvariable=password_str)
-    ippw.grid()
-    btnSubmit = Button(new, text="Add account", command=insert_info)
-    btnSubmit.grid()
-    btnCancel = Button(new, text="Cancel", command=cancel_button)
-    btnCancel.grid()
-    btnExit = Button(new, text="Exit", command=exit_button)
-    btnExit.grid()
-    ippw.insert(0, password)
-
-
-def insert_info():
-    site_name = ipsn.get()
-    username = ipun.get()
-    password_str = ippw.get()
-
-    last_insert = find_last_index()
-    index_insert = last_insert + 1
-
-    pw_copy = bytes(password_str, 'utf-8')
-    enc = f.encrypt(pw_copy)
-
-    # Add to treeview considering current visibility state
-    if passwords_visible:
-        tvData.insert(parent='', index='end', values=(index_insert, site_name, username, password_str))
-    else:
-        stored_passwords[index_insert] = password_str
-        masked_password = '*' * min(len(password_str), 12)
-        tvData.insert(parent='', index='end', values=(index_insert, site_name, username, masked_password))
+    def _create_search_section(self):
+        """Create search widgets"""
+        search_frame = ttk.LabelFrame(self, text="Search", padding="10")
+        search_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
+        search_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(search_frame, text="Search:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        
+        self.search_var = tk.StringVar()
+        search_entry = ttk.Entry(search_frame, textvariable=self.search_var)
+        search_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
+        search_entry.bind('<Return>', lambda e: self._search())
+        
+        ttk.Button(search_frame, text="Search", command=self._search).grid(row=0, column=2, padx=(0, 10))
+        ttk.Button(search_frame, text="Clear", command=self._clear_search).grid(row=0, column=3)
     
-    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index_insert, site_name, username, enc))
-    conn.commit()
-    new.destroy()
-
-
-def cancel_button():
-    ipsn.delete(0, 'end')
-    ipun.delete(0, 'end')
-    ippw.delete(0, 'end')
-
-
-def add_button():
-    new_window()
-
-
-def copy():
-    sel = tvData.selection()[0]
-    item = tvData.item(sel)
-    v = item['values']
-    item_id = v[0]
+    def _create_treeview_section(self):
+        """Create treeview and scrollbar"""
+        tree_frame = ttk.Frame(self)
+        tree_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        tree_frame.grid_rowconfigure(0, weight=1)
+        tree_frame.grid_columnconfigure(0, weight=1)
+        
+        # Treeview
+        columns = ('ID', 'Site', 'Username', 'Password')
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
+        
+        # Configure columns
+        self.tree.heading('ID', text='ID')
+        self.tree.heading('Site', text='Site Name')
+        self.tree.heading('Username', text='Username')
+        self.tree.heading('Password', text='Password')
+        
+        self.tree.column('ID', width=50, minwidth=50)
+        self.tree.column('Site', width=200, minwidth=100)
+        self.tree.column('Username', width=150, minwidth=100)
+        self.tree.column('Password', width=200, minwidth=100)
+        
+        self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.tree.yview)
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        
+        # Bind double-click to edit
+        self.tree.bind('<Double-1>', lambda e: self._show_edit_dialog())
+        
+        # Bind Delete key
+        self.tree.bind('<Delete>', self._delete_selected)
     
-    # Get the actual password
-    if passwords_visible:
-        password_to_copy = v[3]
-    else:
-        password_to_copy = stored_passwords.get(item_id, v[3])
+    def _create_button_section(self):
+        """Create action buttons"""
+        button_frame = ttk.Frame(self)
+        button_frame.grid(row=3, column=0, columnspan=4, sticky=(tk.W, tk.E))
+        
+        buttons = [
+            ("Add", self._show_add_dialog),
+            ("Edit", self._show_edit_dialog),
+            ("Delete", self._delete_selected),
+            ("Copy Password", self._copy_password),
+            ("Toggle Visibility", self._toggle_password_visibility)
+        ]
+        
+        for i, (text, command) in enumerate(buttons):
+            ttk.Button(button_frame, text=text, command=command).grid(
+                row=0, column=i, padx=5, sticky=(tk.W, tk.E))
+            button_frame.grid_columnconfigure(i, weight=1)
     
-    pyperclip.copy(password_to_copy)
-
-
-def deleteRecord():
-    try:
-        sel = tvData.selection()
-        selection_len = len(sel)
-        for j in range(selection_len):
-            v = tvData.item(sel[j])
-            item_id = v['values'][0]
-            tvData.delete(sel[j])
-            d = v['values']
-            iid = d[0]
+    def _create_menu(self):
+        """Create application menu"""
+        menubar = tk.Menu(self.master)
+        self.master.config(menu=menubar)
+        
+        # File menu
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Import Passwords...", command=self._show_import_dialog)
+        file_menu.add_command(label="Change Master Password...", command=self._change_master_password)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.master.quit)
+        
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="About", command=self._show_about)
+        help_menu.add_command(label="Help", command=self._open_help)
+    
+    def _generate_password(self):
+        """Generate a new password"""
+        try:
+            length = int(self.length_var.get())
+            password = self.password_generator.generate(length)
+            self.generated_password_var.set(f"Generated: {password}")
+            # Store the generated password for easy access
+            self._current_generated_password = password
+        except ValueError:
+            messagebox.showerror("Invalid Input", "Please enter a valid password length.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate password: {str(e)}")
+    
+    def _clear_password(self):
+        """Clear generated password"""
+        self.generated_password_var.set("")
+        self._current_generated_password = ""
+    
+    def _show_add_dialog(self):
+        """Show add password dialog"""
+        AddEditDialog(self, self.db_manager, callback=self._populate_treeview,
+                     initial_password=getattr(self, '_current_generated_password', ''))
+    
+    def _show_edit_dialog(self):
+        """Show edit password dialog"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a record to edit.")
+            return
+        
+        item = self.tree.item(selection[0])
+        values = item['values']
+        record_id = values[0]
+        
+        # Get actual password if hidden
+        if not self.passwords_visible and record_id in self.stored_passwords:
+            password = self.stored_passwords[record_id]
+        else:
+            password = values[3]
+        
+        AddEditDialog(self, self.db_manager, callback=self._populate_treeview,
+                     record_id=record_id, site=values[1], username=values[2], password=password)
+    
+    def _delete_selected(self, event=None):
+        """Delete selected records"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select record(s) to delete.")
+            return
+        
+        # Confirm deletion
+        count = len(selection)
+        message = f"Are you sure you want to delete {count} record(s)?"
+        if not messagebox.askyesno("Confirm Deletion", message):
+            return
+        
+        # Delete records
+        for item in selection:
+            values = self.tree.item(item)['values']
+            record_id = values[0]
+            self.db_manager.delete_record(record_id)
             
             # Remove from stored passwords if present
-            if item_id in stored_passwords:
-                del stored_passwords[item_id]
-            
-            c.execute("DELETE FROM data WHERE id = ?", (iid,))
-        conn.commit()
-    except IndexError:
-        tkinter.messagebox.showerror(title="Cannot delete record", message="Please choose a record to delete.")
-
-
-def editRecord():
-    global ipsn
-    global ipun
-    global ippw
-    global new
-    try:
-        cur = tvData.focus()
-        v = tvData.item(cur)
-        d = v['values']
-        item_id = d[0]
-        sn = d[1]
-        un = d[2]
+            if record_id in self.stored_passwords:
+                del self.stored_passwords[record_id]
+        
+        self._populate_treeview()
+    
+    def _copy_password(self):
+        """Copy selected password to clipboard"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a record to copy password.")
+            return
+        
+        item = self.tree.item(selection[0])
+        values = item['values']
+        record_id = values[0]
         
         # Get actual password
-        if passwords_visible:
-            pw = d[3]
+        if not self.passwords_visible and record_id in self.stored_passwords:
+            password = self.stored_passwords[record_id]
         else:
-            pw = stored_passwords.get(item_id, d[3])
+            password = values[3]
         
-        new = tk.Toplevel(window)
-        new.title("Edit record...")
-        new.geometry("200x200")
-        lblsn = Label(new, text="Site name:")
-        lblsn.grid()
-        ipsn = tk.Entry(new, textvariable=site_name)
-        ipsn.grid()
-        lblun = Label(new, text="Username:")
-        lblun.grid()
-        ipun = tk.Entry(new, textvariable=username)
-        ipun.grid()
-        lblpw = Label(new, text="Password:")
-        lblpw.grid()
-        ippw = tk.Entry(new, textvariable=password_str)
-        ippw.grid()
-        btnSubmit = Button(new, text="Update", command=update_info)
-        btnSubmit.grid()
-        btnCancel = Button(new, text="Cancel", command=cancel_edit)
-        btnCancel.grid()
-        btnExit = Button(new, text="Exit", command=exit_button)
-        btnExit.grid()
-        ipsn.insert(0, sn)
-        ipun.insert(0, un)
-        ippw.insert(0, pw)
-    except IndexError:
-        tkinter.messagebox.showerror(title="Cannot edit record", message="Please choose a record to edit.")
-
-
-def exit_button():
-    new.destroy()
-
-
-def update_info():
-    global ipsn
-    global ipun
-    global ippw
-    global new
-    sel = tvData.focus()
-    item = tvData.item(sel)
-    get_values = item['values']
-    selected_index = get_values[0]
+        pyperclip.copy(password)
+        messagebox.showinfo("Copied", "Password copied to clipboard!")
     
-    new_password = ippw.get()
+    def _toggle_password_visibility(self):
+        """Toggle password visibility in treeview"""
+        self.passwords_visible = not self.passwords_visible
+        self._populate_treeview()
     
-    # Update treeview considering current visibility setting
-    if passwords_visible:
-        val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), new_password))
-    else:
-        stored_passwords[selected_index] = new_password
-        masked_password = '*' * min(len(new_password), 12)
-        val = tvData.item(sel, values=(selected_index, ipsn.get(), ipun.get(), masked_password))
-
-    pw_copy = bytes(new_password, 'utf-8')
-    enc = f.encrypt(pw_copy)
-
-    values = []
-    temp_sn = ipsn.get()
-    temp_un = ipun.get()
-    temp_pw = new_password
-    values.append(temp_sn)
-    values.append(temp_un)
-    values.append(enc)
-    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
-    conn.commit()
-    new.destroy()
-
-
-def cancel_edit():
-    """
-    This function clears the input boxes and puts the original un-edited
-    passwords back in the input boxes when the cancel button is clicked
-    """
-    global ipsn
-    global ipun
-    global ippw
-
-    cur = tvData.focus()
-    v = tvData.item(cur)
-    d = v['values']
-    item_id = d[0]
-    sn = d[1]
-    un = d[2]
-    
-    # Get actual password
-    if passwords_visible:
-        pw = d[3]
-    else:
-        pw = stored_passwords.get(item_id, d[3])
-    
-    ipsn.delete(0, 'end')
-    ipun.delete(0, 'end')
-    ippw.delete(0, 'end')
-    ipsn.insert(0, sn)
-    ipun.insert(0, un)
-    ippw.insert(0, pw)
-
-
-def clear_button():
-    """
-    This function clears the password, and password length
-    """
-    global pw_len
-    global password
-    global password_str
-    pw_len = 0
-    password = ''
-    password_str = ''
-    # Update password label
-    print_pw.configure(text=f"Your password is {password}") 
-
-
-def open_help():
-    """
-    This function opens the GitHub repository in the default web browser
-    """
-    webbrowser.open("https://github.com/HaydenHildreth/RandPyPwMan")
-
-
-def import_passwords():
-    """
-    This function will be used to import passwords into the data table
-    it should be able to see the group from import_window() then it will
-    read the .CSV file and add it to the database and treeview. The index
-    of the last password should be found when this is clicked, in case the
-    user has added any passwords whilst the import window has been open.
-    """
-    global c
-    global source
-    global filename
-    global new_import_window
-    last_import = find_last_index()
-    if last_import is None:
-        last_index = 0
-    else:
-        last_index = last_import + 1
-
-    import_source = source.get()
-
-    # VARIABLE TO OPEN FILE
-    file = open(filename, "r")
-    reader = csv.reader(file)
-
-    match import_source:
-        case "Chrome":
-            for line in reader:
-                t_reader = line[0], line[2], line[3]
-                pw_copy_insert = bytes(line[3], 'utf-8')
-                enc_insert = f.encrypt(pw_copy_insert)
-
-                # Add to treeview considering current visibility setting
-                if passwords_visible:
-                    tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  line[3]))
-                else:
-                    stored_passwords[last_index] = line[3]
-                    masked_password = '*' * min(len(line[3]), 12)
-                    tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  masked_password))
-                
-                c.execute("INSERT INTO data VALUES (?,?,?,?)", (last_index, line[0],  line[2],  enc_insert))
-                last_index += 1
-                conn.commit()
-                new_import_window.destroy()
-        case "Firefox":
-            for line in reader:
-                t_reader = line[0], line[1], line[2]
-                pw_copy_insert = bytes(line[2], 'utf-8')
-                enc_insert = f.encrypt(pw_copy_insert)
-
-                # Add to treeview considering current visibility setting
-                if passwords_visible:
-                    tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], line[2]))
-                else:
-                    stored_passwords[last_index] = line[2]
-                    masked_password = '*' * min(len(line[2]), 12)
-                    tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], masked_password))
-                
-                c.execute("INSERT INTO data VALUES (?,?,?,?)", (last_index, line[0], line[1], enc_insert))
-                last_index += 1
-                conn.commit()
-                new_import_window.destroy()
-
-
-def import_window():
-    """
-    Opens new window for importing passwords
-    """
-    global source
-    global entry_data_source
-    global filename
-    global new_import_window
-    global btn_import  # <-- make it global so browse_files() can access it
-    
-    source_list = ["", "Chrome", "Firefox"]
-    new_import_window = tk.Toplevel(window)
-    source = tk.StringVar(new_import_window)
-    new_import_window.title("Import passwords")
-    new_import_window.geometry("200x200")
-    
-    data_source = Label(new_import_window, text="Data source:")
-    data_source.grid()
-    source.set("Select an option")
-    
-    entry_data_source = OptionMenu(new_import_window, source, *source_list)
-    entry_data_source.grid()
-    
-    file_btn = Button(new_import_window, text="Browse files", command=browse_files)
-    file_btn.grid()
-    
-    # Import button starts disabled
-    btn_import = Button(new_import_window, text="Import password", command=import_passwords, state="disabled")
-    btn_import.grid()
-    
-    btn_import_exit = Button(new_import_window, text="Exit", command=new_import_window.destroy)
-    btn_import_exit.grid()
-
-
-def browse_files():
-    global filename
-    filename = filedialog.askopenfilename(
-        initialdir="/",
-        title="Select a file",
-        filetypes=(("CSV files", "*.csv"),)
-    )
-    
-    # If user selected a file, enable the import button
-    if filename:
-        btn_import.config(state="normal")
-
-
-def search():
-    """
-    THIS FUNCTION ALLOWS SEARCHING OF PASSWORDS, USERNAME AND SITES FROM DATABASE
-    """
-    global entry_search
-    global c
-    entry_search = input_search.get()
-
-    c = conn.cursor()
-    c.execute("SELECT * FROM data where site like ? "
-              "OR username like ? "
-              "ORDER BY id",('%'+entry_search+'%','%'+entry_search+'%',))
-    search_records = c.fetchall()
-
-    # Clear treeview and stored passwords
-    tvData.delete(*tvData.get_children())
-    stored_passwords.clear()
-
-    # Put search/filtered data to treeview
-    # It needs to decrypt because it is accessing db directly
-    count_search = 0
-    for j in search_records:
-        decrypted_search = f.decrypt(search_records[count_search][3])
-        decrypted_search = decrypted_search.decode('utf-8')
+    def _search(self):
+        """Search for records"""
+        search_term = self.search_var.get().strip()
+        if not search_term:
+            self._populate_treeview()
+            return
         
-        if passwords_visible:
-            tvData.insert(parent='', index='end', values=(search_records[count_search][0], search_records[count_search][1], search_records[count_search][2], decrypted_search))
-        else:
-            record_id = search_records[count_search][0]
-            stored_passwords[record_id] = decrypted_search
-            masked_password = '*' * min(len(decrypted_search), 12)
-            tvData.insert(parent='', index='end', values=(record_id, search_records[count_search][1], search_records[count_search][2], masked_password))
-        
-        count_search += 1
-
-
-def find_last_index():
-    """
-    THIS FUNCTION FINDS THE LAST INDEX. IT IS USEFUL FOR DETERMINING 
-    HOW MANY PASSWORDS ARE IN DB UPON STARTUP, AS WELL AS KEEPING
-    TRACK OF HOW MANY PASSWORDS ARE STORED FOR INDEXING PURPOSES
-    """
-    last = c.execute("SELECT id FROM data ORDER BY id DESC LIMIT 1")
-    last = c.fetchone()
-    if last == None:
-        last = 0
-    else:
-        last = last[0]
-
-    return last
-
-
-def clear_search():
-    """
-    THIS FUNCTION CLEARS OUT THE SEARCH AND RESETS THE SEARCH INPUT BOX
-    """
-    # Use the refresh function to maintain visibility setting
-    refresh_treeview_with_visibility()
+        records = self.db_manager.search_records(search_term)
+        self._populate_treeview(records)
     
-    # CLEAR OUT INPUT BOX
-    input_search.delete(0, 'end')
+    def _clear_search(self):
+        """Clear search and show all records"""
+        self.search_var.set("")
+        self._populate_treeview()
     
-    
-def change_master_pw():
-    """
-    THIS FUNCTION WILL CHANGE THE MASTER PASSWORD OF THE DATABASE (PASSWORD TO UNLOCK DATABASE)
-    """
-    
-    def set_master():
-        global password, f, key
-        new_password = tb_password.get()
-        new_password = bytes(new_password, 'utf-8')
-        hash_master = bcrypt.hashpw(new_password, bcrypt.gensalt())
+    def _populate_treeview(self, records=None):
+        """Populate treeview with records"""
+        # Clear treeview
+        for item in self.tree.get_children():
+            self.tree.delete(item)
         
-        # Generate new encryption key
-        new_enc_key = Fernet.generate_key()
-        new_f = Fernet(new_enc_key)
+        self.stored_passwords.clear()
         
-        # Get all existing passwords and decrypt them with old key
-        c.execute("SELECT id, password FROM data")
-        all_passwords = c.fetchall()
+        # Get records if not provided
+        if records is None:
+            records = self.db_manager.get_all_records()
         
-        # Re-encrypt all passwords with new key
-        for record in all_passwords:
-            record_id = record[0]
-            old_encrypted_password = record[1]
+        # Populate treeview
+        for record in records:
+            record_id, site, username, encrypted_password = record
+            password = self.db_manager.decrypt_password(encrypted_password)
             
-            try:
-                # Decrypt with old key
-                decrypted_password = f.decrypt(old_encrypted_password)
-                
-                # Re-encrypt with new key
-                new_encrypted_password = new_f.encrypt(decrypted_password)
-                
-                # Update database with new encrypted password
-                c.execute("UPDATE data SET password = ? WHERE id = ?", (new_encrypted_password, record_id))
-            except Exception as e:
-                tkinter.messagebox.showerror(title="Error", message=f"Failed to re-encrypt password for record {record_id}: {str(e)}")
-                return
-        
-        # Update master password and encryption key
-        c2.execute("UPDATE master SET key = ?, enc_key = ?", (hash_master, new_enc_key))
-        conn.commit()
-        conn2.commit()
-        
-        # Update global encryption objects
-        key = new_enc_key
-        f = new_f
-        
-        tkinter.messagebox.showinfo(title="Success", message="Master password changed successfully!")
-        change_pw_window.destroy()
-
-    # Connect to unlock database
-    conn2 = sqlite3.connect('db/unlock.db')
-    c2 = conn2.cursor()
-    c2.execute("SELECT * from master")
-
-    # Create password change window
-    change_pw_window = tk.Tk()
-    change_pw_window.title('Change password')
-    change_pw_window.geometry('300x100')
-    password = b''
-
-    lbl_password = tk.Label(change_pw_window, text='Enter new master password:')
-    tb_password = tk.Entry(change_pw_window, show='*')
-    lbl_password.grid(column=0, row=0, padx=10, pady=5)
-    tb_password.grid(column=1, row=0, padx=10, pady=5)
-    btn_create = tk.Button(change_pw_window, text='Change master password', command=set_master)
-    btn_create.grid(column=0, row=1, columnspan=2, padx=10, pady=10)
-    btn_cancel = tk.Button(change_pw_window, text='Cancel', command=change_pw_window.destroy)
-    btn_cancel.grid(column=0, row=2, columnspan=2, padx=10, pady=5)
-
-    change_pw_window.mainloop()
-    
-    
-def toggle_password_visibility():
-    """
-    THIS FUNCTION CHANGES THE VISIBILITY SETTING. THIS WILL TOGGLE BETWEEN THE TWO SETTINGS
-    """
-    global passwords_visible
-    global stored_passwords
-    
-    passwords_visible = not passwords_visible
-    
-    # Get all items in treeview
-    all_items = tvData.get_children()
-    
-    if passwords_visible:
-        # Show passwords
-        for item in all_items:
-            item_values = tvData.item(item)['values']
-            item_id = item_values[0]
-            if item_id in stored_passwords:
-                # Replace asterisks with actual password
-                tvData.item(item, values=(item_values[0], item_values[1], item_values[2], stored_passwords[item_id]))
-        
-        # Update button text
-        toggle_btn.config(text="Hide Passwords")
-        
-    else:
-        # Hide passwords with asterisks
-        stored_passwords.clear()  # Clear previous stored passwords
-        
-        for item in all_items:
-            item_values = tvData.item(item)['values']
-            item_id = item_values[0]
-            actual_password = str(item_values[3])  # Convert to string to ensure it's a string
-            
-            # Store actual password
-            stored_passwords[item_id] = actual_password
-            
-            # Replace password with asterisks
-            masked_password = '*' * min(len(actual_password), 12)  # Now len() will work
-            tvData.item(item, values=(item_values[0], item_values[1], item_values[2], masked_password))
-
-
-def refresh_treeview_with_visibility():
-    """
-    THIS FUNCTION FACILITATES THE UPDATING/REFRESHING OF THE TREEVIEW WHEN USER
-    TOGGLES THE VISIBILITY STATE
-    """
-    global passwords_visible
-    global stored_passwords
-    
-    # Clear treeview
-    tvData.delete(*tvData.get_children())
-    stored_passwords.clear()
-    
-    # Get all records from database
-    c.execute("SELECT * FROM data")
-    all_records = c.fetchall()
-    
-    # Add records to treeview
-    for record in all_records:
-        decrypted = f.decrypt(record[3])
-        decrypted = decrypted.decode('utf-8')
-        
-        if passwords_visible:
-            # Show actual password
-            tvData.insert(parent='', index='end', values=(record[0], record[1], record[2], decrypted))
-        else:
-            # Store actual password and show masked version
-            stored_passwords[record[0]] = decrypted
-            masked_password = '*' * min(len(decrypted), 12)
-            tvData.insert(parent='', index='end', values=(record[0], record[1], record[2], masked_password))
-    
-    
-def delete_hotkey(event):
-    """
-    THIS FUNCTION FACILITATES DELETING OF RECORDS VIA THE HOTKEY OF
-    DELETE ON USER'S KEYBOARD. ONLY FUNCTIONS WHEN THE TREEVIEW
-    IS IN FOCUS.
-    """
-    
-    # Check if the treeview has focus and there's a selection
-    if window.focus_get() == tvData and tvData.selection():
-        try:
-            sel = tvData.selection()
-            if not sel:
-                return
-            
-            # Get the selected item details for confirmation message
-            first_item = tvData.item(sel[0])
-            site_name = first_item['values'][1]
-            
-            # Create confirmation message
-            if len(sel) == 1:
-                message = f"Are you sure you want to delete the password for '{site_name}'?"
-                title = "Confirm deletion"
+            if self.passwords_visible:
+                display_password = password
             else:
-                message = f"Are you sure you want to delete {len(sel)} selected password records?"
-                title = "Confirm deletion of multiple"
+                self.stored_passwords[record_id] = password
+                display_password = '*' * min(len(password), 12)
             
-            # Show confirmation dialog
-            result = tkinter.messagebox.askyesno(
-                title=title,
-                message=message,
-                icon='warning'
-            )
-            
-            if result:  # Clicked Yes
-                # Delete records
-                for item in sel:
-                    v = tvData.item(item)
-                    item_id = v['values'][0]
-                    tvData.delete(item)
-                    
-                    # Remove from stored passwords if present
-                    if item_id in stored_passwords:
-                        del stored_passwords[item_id]
-                    
-                    # Remove from database
-                    c.execute("DELETE FROM data WHERE id = ?", (item_id,))
-                
-                conn.commit()
-                
-                # Show success message
-                if len(sel) == 1:
-                    tkinter.messagebox.showinfo("Deleted", f"Password for '{site_name}' has been deleted.")
+            self.tree.insert('', 'end', values=(record_id, site, username, display_password))
+    
+    def _show_import_dialog(self):
+        """Show import dialog"""
+        ImportDialog(self, self.db_manager, callback=self._populate_treeview)
+    
+    def _change_master_password(self):
+        """Change master password"""
+        ChangeMasterPasswordDialog(self, self.db_manager)
+    
+    def _show_about(self):
+        """Show about dialog"""
+        messagebox.showinfo("About", "RandPyPwGen v1.99.1\nA secure password manager\n\nRefactored and improved version")
+    
+    def _open_help(self):
+        """Open help in browser"""
+        webbrowser.open("https://github.com/HaydenHildreth/RandPyPwMan")
+
+
+class AddEditDialog:
+    """Dialog for adding/editing password records"""
+    
+    def __init__(self, parent, db_manager, callback, record_id=None, site='', username='', password='', initial_password=''):
+        self.db_manager = db_manager
+        self.callback = callback
+        self.record_id = record_id
+        
+        # Use initial_password if provided and password is empty
+        if not password and initial_password:
+            password = initial_password
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Edit Record" if record_id else "Add Record")
+        self.window.geometry("400x200")
+        self.window.resizable(False, False)
+        
+        # Center window
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 50
+        y = parent_y + 50
+        self.window.geometry(f"400x200+{x}+{y}")
+        
+        self._create_widgets(site, username, password)
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _create_widgets(self, site, username, password):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid_columnconfigure(1, weight=1)
+        
+        # Site name
+        ttk.Label(main_frame, text="Site Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.site_var = tk.StringVar(value=site)
+        site_entry = ttk.Entry(main_frame, textvariable=self.site_var)
+        site_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        site_entry.focus()
+        
+        # Username
+        ttk.Label(main_frame, text="Username:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.username_var = tk.StringVar(value=username)
+        username_entry = ttk.Entry(main_frame, textvariable=self.username_var)
+        username_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        
+        # Password
+        ttk.Label(main_frame, text="Password:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.password_var = tk.StringVar(value=password)
+        password_entry = ttk.Entry(main_frame, textvariable=self.password_var)
+        password_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        
+        # Buttons
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=(20, 0))
+        
+        action_text = "Update" if self.record_id else "Add"
+        ttk.Button(button_frame, text=action_text, command=self._save).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self._cancel).pack(side=tk.LEFT)
+        
+        # Bind Enter key
+        self.window.bind('<Return>', lambda e: self._save())
+        self.window.bind('<Escape>', lambda e: self._cancel())
+    
+    def _save(self):
+        """Save the record"""
+        site = self.site_var.get().strip()
+        username = self.username_var.get().strip()
+        password = self.password_var.get().strip()
+        
+        if not site:
+            messagebox.showerror("Validation Error", "Site name is required!")
+            return
+        
+        if not password:
+            messagebox.showerror("Validation Error", "Password is required!")
+            return
+        
+        try:
+            if self.record_id:
+                # Update existing record
+                success = self.db_manager.update_record(self.record_id, site, username, password)
+                if success:
+                    messagebox.showinfo("Success", "Record updated successfully!")
                 else:
-                    tkinter.messagebox.showinfo("Deleted", f"{len(sel)} password records have been deleted.")
-                    
+                    return
+            else:
+                # Add new record
+                record_id = self.db_manager.add_record(site, username, password)
+                if record_id:
+                    messagebox.showinfo("Success", "Record added successfully!")
+                else:
+                    return
+            
+            self.callback()
+            self.window.destroy()
+            
         except Exception as e:
-            tkinter.messagebox.showerror(
-                title="Error", 
-                message=f"An error occurred while deleting the record(s): {str(e)}"
-            )
+            messagebox.showerror("Error", f"Failed to save record: {str(e)}")
+    
+    def _cancel(self):
+        """Cancel the dialog"""
+        self.window.destroy()
 
 
-# PASSWORD GENERATION SECTION
-t = tk.Label(window, text="Please input desired password length:")
-t.grid(row=1, column=0, sticky=tk.E + tk.W)
-input_text = tk.Entry(window, textvariable=entry_len)
-input_text.grid(row=1, column=1, sticky=tk.E + tk.W)
-print_pw = tk.Label(window, text=f"Your password is: {password}")
-print_pw.grid(row=2, column=0, sticky=tk.E + tk.W)
-sendBtn = tk.Button(window, text="Generate", command=click)
-addBtn = tk.Button(window, text="Add", command=add_button)
-clearBtn = tk.Button(window, text="Clear", command=clear_button)
-add_group_btn = tk.Button(window, text="Add/Remove group", command='')
-sendBtn.grid(row=3, column=0, sticky=tk.E + tk.W)
-addBtn.grid(row=3, column=1, sticky=tk.E + tk.W)
-clearBtn.grid(row=3, column=2, sticky=tk.E + tk.W)
-sendBtn.config(height=2)
-addBtn.config(height=2)
-clearBtn.config(height=2)
+class ImportDialog:
+    """Dialog for importing passwords from CSV files"""
+    
+    def __init__(self, parent, db_manager, callback):
+        self.db_manager = db_manager
+        self.callback = callback
+        self.filename = None
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Import Passwords")
+        self.window.geometry("350x200")
+        self.window.resizable(False, False)
+        
+        # Center window
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 75
+        y = parent_y + 75
+        self.window.geometry(f"350x200+{x}+{y}")
+        
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        ttk.Label(main_frame, text="Select data source:", font=("Arial", 10, "bold")).grid(
+            row=0, column=0, sticky=tk.W, pady=(0, 10))
+        
+        # Data source selection
+        self.source_var = tk.StringVar(value="Chrome")
+        sources = [("Chrome", "Chrome"), ("Firefox", "Firefox")]
+        
+        for i, (text, value) in enumerate(sources):
+            ttk.Radiobutton(main_frame, text=text, variable=self.source_var, 
+                           value=value).grid(row=i+1, column=0, sticky=tk.W, pady=2)
+        
+        # File selection
+        file_frame = ttk.Frame(main_frame)
+        file_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(20, 10))
+        file_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(file_frame, text="File:").grid(row=0, column=0, sticky=tk.W)
+        self.file_var = tk.StringVar()
+        file_entry = ttk.Entry(file_frame, textvariable=self.file_var, state='readonly')
+        file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 10))
+        ttk.Button(file_frame, text="Browse", command=self._browse_file).grid(row=0, column=2)
+        
+        # Buttons
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=4, column=0, pady=(10, 0))
+        
+        self.import_btn = ttk.Button(button_frame, text="Import", command=self._import_passwords, state='disabled')
+        self.import_btn.pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+    
+    def _browse_file(self):
+        """Browse for CSV file"""
+        filename = filedialog.askopenfilename(
+            title="Select CSV File",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        
+        if filename:
+            self.filename = filename
+            self.file_var.set(filename)
+            self.import_btn.config(state='normal')
+    
+    def _import_passwords(self):
+        """Import passwords from CSV file"""
+        if not self.filename:
+            messagebox.showerror("Error", "Please select a file to import.")
+            return
+        
+        try:
+            source = self.source_var.get()
+            imported_count = 0
+            
+            with open(self.filename, 'r', newline='', encoding='utf-8') as file:
+                csv_reader = csv.reader(file)
+                
+                # Skip header row if it exists
+                try:
+                    first_row = next(csv_reader)
+                    # Check if first row looks like headers
+                    if not any(field.startswith('http') for field in first_row):
+                        pass  # Skip header row
+                    else:
+                        # Reset and process first row as data
+                        file.seek(0)
+                        csv_reader = csv.reader(file)
+                except StopIteration:
+                    messagebox.showerror("Error", "The selected file appears to be empty.")
+                    return
+                
+                for row in csv_reader:
+                    if len(row) < 3:
+                        continue  # Skip incomplete rows
+                    
+                    try:
+                        if source == "Chrome":
+                            # Chrome format: name, url, username, password
+                            if len(row) >= 4:
+                                site = row[0] or row[1]  # Use name, fallback to url
+                                username = row[2]
+                                password = row[3]
+                        else:  # Firefox
+                            # Firefox format: url, username, password
+                            site = row[0]
+                            username = row[1]
+                            password = row[2]
+                        
+                        if site and password:  # Only import if we have site and password
+                            if self.db_manager.add_record(site, username, password):
+                                imported_count += 1
+                    
+                    except Exception as e:
+                        print(f"Error processing row {row}: {e}")
+                        continue
+            
+            if imported_count > 0:
+                messagebox.showinfo("Success", f"Successfully imported {imported_count} password(s)!")
+                self.callback()
+                self.window.destroy()
+            else:
+                messagebox.showwarning("No Data", "No valid password records were found in the file.")
+        
+        except Exception as e:
+            messagebox.showerror("Import Error", f"Failed to import passwords: {str(e)}")
 
 
-# SEARCH SECTION
-lbl_search = Label(window, text="Search:")
-lbl_search.grid(row=4, column=0, sticky=tk.E)
-input_search = tk.Entry(window, textvariable=entry_search)
-input_search.grid(row=4, column=1, sticky=tk.E + tk.W)
-btn_search = tk.Button(window, text="Search", command=search)
-btn_search.grid(row=4, column=2, sticky=tk.E + tk.W)
-btn_clear_search = tk.Button(window, text="Clear", command=clear_search)
-btn_clear_search.grid(row=4, column=3, sticky=tk.E + tk.W)
+class ChangeMasterPasswordDialog:
+    """Dialog for changing master password"""
+    
+    def __init__(self, parent, db_manager):
+        self.db_manager = db_manager
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Change Master Password")
+        self.window.geometry("400x150")
+        self.window.resizable(False, False)
+        
+        # Center window
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 100
+        y = parent_y + 100
+        self.window.geometry(f"400x150+{x}+{y}")
+        
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(main_frame, text="Enter new master password:", 
+                 font=("Arial", 10, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 20))
+        
+        ttk.Label(main_frame, text="New Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.password_var = tk.StringVar()
+        password_entry = ttk.Entry(main_frame, textvariable=self.password_var, show='*')
+        password_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        password_entry.focus()
+        
+        # Buttons
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=(20, 0))
+        
+        ttk.Button(button_frame, text="Change Password", command=self._change_password).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        
+        # Bind Enter key
+        self.window.bind('<Return>', lambda e: self._change_password())
+    
+    def _change_password(self):
+        """Change the master password"""
+        new_password = self.password_var.get().strip()
+        
+        if not new_password:
+            messagebox.showerror("Error", "Password cannot be empty!")
+            return
+        
+        if len(new_password) < 4:
+            messagebox.showerror("Error", "Password must be at least 4 characters long!")
+            return
+        
+        # Confirm the change
+        if not messagebox.askyesno("Confirm", "This will re-encrypt all your passwords. Continue?"):
+            return
+        
+        if self.db_manager.change_master_password(new_password):
+            messagebox.showinfo("Success", "Master password changed successfully!")
+            self.window.destroy()
 
 
-# TREEVIEW SECTION
-tvData = Treeview(window, columns=columns, show='headings')
-tvData.grid(row=5, column=0, columnspan=5, sticky='NSEW')
-window.grid_rowconfigure(5, weight=1)
-window.grid_columnconfigure(0, weight=1)
-window.grid_columnconfigure(1, weight=1)
-window.grid_columnconfigure(2, weight=1)
-window.grid_columnconfigure(3, weight=1)
-window.grid_columnconfigure(4, weight=1)
-tvData.column(0, width=50)
-tvData.heading('Site name', text='Site name')
-tvData.heading('Username', text='Username')
-tvData.heading('Password', text='Password')
-tvData.heading('ID', text='ID')
-tvScrollbarRight = Scrollbar()
-tvScrollbarRight.config(command=tvData.yview)
-tvData.config(yscrollcommand=tvScrollbarRight.set)
-# NO IDEA WHY I CANNOT GET THIS TO WORK, BUT IT FITS OK IN CURRENT VIEW AS LONG AS ADDITIONAL COLUMNS AREN'T ADDED
-# tvScrollbarBottom = Scrollbar(tvData, orient='horizontal')      # orient='horizontal'
-# tvScrollbarBottom.config(command=tvData.xview)
-tvScrollbarRight.grid(row=5, column=4, sticky='NSE')
-# tvScrollbarBottom.grid(row=5, column=0, sticky='N', columnspan=6)
+class PasswordManagerApp:
+    """Main application class"""
+    
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("RandPyPwGen v1.99.1")
+        self.root.geometry("900x700")
+        
+        # Center window
+        self.root.update_idletasks()
+        x = (self.root.winfo_screenwidth() // 2) - (900 // 2)
+        y = (self.root.winfo_screenheight() // 2) - (700 // 2)
+        self.root.geometry(f"900x700+{x}+{y}")
+        
+        # Configure root grid
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+        
+        # Initialize database manager
+        self.db_manager = DatabaseManager()
+        
+        # Start with login frame
+        self.current_frame = None
+        self._show_login()
+    
+    def _show_login(self):
+        """Show login frame"""
+        if self.current_frame:
+            self.current_frame.destroy()
+        
+        self.current_frame = LoginFrame(self.root, self.db_manager, self._show_main)
+        self.current_frame.grid(row=0, column=0)
+        
+        # Configure window for login
+        self.root.geometry("400x200")
+        self.root.title("RandPyPwGen - Login")
+    
+    def _show_main(self):
+        """Show main application frame"""
+        if self.current_frame:
+            self.current_frame.destroy()
+        
+        # Configure window for main app
+        self.root.geometry("900x700")
+        self.root.title("RandPyPwGen v1.99.1")
+        
+        self.current_frame = MainFrame(self.root, self.db_manager)
+        self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    
+    def run(self):
+        """Run the application"""
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
+        self.root.mainloop()
+    
+    def _on_closing(self):
+        """Handle application closing"""
+        self.root.quit()
 
 
-# BUTTONS SECTION WITH TOGGLE PASSWORD VISIBILITY
-deleteBtn = tk.Button(window, text="Delete", command=deleteRecord)
-deleteBtn.grid(row=6, column=0, rowspan=1, sticky=tk.E + tk.W + tk.N + tk. S)
-editBtn = tk.Button(window, text="Edit", command=editRecord)
-editBtn.grid(row=6, column=1, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
-copyBtn = tk.Button(window, text="Copy", command=copy)
-copyBtn.grid(row=6, column=2, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
-toggle_btn = tk.Button(window, text="Hide Passwords", command=toggle_password_visibility)
-toggle_btn.grid(row=6, column=3, rowspan=1, sticky=tk.E + tk.W + tk.N + tk.S)
-deleteBtn.config(height=3)
-editBtn.config(height=3)
-copyBtn.config(height=3)
-toggle_btn.config(height=3)
+def main():
+    """Main executable"""
+    try:
+        app = PasswordManagerApp()
+        app.run()
+    except KeyboardInterrupt:
+        print("\nApplication interrupted by user.")
+        sys.exit(0)
+    except Exception as e:
+        messagebox.showerror("Fatal Error", f"An unexpected error occurred: {str(e)}")
+        sys.exit(1)
 
 
-# Bind Delete key hotkey to the window - only when on Treeview
-window.bind("<Delete>", delete_hotkey)
-
-
-# FILE MENU SECTION
-menubar = tk.Menu(window)
-filemenu = tk.Menu(menubar, tearoff=0)
-filemenu.add_command(label="Import", command=import_window)
-filemenu.add_command(label="Change master password", command=change_master_pw)
-filemenu.add_separator()
-filemenu.add_command(label="Exit", command=window.quit)
-menubar.add_cascade(label="File", menu=filemenu)
-helpmenu = tk.Menu(menubar, tearoff=0)
-helpmenu.add_command(label="Help index", command=open_help)
-menubar.add_cascade(label="Help", menu=helpmenu)
-
-
-# UNENCRYPT PASSWORDS AND POPULATE TREEVIEW
-count = 0
-for i in records:
-    decrypted = f.decrypt(records[count][3])
-    decrypted = decrypted.decode('utf-8')
-    tvData.insert(parent='', index='end', values=(records[count][0], records[count][1], records[count][2], decrypted))
-    count += 1
-
-
-last = find_last_index()
-
-
-window.config(menu=menubar)
-window.mainloop()
+if __name__ == "__main__":
+    main()
