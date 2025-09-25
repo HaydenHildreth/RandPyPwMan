@@ -1,6 +1,25 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.1] - 09-25-2025
+  
+No database changes.
+
+### Added
+
+Added multiple Classes to handle functionality at all levels of program. Added Frames to Tkinter GUI.
+
+- Codebase rewrite [Issue #34](https://github.com/HaydenHildreth/RandPyPwMan/issues/34)
+- Tkinter Frames. [Issue #33](https://github.com/HaydenHildreth/RandPyPwMan/issues/33)
+ 
+### Fixed
+
+- Bad code and codebase design.
+
+### Notes
+
+- More work needs to be done but this is an entire codebase rewrite which is done and working.
+
 ## [1.0.1] - 09-11-2025
   
 No database changes.
