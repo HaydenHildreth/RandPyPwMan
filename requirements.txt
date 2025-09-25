@@ -1,3 +1,0 @@
-pyperclip
-cryptography
-bcrypt
