@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RandPyPwGen version 1.99.1
+RandPyPwGen version 1.99.2
 Modular, secure, easy to use password manager
 Written by Hayden Hildreth
 """
@@ -112,7 +112,6 @@ class DatabaseManager:
                 self.window.protocol("WM_DELETE_WINDOW", self._on_close)
             
             def _create_widgets(self):
-                # Use regular tk widgets instead of ttk to rule out ttk issues
                 main_frame = tk.Frame(self.window, padx=20, pady=20)
                 main_frame.pack(fill=tk.BOTH, expand=True)
                 
@@ -145,8 +144,6 @@ class DatabaseManager:
                 self.password_entry.bind('<Return>', lambda e: self._setup_password())
             
             def _setup_password(self):
-                # Debug information
-                print("Setup password called")
                 if self.password_entry is None:
                     print("ERROR: password_entry is None!")
                     messagebox.showerror("Error", "Internal error: password entry not found")
@@ -154,9 +151,8 @@ class DatabaseManager:
                 
                 try:
                     password = self.password_entry.get()
-                    print(f"Raw password: '{password}' (length: {len(password)})")
                     
-                    # Don't strip yet, check what we actually get
+                    # Do not modify, first verify input text
                     if not password:
                         print("Password is empty or None")
                         messagebox.showerror("Error", "Password cannot be empty!")
@@ -164,21 +160,12 @@ class DatabaseManager:
                         return
                     
                     password = password.strip()
-                    print(f"Stripped password: '{password}' (length: {len(password)})")
                     
                     if not password:
                         print("Password is empty after stripping")
                         messagebox.showerror("Error", "Password cannot be empty!")
                         self.password_entry.focus_set()
                         return
-                    
-                    if len(password) < 4:
-                        print(f"Password too short: {len(password)} characters")
-                        messagebox.showerror("Error", "Password must be at least 4 characters long!")
-                        self.password_entry.focus_set()
-                        return
-                    
-                    print("Password validation passed, attempting to save...")
                     
                     password_bytes = password.encode('utf-8')
                     hash_master = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
@@ -190,9 +177,10 @@ class DatabaseManager:
                     conn.commit()
                     conn.close()
                     
-                    print("Password saved successfully!")
                     messagebox.showinfo("Success", "Master password set successfully!")
                     self.success = True
+                    # Destroy the window to allow the application to continue
+                    self.window.quit()
                     self.window.destroy()
                     
                 except Exception as e:
@@ -201,12 +189,11 @@ class DatabaseManager:
             
             def _on_close(self):
                 print("Setup window closed")
+                self.window.quit()
                 self.window.destroy()
             
             def run(self):
-                print("Starting setup window mainloop")
                 self.window.mainloop()
-                print(f"Setup window closed, success = {self.success}")
                 return self.success
         
         setup = MasterPasswordSetup(self)
@@ -522,11 +509,26 @@ class MainFrame(ttk.Frame):
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # Bind double-click to edit
-        self.tree.bind('<Double-1>', lambda e: self._show_edit_dialog())
+        # FIX #2: Bind double-click only to the tree body, not headers
+        # Use a more specific binding that checks what was clicked
+        self.tree.bind('<Double-1>', self._on_double_click)
         
         # Bind Delete key
         self.tree.bind('<Delete>', self._delete_selected)
+    
+    def _on_double_click(self, event):
+        """Handle double-click events on treeview, ignoring header clicks
+        This was added due to a bug in v1.99.1 where when the user double-clicked
+        the Treeview's header column, it would give an error due to the program trying
+        to sort/filter the Treeview data. This has been removed, and now when you double click
+        a cell, it will open up the editing of that cell/record."""
+        
+        # Identify what was clicked
+        region = self.tree.identify_region(event.x, event.y)
+        
+        # If cell is double clicked, open edit window
+        if region == "cell":
+            self._show_edit_dialog()
     
     def _create_button_section(self):
         """Create action buttons"""
@@ -708,7 +710,7 @@ class MainFrame(ttk.Frame):
     
     def _show_about(self):
         """Show about dialog"""
-        messagebox.showinfo("About", "RandPyPwGen v1.99.1\nA secure password manager\n\nRefactored and improved version")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.2\nA secure password manager\n\nRefactored and improved version")
     
     def _open_help(self):
         """Open help in browser"""
@@ -1028,7 +1030,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.1")
+        self.root.title("RandPyPwGen v1.99.2")
         self.root.geometry("900x700")
         
         # Center window
@@ -1067,7 +1069,7 @@ class PasswordManagerApp:
         
         # Configure window for main app
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.1")
+        self.root.title("RandPyPwGen v1.99.2")
         
         self.current_frame = MainFrame(self.root, self.db_manager)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
