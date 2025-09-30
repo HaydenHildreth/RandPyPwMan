@@ -1,6 +1,23 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.2] - 09-30-2025
+  
+No database changes.
+
+### Added
+
+None.
+ 
+### Fixed
+
+- Error pop up when user tries to sort Treeview [Issue #96](https://github.com/HaydenHildreth/RandPyPwMan/issues/96)
+- Program hanging after initial password setup. [Issue #94](https://github.com/HaydenHildreth/RandPyPwMan/issues/94)
+
+### Notes
+
+- More work needs to be done but this is an entire codebase rewrite which is done and working.
+
 ## [1.99.1] - 09-25-2025
   
 No database changes.
@@ -15,10 +32,11 @@ Added multiple Classes to handle functionality at all levels of program. Added F
 ### Fixed
 
 - Bad code and codebase design.
+- Removed install.py program. [Issue #95](https://github.com/HaydenHildreth/RandPyPwMan/issues/95)
 
 ### Notes
 
-- More work needs to be done but this is an entire codebase rewrite which is done and working.
+- Almost done with v2.0.0.
 
 ## [1.0.1] - 09-11-2025
   
