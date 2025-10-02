@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.3] - 10-02-2025
+  
+Added new database for user settings.
+
+### Added
+
+Settings DB (SETTINGS.db). [Issue #97](https://github.com/HaydenHildreth/RandPyPwMan/issues/97)
+ 
+### Fixed
+
+None.
+
+### Notes
+
+- SETTINGS.db database will help facilitate more customization down the road. Need to think of additional things that would be nice to add to this for 2.0 launch.
+
 ## [1.99.2] - 09-30-2025
   
 No database changes.
