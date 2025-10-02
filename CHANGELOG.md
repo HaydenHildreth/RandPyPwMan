@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.99.3] - 10-02-2025
   
-Added new database for user settings.
+Major database changes. This update added new database for user settings. To update from 1.99.2 or prior, use the 1.99.3.py update file in updates folder. Additional information will be added as we approach 2.0.
 
 ### Added
 
