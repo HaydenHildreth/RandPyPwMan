@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RandPyPwGen version 1.99.2
+RandPyPwGen version 1.99.3
 Modular, secure, easy to use password manager
 Written by Hayden Hildreth
 """
@@ -12,6 +12,7 @@ import string
 import secrets
 import sqlite3
 import webbrowser
+import time
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict, Any
 import bcrypt
@@ -65,8 +66,16 @@ class DatabaseManager:
                 key varchar(255),
                 enc_key varchar(255)
             )""")
+            # Create settings table for user preferences
+            c2.execute("""CREATE TABLE IF NOT EXISTS settings(
+                key varchar(100) PRIMARY KEY,
+                value varchar(255)
+            )""")
             conn2.commit()
             conn2.close()
+            
+            # Set default settings
+            self._set_default_settings()
             
             # Check if master password exists
             if not self._has_master_password():
@@ -76,6 +85,51 @@ class DatabaseManager:
             
         except Exception as e:
             messagebox.showerror("Database Error", f"Failed to setup databases: {str(e)}")
+            return False
+    
+    def _set_default_settings(self):
+        """Set default settings for new installations"""
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            
+            # Check if settings exist
+            c.execute("SELECT COUNT(*) FROM settings")
+            count = c.fetchone()[0]
+            
+            if count == 0:
+                # Set defaults
+                c.execute("INSERT OR IGNORE INTO settings VALUES ('auto_lock_enabled', '1')")
+                c.execute("INSERT OR IGNORE INTO settings VALUES ('auto_lock_minutes', '5')")
+                conn.commit()
+            
+            conn.close()
+        except:
+            pass
+    
+    def get_setting(self, key: str, default: str = '') -> str:
+        """Get a setting value"""
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("SELECT value FROM settings WHERE key=?", (key,))
+            result = c.fetchone()
+            conn.close()
+            return result[0] if result else default
+        except:
+            return default
+    
+    def set_setting(self, key: str, value: str) -> bool:
+        """Set a setting value"""
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("INSERT OR REPLACE INTO settings VALUES (?, ?)", (key, value))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"Failed to save setting: {e}")
             return False
     
     def _has_master_password(self) -> bool:
@@ -122,12 +176,10 @@ class DatabaseManager:
                 instruction_label = tk.Label(main_frame, text="Enter master password:")
                 instruction_label.pack(pady=(0, 10))
                 
-                # Use regular Entry widget
                 self.password_entry = tk.Entry(main_frame, show='*', width=30, font=("Arial", 10))
                 self.password_entry.pack(pady=(0, 20))
                 self.password_entry.focus_set()
                 
-                # Button frame
                 button_frame = tk.Frame(main_frame)
                 button_frame.pack()
                 
@@ -139,22 +191,18 @@ class DatabaseManager:
                                    font=("Arial", 10), padx=20)
                 exit_btn.pack(side=tk.LEFT)
                 
-                # Bind Enter key
                 self.window.bind('<Return>', lambda e: self._setup_password())
                 self.password_entry.bind('<Return>', lambda e: self._setup_password())
             
             def _setup_password(self):
                 if self.password_entry is None:
-                    print("ERROR: password_entry is None!")
                     messagebox.showerror("Error", "Internal error: password entry not found")
                     return
                 
                 try:
                     password = self.password_entry.get()
                     
-                    # Do not modify, first verify input text
                     if not password:
-                        print("Password is empty or None")
                         messagebox.showerror("Error", "Password cannot be empty!")
                         self.password_entry.focus_set()
                         return
@@ -162,8 +210,12 @@ class DatabaseManager:
                     password = password.strip()
                     
                     if not password:
-                        print("Password is empty after stripping")
                         messagebox.showerror("Error", "Password cannot be empty!")
+                        self.password_entry.focus_set()
+                        return
+                    
+                    if len(password) < 4:
+                        messagebox.showerror("Error", "Password must be at least 4 characters long!")
                         self.password_entry.focus_set()
                         return
                     
@@ -179,16 +231,13 @@ class DatabaseManager:
                     
                     messagebox.showinfo("Success", "Master password set successfully!")
                     self.success = True
-                    # Destroy the window to allow the application to continue
                     self.window.quit()
                     self.window.destroy()
                     
                 except Exception as e:
-                    print(f"Exception in _setup_password: {e}")
                     messagebox.showerror("Error", f"Failed to set master password: {str(e)}")
             
             def _on_close(self):
-                print("Setup window closed")
                 self.window.quit()
                 self.window.destroy()
             
@@ -317,11 +366,9 @@ class DatabaseManager:
     def change_master_password(self, new_password: str) -> bool:
         """Change the master password and re-encrypt all data"""
         try:
-            # Generate new encryption key
             new_enc_key = Fernet.generate_key()
             new_fernet = Fernet(new_enc_key)
             
-            # Get all records and re-encrypt
             records = self.get_all_records()
             
             conn = sqlite3.connect(self.data_db)
@@ -329,17 +376,13 @@ class DatabaseManager:
             
             for record in records:
                 record_id, site, username, encrypted_password = record
-                # Decrypt with old key
                 decrypted = self.decrypt_password(encrypted_password)
-                # Re-encrypt with new key
                 new_encrypted = new_fernet.encrypt(decrypted.encode('utf-8'))
-                # Update record
                 c.execute("UPDATE data SET password=? WHERE id=?", (new_encrypted, record_id))
             
             conn.commit()
             conn.close()
             
-            # Update master password and encryption key
             new_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
             
             conn2 = sqlite3.connect(self.unlock_db)
@@ -348,7 +391,6 @@ class DatabaseManager:
             conn2.commit()
             conn2.close()
             
-            # Update current encryption key
             self.fernet = new_fernet
             
             return True
@@ -381,11 +423,9 @@ class LoginFrame(ttk.Frame):
         self._create_widgets()
     
     def _create_widgets(self):
-        # Title
         ttk.Label(self, text="RandPyPwGen", font=("Arial", 16, "bold")).grid(
             row=0, column=0, columnspan=2, pady=(0, 20))
         
-        # Master password input
         ttk.Label(self, text="Master Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
         
         self.password_var = tk.StringVar()
@@ -393,14 +433,12 @@ class LoginFrame(ttk.Frame):
         self.password_entry.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         self.password_entry.focus()
         
-        # Buttons
         button_frame = ttk.Frame(self)
         button_frame.grid(row=3, column=0, columnspan=2, pady=(20, 0))
         
         ttk.Button(button_frame, text="Unlock", command=self._authenticate).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Exit", command=self.quit).pack(side=tk.LEFT)
         
-        # Bind Enter key
         self.password_entry.bind('<Return>', lambda e: self._authenticate())
     
     def _authenticate(self):
@@ -416,19 +454,24 @@ class LoginFrame(ttk.Frame):
 class MainFrame(ttk.Frame):
     """Main application frame"""
     
-    def __init__(self, parent, db_manager):
+    def __init__(self, parent, db_manager, lock_callback):
         super().__init__(parent)
         self.db_manager = db_manager
+        self.lock_callback = lock_callback
         self.password_generator = PasswordGenerator()
         self.passwords_visible = True
         self.stored_passwords: Dict[int, str] = {}
         
+        # Auto-lock timer tracking
+        self.auto_lock_timer = None
+        self.last_activity_time = None
+        
         self._create_widgets()
         self._populate_treeview()
+        self._start_activity_monitoring()
     
     def _create_widgets(self):
-        # Configure grid weights
-        self.grid_rowconfigure(2, weight=1)  # Treeview row
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
@@ -487,11 +530,9 @@ class MainFrame(ttk.Frame):
         tree_frame.grid_rowconfigure(0, weight=1)
         tree_frame.grid_columnconfigure(0, weight=1)
         
-        # Treeview
         columns = ('ID', 'Site', 'Username', 'Password')
         self.tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
         
-        # Configure columns
         self.tree.heading('ID', text='ID')
         self.tree.heading('Site', text='Site Name')
         self.tree.heading('Username', text='Username')
@@ -504,29 +545,17 @@ class MainFrame(ttk.Frame):
         
         self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Scrollbar
         scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.tree.yview)
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # FIX #2: Bind double-click only to the tree body, not headers
-        # Use a more specific binding that checks what was clicked
         self.tree.bind('<Double-1>', self._on_double_click)
-        
-        # Bind Delete key
         self.tree.bind('<Delete>', self._delete_selected)
     
     def _on_double_click(self, event):
-        """Handle double-click events on treeview, ignoring header clicks
-        This was added due to a bug in v1.99.1 where when the user double-clicked
-        the Treeview's header column, it would give an error due to the program trying
-        to sort/filter the Treeview data. This has been removed, and now when you double click
-        a cell, it will open up the editing of that cell/record."""
-        
-        # Identify what was clicked
+        """Handle double-click events on treeview, ignoring header clicks"""
         region = self.tree.identify_region(event.x, event.y)
         
-        # If cell is double clicked, open edit window
         if region == "cell":
             self._show_edit_dialog()
     
@@ -561,19 +590,64 @@ class MainFrame(ttk.Frame):
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.master.quit)
         
+        # Options menu
+        options_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Options", menu=options_menu)
+        options_menu.add_command(label="Auto-Lock Settings...", command=self._show_autolock_settings)
+        
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Help", menu=help_menu)
         help_menu.add_command(label="About", command=self._show_about)
         help_menu.add_command(label="Help", command=self._open_help)
     
+    def _start_activity_monitoring(self):
+        """Start monitoring user activity for auto-lock"""
+        self._register_activity()
+        self._check_auto_lock()
+    
+    def _register_activity(self):
+        """Register an activity event"""
+        self.last_activity_time = time.time()
+    
+    def _check_auto_lock(self):
+        """Check if auto-lock should trigger"""
+        if self.auto_lock_timer:
+            self.after_cancel(self.auto_lock_timer)
+        
+        enabled = self.db_manager.get_setting('auto_lock_enabled', '1') == '1'
+        
+        if enabled and self.last_activity_time:
+            minutes = int(self.db_manager.get_setting('auto_lock_minutes', '5'))
+            timeout_seconds = minutes * 60
+            
+            elapsed = time.time() - self.last_activity_time
+            
+            if elapsed >= timeout_seconds:
+                self._lock_application()
+                return
+        
+        self.auto_lock_timer = self.after(10000, self._check_auto_lock)
+    
+    def _lock_application(self):
+        """Lock the application and return to login screen"""
+        if self.auto_lock_timer:
+            self.after_cancel(self.auto_lock_timer)
+        
+        self.lock_callback()
+    
+    def _show_autolock_settings(self):
+        """Show auto-lock settings dialog"""
+        self._register_activity()
+        AutoLockSettingsDialog(self, self.db_manager)
+    
     def _generate_password(self):
         """Generate a new password"""
+        self._register_activity()
         try:
             length = int(self.length_var.get())
             password = self.password_generator.generate(length)
             self.generated_password_var.set(f"Generated: {password}")
-            # Store the generated password for easy access
             self._current_generated_password = password
         except ValueError:
             messagebox.showerror("Invalid Input", "Please enter a valid password length.")
@@ -582,16 +656,19 @@ class MainFrame(ttk.Frame):
     
     def _clear_password(self):
         """Clear generated password"""
+        self._register_activity()
         self.generated_password_var.set("")
         self._current_generated_password = ""
     
     def _show_add_dialog(self):
         """Show add password dialog"""
+        self._register_activity()
         AddEditDialog(self, self.db_manager, callback=self._populate_treeview,
                      initial_password=getattr(self, '_current_generated_password', ''))
     
     def _show_edit_dialog(self):
         """Show edit password dialog"""
+        self._register_activity()
         selection = self.tree.selection()
         if not selection:
             messagebox.showwarning("No Selection", "Please select a record to edit.")
@@ -601,7 +678,6 @@ class MainFrame(ttk.Frame):
         values = item['values']
         record_id = values[0]
         
-        # Get actual password if hidden
         if not self.passwords_visible and record_id in self.stored_passwords:
             password = self.stored_passwords[record_id]
         else:
@@ -612,24 +688,22 @@ class MainFrame(ttk.Frame):
     
     def _delete_selected(self, event=None):
         """Delete selected records"""
+        self._register_activity()
         selection = self.tree.selection()
         if not selection:
             messagebox.showwarning("No Selection", "Please select record(s) to delete.")
             return
         
-        # Confirm deletion
         count = len(selection)
         message = f"Are you sure you want to delete {count} record(s)?"
         if not messagebox.askyesno("Confirm Deletion", message):
             return
         
-        # Delete records
         for item in selection:
             values = self.tree.item(item)['values']
             record_id = values[0]
             self.db_manager.delete_record(record_id)
             
-            # Remove from stored passwords if present
             if record_id in self.stored_passwords:
                 del self.stored_passwords[record_id]
         
@@ -637,6 +711,7 @@ class MainFrame(ttk.Frame):
     
     def _copy_password(self):
         """Copy selected password to clipboard"""
+        self._register_activity()
         selection = self.tree.selection()
         if not selection:
             messagebox.showwarning("No Selection", "Please select a record to copy password.")
@@ -646,7 +721,6 @@ class MainFrame(ttk.Frame):
         values = item['values']
         record_id = values[0]
         
-        # Get actual password
         if not self.passwords_visible and record_id in self.stored_passwords:
             password = self.stored_passwords[record_id]
         else:
@@ -657,11 +731,13 @@ class MainFrame(ttk.Frame):
     
     def _toggle_password_visibility(self):
         """Toggle password visibility in treeview"""
+        self._register_activity()
         self.passwords_visible = not self.passwords_visible
         self._populate_treeview()
     
     def _search(self):
         """Search for records"""
+        self._register_activity()
         search_term = self.search_var.get().strip()
         if not search_term:
             self._populate_treeview()
@@ -672,22 +748,20 @@ class MainFrame(ttk.Frame):
     
     def _clear_search(self):
         """Clear search and show all records"""
+        self._register_activity()
         self.search_var.set("")
         self._populate_treeview()
     
     def _populate_treeview(self, records=None):
         """Populate treeview with records"""
-        # Clear treeview
         for item in self.tree.get_children():
             self.tree.delete(item)
         
         self.stored_passwords.clear()
         
-        # Get records if not provided
         if records is None:
             records = self.db_manager.get_all_records()
         
-        # Populate treeview
         for record in records:
             record_id, site, username, encrypted_password = record
             password = self.db_manager.decrypt_password(encrypted_password)
@@ -702,19 +776,116 @@ class MainFrame(ttk.Frame):
     
     def _show_import_dialog(self):
         """Show import dialog"""
+        self._register_activity()
         ImportDialog(self, self.db_manager, callback=self._populate_treeview)
     
     def _change_master_password(self):
         """Change master password"""
+        self._register_activity()
         ChangeMasterPasswordDialog(self, self.db_manager)
     
     def _show_about(self):
         """Show about dialog"""
-        messagebox.showinfo("About", "RandPyPwGen v1.99.2\nA secure password manager\n\nRefactored and improved version")
+        self._register_activity()
+        messagebox.showinfo("About", "RandPyPwGen v1.99.3\nA secure password manager\n\nWith auto-lock timer feature")
     
     def _open_help(self):
         """Open help in browser"""
+        self._register_activity()
         webbrowser.open("https://github.com/HaydenHildreth/RandPyPwMan")
+
+
+class AutoLockSettingsDialog:
+    """Dialog for configuring auto-lock settings"""
+    
+    def __init__(self, parent, db_manager):
+        self.db_manager = db_manager
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Auto-Lock Settings")
+        self.window.geometry("400x180")
+        self.window.resizable(False, False)
+        
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 100
+        y = parent_y + 100
+        self.window.geometry(f"400x180+{x}+{y}")
+        
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(main_frame, text="Auto-Lock Configuration", 
+                 font=("Arial", 11, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 20))
+        
+        self.enabled_var = tk.BooleanVar()
+        enabled_value = self.db_manager.get_setting('auto_lock_enabled', '1')
+        self.enabled_var.set(enabled_value == '1')
+        
+        ttk.Checkbutton(main_frame, text="Enable auto-lock", 
+                       variable=self.enabled_var,
+                       command=self._toggle_enabled).grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=(0, 15))
+        
+        timeout_frame = ttk.Frame(main_frame)
+        timeout_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
+        
+        ttk.Label(timeout_frame, text="Lock after:").pack(side=tk.LEFT, padx=(0, 10))
+        
+        self.minutes_var = tk.StringVar()
+        current_minutes = self.db_manager.get_setting('auto_lock_minutes', '5')
+        self.minutes_var.set(current_minutes)
+        
+        self.minutes_spinbox = ttk.Spinbox(timeout_frame, from_=1, to=60, 
+                                          textvariable=self.minutes_var, 
+                                          width=10,
+                                          state='readonly' if not self.enabled_var.get() else 'normal')
+        self.minutes_spinbox.pack(side=tk.LEFT, padx=(0, 10))
+        
+        ttk.Label(timeout_frame, text="minutes of inactivity").pack(side=tk.LEFT)
+        
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=3, column=0, columnspan=2)
+        
+        ttk.Button(button_frame, text="Save", command=self._save_settings).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+    
+    def _toggle_enabled(self):
+        """Toggle the enabled state of timeout controls"""
+        if self.enabled_var.get():
+            self.minutes_spinbox.config(state='normal')
+        else:
+            self.minutes_spinbox.config(state='readonly')
+    
+    def _save_settings(self):
+        """Save auto-lock settings"""
+        try:
+            enabled = '1' if self.enabled_var.get() else '0'
+            minutes = self.minutes_var.get().strip()
+            
+            try:
+                minutes_int = int(minutes)
+                if minutes_int < 1 or minutes_int > 60:
+                    messagebox.showerror("Invalid Input", "Timeout must be between 1 and 60 minutes.")
+                    return
+            except ValueError:
+                messagebox.showerror("Invalid Input", "Please enter a valid number of minutes.")
+                return
+            
+            self.db_manager.set_setting('auto_lock_enabled', enabled)
+            self.db_manager.set_setting('auto_lock_minutes', minutes)
+            
+            messagebox.showinfo("Success", "Auto-lock settings saved successfully!")
+            self.window.destroy()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save settings: {str(e)}")
 
 
 class AddEditDialog:
@@ -725,7 +896,6 @@ class AddEditDialog:
         self.callback = callback
         self.record_id = record_id
         
-        # Use initial_password if provided and password is empty
         if not password and initial_password:
             password = initial_password
         
@@ -734,7 +904,6 @@ class AddEditDialog:
         self.window.geometry("400x200")
         self.window.resizable(False, False)
         
-        # Center window
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
         parent_y = parent.winfo_rooty()
@@ -751,26 +920,22 @@ class AddEditDialog:
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(1, weight=1)
         
-        # Site name
         ttk.Label(main_frame, text="Site Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.site_var = tk.StringVar(value=site)
         site_entry = ttk.Entry(main_frame, textvariable=self.site_var)
         site_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         site_entry.focus()
         
-        # Username
         ttk.Label(main_frame, text="Username:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.username_var = tk.StringVar(value=username)
         username_entry = ttk.Entry(main_frame, textvariable=self.username_var)
         username_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         
-        # Password
         ttk.Label(main_frame, text="Password:").grid(row=2, column=0, sticky=tk.W, pady=5)
         self.password_var = tk.StringVar(value=password)
         password_entry = ttk.Entry(main_frame, textvariable=self.password_var)
         password_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         
-        # Buttons
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=3, column=0, columnspan=2, pady=(20, 0))
         
@@ -778,7 +943,6 @@ class AddEditDialog:
         ttk.Button(button_frame, text=action_text, command=self._save).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Cancel", command=self._cancel).pack(side=tk.LEFT)
         
-        # Bind Enter key
         self.window.bind('<Return>', lambda e: self._save())
         self.window.bind('<Escape>', lambda e: self._cancel())
     
@@ -798,14 +962,12 @@ class AddEditDialog:
         
         try:
             if self.record_id:
-                # Update existing record
                 success = self.db_manager.update_record(self.record_id, site, username, password)
                 if success:
                     messagebox.showinfo("Success", "Record updated successfully!")
                 else:
                     return
             else:
-                # Add new record
                 record_id = self.db_manager.add_record(site, username, password)
                 if record_id:
                     messagebox.showinfo("Success", "Record added successfully!")
@@ -836,7 +998,6 @@ class ImportDialog:
         self.window.geometry("350x200")
         self.window.resizable(False, False)
         
-        # Center window
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
         parent_y = parent.winfo_rooty()
@@ -855,7 +1016,6 @@ class ImportDialog:
         ttk.Label(main_frame, text="Select data source:", font=("Arial", 10, "bold")).grid(
             row=0, column=0, sticky=tk.W, pady=(0, 10))
         
-        # Data source selection
         self.source_var = tk.StringVar(value="Chrome")
         sources = [("Chrome", "Chrome"), ("Firefox", "Firefox")]
         
@@ -863,7 +1023,6 @@ class ImportDialog:
             ttk.Radiobutton(main_frame, text=text, variable=self.source_var, 
                            value=value).grid(row=i+1, column=0, sticky=tk.W, pady=2)
         
-        # File selection
         file_frame = ttk.Frame(main_frame)
         file_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(20, 10))
         file_frame.grid_columnconfigure(1, weight=1)
@@ -874,7 +1033,6 @@ class ImportDialog:
         file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 10))
         ttk.Button(file_frame, text="Browse", command=self._browse_file).grid(row=0, column=2)
         
-        # Buttons
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=4, column=0, pady=(10, 0))
         
@@ -907,14 +1065,11 @@ class ImportDialog:
             with open(self.filename, 'r', newline='', encoding='utf-8') as file:
                 csv_reader = csv.reader(file)
                 
-                # Skip header row if it exists
                 try:
                     first_row = next(csv_reader)
-                    # Check if first row looks like headers
                     if not any(field.startswith('http') for field in first_row):
-                        pass  # Skip header row
+                        pass
                     else:
-                        # Reset and process first row as data
                         file.seek(0)
                         csv_reader = csv.reader(file)
                 except StopIteration:
@@ -923,22 +1078,20 @@ class ImportDialog:
                 
                 for row in csv_reader:
                     if len(row) < 3:
-                        continue  # Skip incomplete rows
+                        continue
                     
                     try:
                         if source == "Chrome":
-                            # Chrome format: name, url, username, password
                             if len(row) >= 4:
-                                site = row[0] or row[1]  # Use name, fallback to url
+                                site = row[0] or row[1]
                                 username = row[2]
                                 password = row[3]
-                        else:  # Firefox
-                            # Firefox format: url, username, password
+                        else:
                             site = row[0]
                             username = row[1]
                             password = row[2]
                         
-                        if site and password:  # Only import if we have site and password
+                        if site and password:
                             if self.db_manager.add_record(site, username, password):
                                 imported_count += 1
                     
@@ -968,7 +1121,6 @@ class ChangeMasterPasswordDialog:
         self.window.geometry("400x150")
         self.window.resizable(False, False)
         
-        # Center window
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
         parent_y = parent.winfo_rooty()
@@ -994,14 +1146,12 @@ class ChangeMasterPasswordDialog:
         password_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         password_entry.focus()
         
-        # Buttons
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=2, column=0, columnspan=2, pady=(20, 0))
         
         ttk.Button(button_frame, text="Change Password", command=self._change_password).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
         
-        # Bind Enter key
         self.window.bind('<Return>', lambda e: self._change_password())
     
     def _change_password(self):
@@ -1016,7 +1166,6 @@ class ChangeMasterPasswordDialog:
             messagebox.showerror("Error", "Password must be at least 4 characters long!")
             return
         
-        # Confirm the change
         if not messagebox.askyesno("Confirm", "This will re-encrypt all your passwords. Continue?"):
             return
         
@@ -1030,23 +1179,19 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.2")
+        self.root.title("RandPyPwGen v1.99.3")
         self.root.geometry("900x700")
         
-        # Center window
         self.root.update_idletasks()
         x = (self.root.winfo_screenwidth() // 2) - (900 // 2)
         y = (self.root.winfo_screenheight() // 2) - (700 // 2)
         self.root.geometry(f"900x700+{x}+{y}")
         
-        # Configure root grid
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
         
-        # Initialize database manager
         self.db_manager = DatabaseManager()
         
-        # Start with login frame
         self.current_frame = None
         self._show_login()
     
@@ -1058,7 +1203,6 @@ class PasswordManagerApp:
         self.current_frame = LoginFrame(self.root, self.db_manager, self._show_main)
         self.current_frame.grid(row=0, column=0)
         
-        # Configure window for login
         self.root.geometry("400x200")
         self.root.title("RandPyPwGen - Login")
     
@@ -1067,11 +1211,10 @@ class PasswordManagerApp:
         if self.current_frame:
             self.current_frame.destroy()
         
-        # Configure window for main app
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.2")
+        self.root.title("RandPyPwGen v1.99.3")
         
-        self.current_frame = MainFrame(self.root, self.db_manager)
+        self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
     
     def run(self):
