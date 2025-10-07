@@ -1,6 +1,38 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.5] - 10-07-2025
+  
+Major database changes. This update changed group logic, a new database was added to fix some minor flaws in prior version's implementation.
+
+### Added
+
+Groups. [Issue #99](https://github.com/HaydenHildreth/RandPyPwMan/issues/99)
+ 
+### Fixed
+
+None.
+
+### Notes
+
+- In previous version, you couldn't see the group you had created unless it was actually assigned to a password. By adding a new DB it has fixed this issue.
+
+## [1.99.4] - 10-06-2025
+  
+Minor database changes. This update added group logic, as well as a new column to facilitate the assigment of a group to the password.
+
+### Added
+
+Groups. [Issue #99](https://github.com/HaydenHildreth/RandPyPwMan/issues/99)
+ 
+### Fixed
+
+None.
+
+### Notes
+
+- None.
+
 ## [1.99.3] - 10-02-2025
   
 Major database changes. This update added new database for user settings. To update from 1.99.2 or prior, use the 1.99.3.py update file in updates folder. Additional information will be added as we approach 2.0.
