@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-RandPyPwGen version 1.99.3
+RandPyPwGen version 1.99.5
 Modular, secure, easy to use password manager
 Written by Hayden Hildreth
+Modified to use separate groups table
 """
 
 import os
@@ -38,35 +39,97 @@ class DatabaseManager:
             if not self._setup_databases():
                 sys.exit(1)
         
-        # Load encryption key
         self._load_encryption_key()
+        self._migrate_database()
+    
+    def _load_encryption_key(self):
+        """Load the encryption key from database"""
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("SELECT enc_key FROM master")
+            result = c.fetchone()
+            conn.close()
+            
+            if result:
+                self.fernet = Fernet(result[0])
+            else:
+                raise Exception("No encryption key found")
+                
+        except Exception as e:
+            messagebox.showerror("Encryption Error", f"Failed to load encryption key: {str(e)}")
+            sys.exit(1)
+    
+    def _migrate_database(self):
+        """Add group column if it doesn't exist and create groups table"""
+        try:
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            
+            # Check if group_name column exists in data table
+            c.execute("PRAGMA table_info(data)")
+            columns = [column[1] for column in c.fetchall()]
+            
+            if 'group_name' not in columns:
+                c.execute("ALTER TABLE data ADD COLUMN group_name varchar(100)")
+                conn.commit()
+            else:
+                c.execute("UPDATE data SET group_name = NULL WHERE group_name = 'All'")
+                conn.commit()
+            
+            # Create groups table if it doesn't exist
+            c.execute("""CREATE TABLE IF NOT EXISTS groups(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name varchar(100) UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )""")
+            conn.commit()
+            
+            # Migrate existing groups from data table to groups table
+            c.execute("SELECT DISTINCT group_name FROM data WHERE group_name IS NOT NULL AND group_name != ''")
+            existing_groups = [row[0] for row in c.fetchall()]
+            
+            for group in existing_groups:
+                try:
+                    c.execute("INSERT OR IGNORE INTO groups (name) VALUES (?)", (group,))
+                except:
+                    pass
+            
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Migration warning: {e}")
     
     def _setup_databases(self) -> bool:
         """Setup databases if they don't exist"""
         try:
-            # Create directory
             self.db_path.mkdir(exist_ok=True)
             
-            # Setup data database
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             c.execute("""CREATE TABLE IF NOT EXISTS data(
                 id INTEGER PRIMARY KEY,
                 site varchar(100) NOT NULL,
                 username varchar(100) NOT NULL,
-                password varchar(100) NOT NULL
+                password varchar(100) NOT NULL,
+                group_name varchar(100)
+            )""")
+            
+            # Create groups table
+            c.execute("""CREATE TABLE IF NOT EXISTS groups(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name varchar(100) UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )""")
             conn.commit()
             conn.close()
             
-            # Setup unlock database
             conn2 = sqlite3.connect(self.unlock_db)
             c2 = conn2.cursor()
             c2.execute("""CREATE TABLE IF NOT EXISTS master(
                 key varchar(255),
                 enc_key varchar(255)
             )""")
-            # Create settings table for user preferences
             c2.execute("""CREATE TABLE IF NOT EXISTS settings(
                 key varchar(100) PRIMARY KEY,
                 value varchar(255)
@@ -74,10 +137,8 @@ class DatabaseManager:
             conn2.commit()
             conn2.close()
             
-            # Set default settings
             self._set_default_settings()
             
-            # Check if master password exists
             if not self._has_master_password():
                 return self._setup_master_password()
             
@@ -93,12 +154,10 @@ class DatabaseManager:
             conn = sqlite3.connect(self.unlock_db)
             c = conn.cursor()
             
-            # Check if settings exist
             c.execute("SELECT COUNT(*) FROM settings")
             count = c.fetchone()[0]
             
             if count == 0:
-                # Set defaults
                 c.execute("INSERT OR IGNORE INTO settings VALUES ('auto_lock_enabled', '1')")
                 c.execute("INSERT OR IGNORE INTO settings VALUES ('auto_lock_minutes', '5')")
                 conn.commit()
@@ -156,7 +215,6 @@ class DatabaseManager:
                 self.window.geometry('400x200')
                 self.window.resizable(False, False)
                 
-                # Center window
                 self.window.update_idletasks()
                 x = (self.window.winfo_screenwidth() // 2) - (400 // 2)
                 y = (self.window.winfo_screenheight() // 2) - (200 // 2)
@@ -248,24 +306,6 @@ class DatabaseManager:
         setup = MasterPasswordSetup(self)
         return setup.run()
     
-    def _load_encryption_key(self):
-        """Load the encryption key from database"""
-        try:
-            conn = sqlite3.connect(self.unlock_db)
-            c = conn.cursor()
-            c.execute("SELECT enc_key FROM master")
-            result = c.fetchone()
-            conn.close()
-            
-            if result:
-                self.fernet = Fernet(result[0])
-            else:
-                raise Exception("No encryption key found")
-                
-        except Exception as e:
-            messagebox.showerror("Encryption Error", f"Failed to load encryption key: {str(e)}")
-            sys.exit(1)
-    
     def verify_master_password(self, password: str) -> bool:
         """Verify the master password"""
         try:
@@ -283,12 +323,17 @@ class DatabaseManager:
             messagebox.showerror("Authentication Error", f"Failed to verify password: {str(e)}")
             return False
     
-    def get_all_records(self) -> List[Tuple]:
-        """Get all password records from database"""
+    def get_all_records(self, group_filter: str = "All") -> List[Tuple]:
+        """Get all password records from database, optionally filtered by group"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("SELECT * FROM data ORDER BY id")
+            
+            if group_filter == "All":
+                c.execute("SELECT * FROM data ORDER BY id")
+            else:
+                c.execute("SELECT * FROM data WHERE group_name=? ORDER BY id", (group_filter,))
+            
             records = c.fetchall()
             conn.close()
             return records
@@ -296,13 +341,107 @@ class DatabaseManager:
             messagebox.showerror("Database Error", f"Failed to retrieve records: {str(e)}")
             return []
     
-    def search_records(self, search_term: str) -> List[Tuple]:
-        """Search for records by site name or username"""
+    def get_all_groups(self) -> List[str]:
+        """Get list of all groups from groups table"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("""SELECT * FROM data WHERE site LIKE ? OR username LIKE ? ORDER BY id""",
-                     (f'%{search_term}%', f'%{search_term}%'))
+            c.execute("SELECT name FROM groups ORDER BY name")
+            groups = [row[0] for row in c.fetchall()]
+            conn.close()
+            
+            # Always add "All" at the beginning
+            groups.insert(0, 'All')
+            
+            return groups
+        except Exception as e:
+            print(f"Error getting groups: {e}")
+            return ['All']
+    
+    def add_group(self, group_name: str) -> bool:
+        """Add a new group to the groups table"""
+        try:
+            if not group_name or group_name.strip() == '':
+                return False
+            
+            group_name = group_name.strip()
+            
+            if group_name.lower() == 'all':
+                return False
+            
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            c.execute("INSERT INTO groups (name) VALUES (?)", (group_name,))
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.IntegrityError:
+            # Group already exists
+            return False
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to add group: {str(e)}")
+            return False
+    
+    def delete_group(self, group_name: str) -> bool:
+        """Delete a group from the groups table"""
+        try:
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            
+            # Remove group from groups table
+            c.execute("DELETE FROM groups WHERE name=?", (group_name,))
+            
+            # Set group_name to NULL for all passwords in this group
+            c.execute("UPDATE data SET group_name=NULL WHERE group_name=?", (group_name,))
+            
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to delete group: {str(e)}")
+            return False
+    
+    def rename_group(self, old_name: str, new_name: str) -> bool:
+        """Rename a group"""
+        try:
+            if new_name == '':
+                new_name = None
+            
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            
+            # Update the groups table
+            if new_name:
+                c.execute("UPDATE groups SET name=? WHERE name=?", (new_name, old_name))
+            else:
+                c.execute("DELETE FROM groups WHERE name=?", (old_name,))
+            
+            # Update all passwords with this group
+            c.execute("UPDATE data SET group_name=? WHERE group_name=?", (new_name, old_name))
+            
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Error", f"Group '{new_name}' already exists!")
+            return False
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to rename group: {str(e)}")
+            return False
+    
+    def search_records(self, search_term: str, group_filter: str = "All") -> List[Tuple]:
+        """Search for records by site name or username, optionally filtered by group"""
+        try:
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            
+            if group_filter == "All":
+                c.execute("""SELECT * FROM data WHERE site LIKE ? OR username LIKE ? ORDER BY id""",
+                         (f'%{search_term}%', f'%{search_term}%'))
+            else:
+                c.execute("""SELECT * FROM data WHERE (site LIKE ? OR username LIKE ?) AND group_name=? ORDER BY id""",
+                         (f'%{search_term}%', f'%{search_term}%', group_filter))
+            
             records = c.fetchall()
             conn.close()
             return records
@@ -310,15 +449,18 @@ class DatabaseManager:
             messagebox.showerror("Search Error", f"Failed to search records: {str(e)}")
             return []
     
-    def add_record(self, site: str, username: str, password: str) -> Optional[int]:
+    def add_record(self, site: str, username: str, password: str, group_name: Optional[str] = None) -> Optional[int]:
         """Add a new password record"""
         try:
             encrypted_password = self.fernet.encrypt(password.encode('utf-8'))
             
+            if group_name == '':
+                group_name = None
+            
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("INSERT INTO data (site, username, password) VALUES (?, ?, ?)",
-                     (site, username, encrypted_password))
+            c.execute("INSERT INTO data (site, username, password, group_name) VALUES (?, ?, ?, ?)",
+                     (site, username, encrypted_password, group_name))
             record_id = c.lastrowid
             conn.commit()
             conn.close()
@@ -327,15 +469,18 @@ class DatabaseManager:
             messagebox.showerror("Database Error", f"Failed to add record: {str(e)}")
             return None
     
-    def update_record(self, record_id: int, site: str, username: str, password: str) -> bool:
+    def update_record(self, record_id: int, site: str, username: str, password: str, group_name: Optional[str] = None) -> bool:
         """Update an existing password record"""
         try:
             encrypted_password = self.fernet.encrypt(password.encode('utf-8'))
             
+            if group_name == '':
+                group_name = None
+            
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("UPDATE data SET site=?, username=?, password=? WHERE id=?",
-                     (site, username, encrypted_password, record_id))
+            c.execute("UPDATE data SET site=?, username=?, password=?, group_name=? WHERE id=?",
+                     (site, username, encrypted_password, group_name, record_id))
             conn.commit()
             conn.close()
             return True
@@ -375,7 +520,11 @@ class DatabaseManager:
             c = conn.cursor()
             
             for record in records:
-                record_id, site, username, encrypted_password = record
+                if len(record) == 5:
+                    record_id, site, username, encrypted_password, group_name = record
+                else:
+                    record_id, site, username, encrypted_password = record
+                
                 decrypted = self.decrypt_password(encrypted_password)
                 new_encrypted = new_fernet.encrypt(decrypted.encode('utf-8'))
                 c.execute("UPDATE data SET password=? WHERE id=?", (new_encrypted, record_id))
@@ -461,8 +610,8 @@ class MainFrame(ttk.Frame):
         self.password_generator = PasswordGenerator()
         self.passwords_visible = True
         self.stored_passwords: Dict[int, str] = {}
+        self.current_group = "All"
         
-        # Auto-lock timer tracking
         self.auto_lock_timer = None
         self.last_activity_time = None
         
@@ -471,13 +620,14 @@ class MainFrame(ttk.Frame):
         self._start_activity_monitoring()
     
     def _create_widgets(self):
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
         self.grid_columnconfigure(3, weight=1)
         
         self._create_password_generation_section()
+        self._create_group_filter_section()
         self._create_search_section()
         self._create_treeview_section()
         self._create_button_section()
@@ -507,10 +657,28 @@ class MainFrame(ttk.Frame):
                                        font=("Courier", 10), foreground="blue")
         self.password_label.grid(row=1, column=0, columnspan=5, sticky=(tk.W, tk.E), pady=(10, 0))
     
+    def _create_group_filter_section(self):
+        """Create group filter widgets"""
+        group_frame = ttk.LabelFrame(self, text="Group Filter", padding="10")
+        group_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
+        group_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(group_frame, text="Group:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        
+        self.group_var = tk.StringVar(value="All")
+        self.group_combo = ttk.Combobox(group_frame, textvariable=self.group_var, state='readonly', width=25)
+        self.group_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
+        self.group_combo.bind('<<ComboboxSelected>>', lambda e: self._on_group_change())
+        
+        ttk.Button(group_frame, text="New Group", command=self._show_new_group_dialog).grid(row=0, column=2, padx=(0, 5))
+        ttk.Button(group_frame, text="Manage Groups", command=self._show_manage_groups_dialog).grid(row=0, column=3)
+        
+        self._refresh_groups()
+    
     def _create_search_section(self):
         """Create search widgets"""
         search_frame = ttk.LabelFrame(self, text="Search", padding="10")
-        search_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
+        search_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
         search_frame.grid_columnconfigure(1, weight=1)
         
         ttk.Label(search_frame, text="Search:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
@@ -526,22 +694,24 @@ class MainFrame(ttk.Frame):
     def _create_treeview_section(self):
         """Create treeview and scrollbar"""
         tree_frame = ttk.Frame(self)
-        tree_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        tree_frame.grid(row=3, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         tree_frame.grid_rowconfigure(0, weight=1)
         tree_frame.grid_columnconfigure(0, weight=1)
         
-        columns = ('ID', 'Site', 'Username', 'Password')
+        columns = ('ID', 'Site', 'Username', 'Password', 'Group')
         self.tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
         
         self.tree.heading('ID', text='ID')
         self.tree.heading('Site', text='Site Name')
         self.tree.heading('Username', text='Username')
         self.tree.heading('Password', text='Password')
+        self.tree.heading('Group', text='Group')
         
         self.tree.column('ID', width=50, minwidth=50)
         self.tree.column('Site', width=200, minwidth=100)
         self.tree.column('Username', width=150, minwidth=100)
-        self.tree.column('Password', width=200, minwidth=100)
+        self.tree.column('Password', width=150, minwidth=100)
+        self.tree.column('Group', width=100, minwidth=80)
         
         self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
@@ -562,7 +732,7 @@ class MainFrame(ttk.Frame):
     def _create_button_section(self):
         """Create action buttons"""
         button_frame = ttk.Frame(self)
-        button_frame.grid(row=3, column=0, columnspan=4, sticky=(tk.W, tk.E))
+        button_frame.grid(row=4, column=0, columnspan=4, sticky=(tk.W, tk.E))
         
         buttons = [
             ("Add", self._show_add_dialog),
@@ -582,7 +752,6 @@ class MainFrame(ttk.Frame):
         menubar = tk.Menu(self.master)
         self.master.config(menu=menubar)
         
-        # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="Import Passwords...", command=self._show_import_dialog)
@@ -590,12 +759,10 @@ class MainFrame(ttk.Frame):
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.master.quit)
         
-        # Options menu
         options_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Options", menu=options_menu)
         options_menu.add_command(label="Auto-Lock Settings...", command=self._show_autolock_settings)
         
-        # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Help", menu=help_menu)
         help_menu.add_command(label="About", command=self._show_about)
@@ -641,6 +808,31 @@ class MainFrame(ttk.Frame):
         self._register_activity()
         AutoLockSettingsDialog(self, self.db_manager)
     
+    def _refresh_groups(self):
+        """Refresh the list of groups in the dropdown"""
+        groups = self.db_manager.get_all_groups()
+        self.group_combo['values'] = groups
+        
+        if self.current_group not in groups:
+            self.current_group = "All"
+            self.group_var.set("All")
+    
+    def _on_group_change(self):
+        """Handle group selection change"""
+        self._register_activity()
+        self.current_group = self.group_var.get()
+        self._populate_treeview()
+    
+    def _show_new_group_dialog(self):
+        """Show dialog to create a new group"""
+        self._register_activity()
+        NewGroupDialog(self, self.db_manager, callback=self._on_data_changed)
+    
+    def _show_manage_groups_dialog(self):
+        """Show dialog to manage existing groups"""
+        self._register_activity()
+        ManageGroupsDialog(self, self.db_manager, callback=self._on_data_changed)
+    
     def _generate_password(self):
         """Generate a new password"""
         self._register_activity()
@@ -663,8 +855,10 @@ class MainFrame(ttk.Frame):
     def _show_add_dialog(self):
         """Show add password dialog"""
         self._register_activity()
-        AddEditDialog(self, self.db_manager, callback=self._populate_treeview,
-                     initial_password=getattr(self, '_current_generated_password', ''))
+        default_group = None if self.current_group == "All" else self.current_group
+        AddEditDialog(self, self.db_manager, callback=self._on_data_changed,
+                     initial_password=getattr(self, '_current_generated_password', ''),
+                     default_group=default_group)
     
     def _show_edit_dialog(self):
         """Show edit password dialog"""
@@ -683,8 +877,11 @@ class MainFrame(ttk.Frame):
         else:
             password = values[3]
         
-        AddEditDialog(self, self.db_manager, callback=self._populate_treeview,
-                     record_id=record_id, site=values[1], username=values[2], password=password)
+        group = values[4] if len(values) > 4 and values[4] else None
+        
+        AddEditDialog(self, self.db_manager, callback=self._on_data_changed,
+                     record_id=record_id, site=values[1], username=values[2], 
+                     password=password, group=group)
     
     def _delete_selected(self, event=None):
         """Delete selected records"""
@@ -707,7 +904,7 @@ class MainFrame(ttk.Frame):
             if record_id in self.stored_passwords:
                 del self.stored_passwords[record_id]
         
-        self._populate_treeview()
+        self._on_data_changed()
     
     def _copy_password(self):
         """Copy selected password to clipboard"""
@@ -743,13 +940,18 @@ class MainFrame(ttk.Frame):
             self._populate_treeview()
             return
         
-        records = self.db_manager.search_records(search_term)
+        records = self.db_manager.search_records(search_term, self.current_group)
         self._populate_treeview(records)
     
     def _clear_search(self):
         """Clear search and show all records"""
         self._register_activity()
         self.search_var.set("")
+        self._populate_treeview()
+    
+    def _on_data_changed(self):
+        """Called when data is added, edited, or deleted"""
+        self._refresh_groups()
         self._populate_treeview()
     
     def _populate_treeview(self, records=None):
@@ -760,10 +962,15 @@ class MainFrame(ttk.Frame):
         self.stored_passwords.clear()
         
         if records is None:
-            records = self.db_manager.get_all_records()
+            records = self.db_manager.get_all_records(self.current_group)
         
         for record in records:
-            record_id, site, username, encrypted_password = record
+            if len(record) == 5:
+                record_id, site, username, encrypted_password, group_name = record
+            else:
+                record_id, site, username, encrypted_password = record
+                group_name = None
+            
             password = self.db_manager.decrypt_password(encrypted_password)
             
             if self.passwords_visible:
@@ -772,12 +979,15 @@ class MainFrame(ttk.Frame):
                 self.stored_passwords[record_id] = password
                 display_password = '*' * min(len(password), 12)
             
-            self.tree.insert('', 'end', values=(record_id, site, username, display_password))
+            display_group = group_name if group_name else ""
+            
+            self.tree.insert('', 'end', values=(record_id, site, username, display_password, display_group))
     
     def _show_import_dialog(self):
         """Show import dialog"""
         self._register_activity()
-        ImportDialog(self, self.db_manager, callback=self._populate_treeview)
+        default_group = None if self.current_group == "All" else self.current_group
+        ImportDialog(self, self.db_manager, callback=self._on_data_changed, current_group=default_group)
     
     def _change_master_password(self):
         """Change master password"""
@@ -787,12 +997,257 @@ class MainFrame(ttk.Frame):
     def _show_about(self):
         """Show about dialog"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.3\nA secure password manager\n\nWith auto-lock timer feature")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.5\nA secure password manager\n\nWith auto-lock timer and groups feature")
     
     def _open_help(self):
         """Open help in browser"""
         self._register_activity()
         webbrowser.open("https://github.com/HaydenHildreth/RandPyPwMan")
+
+
+class NewGroupDialog:
+    """Dialog for creating a new group"""
+    
+    def __init__(self, parent, db_manager, callback):
+        self.db_manager = db_manager
+        self.callback = callback
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("New Group")
+        self.window.geometry("350x130")
+        self.window.resizable(False, False)
+        
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 100
+        y = parent_y + 100
+        self.window.geometry(f"350x130+{x}+{y}")
+        
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(main_frame, text="Create New Group", 
+                 font=("Arial", 11, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 15))
+        
+        ttk.Label(main_frame, text="Group Name:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.group_var = tk.StringVar()
+        group_entry = ttk.Entry(main_frame, textvariable=self.group_var, width=25)
+        group_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        group_entry.focus()
+        
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=(15, 0))
+        
+        ttk.Button(button_frame, text="Create", command=self._create_group).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        
+        self.window.bind('<Return>', lambda e: self._create_group())
+        self.window.bind('<Escape>', lambda e: self.window.destroy())
+    
+    def _create_group(self):
+        """Create the new group"""
+        group_name = self.group_var.get().strip()
+        
+        if not group_name:
+            messagebox.showerror("Error", "Group name cannot be empty!")
+            return
+        
+        if group_name.lower() == "all":
+            messagebox.showerror("Error", "'All' is a reserved group name!")
+            return
+        
+        if self.db_manager.add_group(group_name):
+            messagebox.showinfo("Success", f"Group '{group_name}' created successfully!")
+            self.callback()
+            self.window.destroy()
+        else:
+            messagebox.showerror("Error", f"Group '{group_name}' already exists!")
+
+
+class ManageGroupsDialog:
+    """Dialog for managing existing groups"""
+    
+    def __init__(self, parent, db_manager, callback):
+        self.db_manager = db_manager
+        self.callback = callback
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Manage Groups")
+        self.window.geometry("400x350")
+        self.window.resizable(False, False)
+        
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 75
+        y = parent_y + 75
+        self.window.geometry(f"400x350+{x}+{y}")
+        
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid_columnconfigure(0, weight=1)
+        main_frame.grid_rowconfigure(1, weight=1)
+        
+        ttk.Label(main_frame, text="Manage Groups", 
+                 font=("Arial", 11, "bold")).grid(row=0, column=0, pady=(0, 15))
+        
+        list_frame = ttk.Frame(main_frame)
+        list_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 15))
+        list_frame.grid_columnconfigure(0, weight=1)
+        list_frame.grid_rowconfigure(0, weight=1)
+        
+        self.groups_listbox = tk.Listbox(list_frame, height=10)
+        self.groups_listbox.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.groups_listbox.yview)
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        self.groups_listbox.configure(yscrollcommand=scrollbar.set)
+        
+        self._populate_groups()
+        
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=2, column=0, pady=(0, 10))
+        
+        ttk.Button(button_frame, text="Rename Group", command=self._rename_group).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Delete Group", command=self._delete_group).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Close", command=self.window.destroy).pack(side=tk.LEFT)
+
+    
+    def _populate_groups(self):
+        """Populate the listbox with groups"""
+        self.groups_listbox.delete(0, tk.END)
+        groups = self.db_manager.get_all_groups()
+        
+        if 'All' in groups:
+            groups.remove('All')
+        
+        if not groups:
+            self.groups_listbox.insert(tk.END, "(No groups created yet)")
+        else:
+            for group in groups:
+                self.groups_listbox.insert(tk.END, group)
+    
+    def _rename_group(self):
+        """Rename selected group"""
+        selection = self.groups_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a group to rename.")
+            return
+        
+        old_name = self.groups_listbox.get(selection[0])
+        
+        if old_name == "(No groups created yet)":
+            return
+        
+        RenameGroupDialog(self.window, self.db_manager, old_name, self._on_change_complete)
+    
+    def _delete_group(self):
+        """Delete selected group"""
+        selection = self.groups_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("No Selection", "Please select a group to delete.")
+            return
+        
+        group_name = self.groups_listbox.get(selection[0])
+        
+        if group_name == "(No groups created yet)":
+            return
+        
+        if not messagebox.askyesno("Confirm Deletion", 
+                                   f"Are you sure you want to delete the group '{group_name}'?\n\n"
+                                   "Passwords in this group will not be deleted, but will have no group assigned."):
+            return
+        
+        if self.db_manager.delete_group(group_name):
+            messagebox.showinfo("Success", f"Group '{group_name}' deleted successfully!")
+            self._on_change_complete()
+    
+    def _on_change_complete(self):
+        """Called after a group is renamed or deleted"""
+        self._populate_groups()
+        self.callback()
+
+
+class RenameGroupDialog:
+    """Dialog for renaming a group"""
+    
+    def __init__(self, parent, db_manager, old_name, callback):
+        self.db_manager = db_manager
+        self.old_name = old_name
+        self.callback = callback
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Rename Group")
+        self.window.geometry("350x150")
+        self.window.resizable(False, False)
+        
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 50
+        y = parent_y + 50
+        self.window.geometry(f"350x150+{x}+{y}")
+        
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(main_frame, text=f"Rename Group: {self.old_name}", 
+                 font=("Arial", 10, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 15))
+        
+        ttk.Label(main_frame, text="New Name:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.new_name_var = tk.StringVar(value=self.old_name)
+        name_entry = ttk.Entry(main_frame, textvariable=self.new_name_var, width=25)
+        name_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        name_entry.focus()
+        name_entry.select_range(0, tk.END)
+        
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=(15, 0))
+        
+        ttk.Button(button_frame, text="Rename", command=self._rename).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        
+        self.window.bind('<Return>', lambda e: self._rename())
+        self.window.bind('<Escape>', lambda e: self.window.destroy())
+    
+    def _rename(self):
+        """Perform the rename"""
+        new_name = self.new_name_var.get().strip()
+        
+        if not new_name:
+            messagebox.showerror("Error", "Group name cannot be empty!")
+            return
+        
+        if new_name.lower() == "all":
+            messagebox.showerror("Error", "'All' is a reserved name!")
+            return
+        
+        if new_name == self.old_name:
+            self.window.destroy()
+            return
+        
+        if self.db_manager.rename_group(self.old_name, new_name):
+            messagebox.showinfo("Success", f"Group renamed from '{self.old_name}' to '{new_name}'!")
+            self.callback()
+            self.window.destroy()
 
 
 class AutoLockSettingsDialog:
@@ -891,7 +1346,7 @@ class AutoLockSettingsDialog:
 class AddEditDialog:
     """Dialog for adding/editing password records"""
     
-    def __init__(self, parent, db_manager, callback, record_id=None, site='', username='', password='', initial_password=''):
+    def __init__(self, parent, db_manager, callback, record_id=None, site='', username='', password='', group=None, initial_password='', default_group=None):
         self.db_manager = db_manager
         self.callback = callback
         self.record_id = record_id
@@ -899,9 +1354,12 @@ class AddEditDialog:
         if not password and initial_password:
             password = initial_password
         
+        if group is None and default_group is not None:
+            group = default_group
+        
         self.window = tk.Toplevel(parent)
         self.window.title("Edit Record" if record_id else "Add Record")
-        self.window.geometry("400x200")
+        self.window.geometry("400x250")
         self.window.resizable(False, False)
         
         self.window.update_idletasks()
@@ -909,13 +1367,13 @@ class AddEditDialog:
         parent_y = parent.winfo_rooty()
         x = parent_x + 50
         y = parent_y + 50
-        self.window.geometry(f"400x200+{x}+{y}")
+        self.window.geometry(f"400x250+{x}+{y}")
         
-        self._create_widgets(site, username, password)
+        self._create_widgets(site, username, password, group)
         self.window.transient(parent)
         self.window.grab_set()
     
-    def _create_widgets(self, site, username, password):
+    def _create_widgets(self, site, username, password, group):
         main_frame = ttk.Frame(self.window, padding="20")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(1, weight=1)
@@ -936,8 +1394,18 @@ class AddEditDialog:
         password_entry = ttk.Entry(main_frame, textvariable=self.password_var)
         password_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         
+        ttk.Label(main_frame, text="Group:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        self.group_var = tk.StringVar(value=group if group else "")
+        
+        groups = self.db_manager.get_all_groups()
+        if 'All' in groups:
+            groups.remove('All')
+        
+        self.group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups)
+        self.group_combo.grid(row=3, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=3, column=0, columnspan=2, pady=(20, 0))
+        button_frame.grid(row=4, column=0, columnspan=2, pady=(20, 0))
         
         action_text = "Update" if self.record_id else "Add"
         ttk.Button(button_frame, text=action_text, command=self._save).pack(side=tk.LEFT, padx=(0, 10))
@@ -951,6 +1419,7 @@ class AddEditDialog:
         site = self.site_var.get().strip()
         username = self.username_var.get().strip()
         password = self.password_var.get().strip()
+        group = self.group_var.get().strip()
         
         if not site:
             messagebox.showerror("Validation Error", "Site name is required!")
@@ -960,15 +1429,18 @@ class AddEditDialog:
             messagebox.showerror("Validation Error", "Password is required!")
             return
         
+        if not group:
+            group = None
+        
         try:
             if self.record_id:
-                success = self.db_manager.update_record(self.record_id, site, username, password)
+                success = self.db_manager.update_record(self.record_id, site, username, password, group)
                 if success:
                     messagebox.showinfo("Success", "Record updated successfully!")
                 else:
                     return
             else:
-                record_id = self.db_manager.add_record(site, username, password)
+                record_id = self.db_manager.add_record(site, username, password, group)
                 if record_id:
                     messagebox.showinfo("Success", "Record added successfully!")
                 else:
@@ -988,14 +1460,15 @@ class AddEditDialog:
 class ImportDialog:
     """Dialog for importing passwords from CSV files"""
     
-    def __init__(self, parent, db_manager, callback):
+    def __init__(self, parent, db_manager, callback, current_group=None):
         self.db_manager = db_manager
         self.callback = callback
+        self.current_group = current_group
         self.filename = None
         
         self.window = tk.Toplevel(parent)
         self.window.title("Import Passwords")
-        self.window.geometry("350x200")
+        self.window.geometry("350x250")
         self.window.resizable(False, False)
         
         self.window.update_idletasks()
@@ -1003,7 +1476,7 @@ class ImportDialog:
         parent_y = parent.winfo_rooty()
         x = parent_x + 75
         y = parent_y + 75
-        self.window.geometry(f"350x200+{x}+{y}")
+        self.window.geometry(f"350x250+{x}+{y}")
         
         self._create_widgets()
         self.window.transient(parent)
@@ -1023,18 +1496,31 @@ class ImportDialog:
             ttk.Radiobutton(main_frame, text=text, variable=self.source_var, 
                            value=value).grid(row=i+1, column=0, sticky=tk.W, pady=2)
         
+        ttk.Label(main_frame, text="Import to group:", font=("Arial", 10)).grid(
+            row=3, column=0, sticky=tk.W, pady=(15, 5))
+        
+        self.group_var = tk.StringVar(value=self.current_group if self.current_group else "")
+        groups = self.db_manager.get_all_groups()
+        if 'All' in groups:
+            groups.remove('All')
+        
+        groups.insert(0, "(None)")
+        
+        group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups, width=25)
+        group_combo.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        
         file_frame = ttk.Frame(main_frame)
-        file_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(20, 10))
+        file_frame.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=(10, 10))
         file_frame.grid_columnconfigure(1, weight=1)
         
         ttk.Label(file_frame, text="File:").grid(row=0, column=0, sticky=tk.W)
         self.file_var = tk.StringVar()
-        file_entry = ttk.Entry(file_frame, textvariable=self.file_var, state='readonly')
+        file_entry = ttk.Entry(file_frame, textvariable=self.file_var, state='readonly', width=20)
         file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 10))
         ttk.Button(file_frame, text="Browse", command=self._browse_file).grid(row=0, column=2)
         
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=4, column=0, pady=(10, 0))
+        button_frame.grid(row=6, column=0, pady=(10, 0))
         
         self.import_btn = ttk.Button(button_frame, text="Import", command=self._import_passwords, state='disabled')
         self.import_btn.pack(side=tk.LEFT, padx=(0, 10))
@@ -1060,6 +1546,11 @@ class ImportDialog:
         
         try:
             source = self.source_var.get()
+            group = self.group_var.get().strip()
+            
+            if group == "(None)" or group == "":
+                group = None
+            
             imported_count = 0
             
             with open(self.filename, 'r', newline='', encoding='utf-8') as file:
@@ -1092,7 +1583,7 @@ class ImportDialog:
                             password = row[2]
                         
                         if site and password:
-                            if self.db_manager.add_record(site, username, password):
+                            if self.db_manager.add_record(site, username, password, group):
                                 imported_count += 1
                     
                     except Exception as e:
@@ -1100,7 +1591,8 @@ class ImportDialog:
                         continue
             
             if imported_count > 0:
-                messagebox.showinfo("Success", f"Successfully imported {imported_count} password(s)!")
+                group_msg = f"to group '{group}'" if group else "without a group"
+                messagebox.showinfo("Success", f"Successfully imported {imported_count} password(s) {group_msg}!")
                 self.callback()
                 self.window.destroy()
             else:
@@ -1179,7 +1671,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.3")
+        self.root.title("RandPyPwGen v1.99.5")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -1212,7 +1704,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.3")
+        self.root.title("RandPyPwGen v1.99.5")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
