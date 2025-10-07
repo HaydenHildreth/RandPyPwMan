@@ -1171,9 +1171,6 @@ class ManageGroupsDialog:
         ttk.Button(button_frame, text="Delete Group", command=self._delete_group).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Close", command=self.window.destroy).pack(side=tk.LEFT)
         
-        info_label = ttk.Label(main_frame, text="Note: 'All' is not an actual group, just a filter view.", 
-                              font=("Arial", 8), foreground="gray")
-        info_label.grid(row=3, column=0, pady=(5, 0))
     
     def _populate_groups(self):
         """Populate the listbox with groups"""
