@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """
-RandPyPwGen version 1.99.5
-Modular, secure, easy to use password manager
-Written by Hayden Hildreth
-Modified to use separate groups table
+RandPyPwGen version 1.99.6
 """
 
 import os
@@ -77,6 +74,16 @@ class DatabaseManager:
                 c.execute("UPDATE data SET group_name = NULL WHERE group_name = 'All'")
                 conn.commit()
             
+            # Add date_added column if it doesn't exist
+            if 'date_added' not in columns:
+                c.execute("ALTER TABLE data ADD COLUMN date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+                conn.commit()
+            
+            # Add date_modified column if it doesn't exist
+            if 'date_modified' not in columns:
+                c.execute("ALTER TABLE data ADD COLUMN date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+                conn.commit()
+            
             # Create groups table if it doesn't exist
             c.execute("""CREATE TABLE IF NOT EXISTS groups(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,7 +119,9 @@ class DatabaseManager:
                 site varchar(100) NOT NULL,
                 username varchar(100) NOT NULL,
                 password varchar(100) NOT NULL,
-                group_name varchar(100)
+                group_name varchar(100),
+                date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )""")
             
             # Create groups table
@@ -459,7 +468,8 @@ class DatabaseManager:
             
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("INSERT INTO data (site, username, password, group_name) VALUES (?, ?, ?, ?)",
+            c.execute("""INSERT INTO data (site, username, password, group_name, date_added, date_modified) 
+                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)""",
                      (site, username, encrypted_password, group_name))
             record_id = c.lastrowid
             conn.commit()
@@ -479,7 +489,8 @@ class DatabaseManager:
             
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("UPDATE data SET site=?, username=?, password=?, group_name=? WHERE id=?",
+            c.execute("""UPDATE data SET site=?, username=?, password=?, group_name=?, date_modified=CURRENT_TIMESTAMP 
+                        WHERE id=?""",
                      (site, username, encrypted_password, group_name, record_id))
             conn.commit()
             conn.close()
@@ -487,6 +498,19 @@ class DatabaseManager:
         except Exception as e:
             messagebox.showerror("Database Error", f"Failed to update record: {str(e)}")
             return False
+    
+    def get_record_by_id(self, record_id: int) -> Optional[Tuple]:
+        """Get a single record by ID with all fields including dates"""
+        try:
+            conn = sqlite3.connect(self.data_db)
+            c = conn.cursor()
+            c.execute("SELECT * FROM data WHERE id=?", (record_id,))
+            record = c.fetchone()
+            conn.close()
+            return record
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to retrieve record: {str(e)}")
+            return None
     
     def delete_record(self, record_id: int) -> bool:
         """Delete a password record"""
@@ -520,10 +544,13 @@ class DatabaseManager:
             c = conn.cursor()
             
             for record in records:
-                if len(record) == 5:
+                # Handle different record lengths
+                if len(record) >= 7:
+                    record_id, site, username, encrypted_password, group_name, date_added, date_modified = record[:7]
+                elif len(record) == 5:
                     record_id, site, username, encrypted_password, group_name = record
                 else:
-                    record_id, site, username, encrypted_password = record
+                    record_id, site, username, encrypted_password = record[:4]
                 
                 decrypted = self.decrypt_password(encrypted_password)
                 new_encrypted = new_fernet.encrypt(decrypted.encode('utf-8'))
@@ -872,16 +899,33 @@ class MainFrame(ttk.Frame):
         values = item['values']
         record_id = values[0]
         
-        if not self.passwords_visible and record_id in self.stored_passwords:
-            password = self.stored_passwords[record_id]
-        else:
-            password = values[3]
+        # Get full record from database to include dates
+        full_record = self.db_manager.get_record_by_id(record_id)
         
-        group = values[4] if len(values) > 4 and values[4] else None
+        if not full_record:
+            messagebox.showerror("Error", "Failed to retrieve record details.")
+            return
+        
+        # Extract data from full record
+        if len(full_record) >= 7:
+            _, site, username, encrypted_password, group_name, date_added, date_modified = full_record[:7]
+        else:
+            # Fallback for older records without dates
+            if len(full_record) == 5:
+                _, site, username, encrypted_password, group_name = full_record
+            else:
+                _, site, username, encrypted_password = full_record[:4]
+                group_name = None
+            date_added = None
+            date_modified = None
+        
+        # Decrypt password
+        password = self.db_manager.decrypt_password(encrypted_password)
         
         AddEditDialog(self, self.db_manager, callback=self._on_data_changed,
-                     record_id=record_id, site=values[1], username=values[2], 
-                     password=password, group=group)
+                     record_id=record_id, site=site, username=username, 
+                     password=password, group=group_name, 
+                     date_added=date_added, date_modified=date_modified)
     
     def _delete_selected(self, event=None):
         """Delete selected records"""
@@ -965,10 +1009,13 @@ class MainFrame(ttk.Frame):
             records = self.db_manager.get_all_records(self.current_group)
         
         for record in records:
-            if len(record) == 5:
+            # Handle different record lengths for backward compatibility
+            if len(record) >= 7:
+                record_id, site, username, encrypted_password, group_name, date_added, date_modified = record[:7]
+            elif len(record) == 5:
                 record_id, site, username, encrypted_password, group_name = record
             else:
-                record_id, site, username, encrypted_password = record
+                record_id, site, username, encrypted_password = record[:4]
                 group_name = None
             
             password = self.db_manager.decrypt_password(encrypted_password)
@@ -997,7 +1044,7 @@ class MainFrame(ttk.Frame):
     def _show_about(self):
         """Show about dialog"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.5\nA secure password manager\n\nWith auto-lock timer and groups feature")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.6\nA secure password manager\n\nWith auto-lock timer and groups feature")
     
     def _open_help(self):
         """Open help in browser"""
@@ -1123,7 +1170,10 @@ class ManageGroupsDialog:
         ttk.Button(button_frame, text="Rename Group", command=self._rename_group).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Delete Group", command=self._delete_group).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Close", command=self.window.destroy).pack(side=tk.LEFT)
-
+        
+        info_label = ttk.Label(main_frame, text="Note: 'All' is not an actual group, just a filter view.", 
+                              font=("Arial", 8), foreground="gray")
+        info_label.grid(row=3, column=0, pady=(5, 0))
     
     def _populate_groups(self):
         """Populate the listbox with groups"""
@@ -1346,10 +1396,13 @@ class AutoLockSettingsDialog:
 class AddEditDialog:
     """Dialog for adding/editing password records"""
     
-    def __init__(self, parent, db_manager, callback, record_id=None, site='', username='', password='', group=None, initial_password='', default_group=None):
+    def __init__(self, parent, db_manager, callback, record_id=None, site='', username='', password='', 
+                 group=None, initial_password='', default_group=None, date_added=None, date_modified=None):
         self.db_manager = db_manager
         self.callback = callback
         self.record_id = record_id
+        self.date_added = date_added
+        self.date_modified = date_modified
         
         if not password and initial_password:
             password = initial_password
@@ -1359,7 +1412,10 @@ class AddEditDialog:
         
         self.window = tk.Toplevel(parent)
         self.window.title("Edit Record" if record_id else "Add Record")
-        self.window.geometry("400x250")
+        
+        # Adjust window height if editing (to show dates)
+        window_height = 340 if record_id and (date_added or date_modified) else 250
+        self.window.geometry(f"450x{window_height}")
         self.window.resizable(False, False)
         
         self.window.update_idletasks()
@@ -1367,7 +1423,7 @@ class AddEditDialog:
         parent_y = parent.winfo_rooty()
         x = parent_x + 50
         y = parent_y + 50
-        self.window.geometry(f"400x250+{x}+{y}")
+        self.window.geometry(f"450x{window_height}+{x}+{y}")
         
         self._create_widgets(site, username, password, group)
         self.window.transient(parent)
@@ -1378,23 +1434,28 @@ class AddEditDialog:
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(main_frame, text="Site Name:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        current_row = 0
+        
+        ttk.Label(main_frame, text="Site Name:").grid(row=current_row, column=0, sticky=tk.W, pady=5)
         self.site_var = tk.StringVar(value=site)
         site_entry = ttk.Entry(main_frame, textvariable=self.site_var)
-        site_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        site_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         site_entry.focus()
+        current_row += 1
         
-        ttk.Label(main_frame, text="Username:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Username:").grid(row=current_row, column=0, sticky=tk.W, pady=5)
         self.username_var = tk.StringVar(value=username)
         username_entry = ttk.Entry(main_frame, textvariable=self.username_var)
-        username_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        username_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        current_row += 1
         
-        ttk.Label(main_frame, text="Password:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Password:").grid(row=current_row, column=0, sticky=tk.W, pady=5)
         self.password_var = tk.StringVar(value=password)
         password_entry = ttk.Entry(main_frame, textvariable=self.password_var)
-        password_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        password_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        current_row += 1
         
-        ttk.Label(main_frame, text="Group:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Group:").grid(row=current_row, column=0, sticky=tk.W, pady=5)
         self.group_var = tk.StringVar(value=group if group else "")
         
         groups = self.db_manager.get_all_groups()
@@ -1402,10 +1463,36 @@ class AddEditDialog:
             groups.remove('All')
         
         self.group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups)
-        self.group_combo.grid(row=3, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        self.group_combo.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        current_row += 1
+        
+        # Show date fields only when editing
+        if self.record_id and (self.date_added or self.date_modified):
+            # Add separator
+            separator = ttk.Separator(main_frame, orient='horizontal')
+            separator.grid(row=current_row, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=15)
+            current_row += 1
+            
+            # Date Added
+            if self.date_added:
+                ttk.Label(main_frame, text="Date Added:", font=("Arial", 9, "bold")).grid(
+                    row=current_row, column=0, sticky=tk.W, pady=3)
+                date_added_label = ttk.Label(main_frame, text=self._format_date(self.date_added), 
+                                             font=("Arial", 9), foreground="blue")
+                date_added_label.grid(row=current_row, column=1, sticky=tk.W, padx=(10, 0), pady=3)
+                current_row += 1
+            
+            # Date Modified
+            if self.date_modified:
+                ttk.Label(main_frame, text="Last Modified:", font=("Arial", 9, "bold")).grid(
+                    row=current_row, column=0, sticky=tk.W, pady=3)
+                date_modified_label = ttk.Label(main_frame, text=self._format_date(self.date_modified), 
+                                                font=("Arial", 9), foreground="blue")
+                date_modified_label.grid(row=current_row, column=1, sticky=tk.W, padx=(10, 0), pady=3)
+                current_row += 1
         
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=4, column=0, columnspan=2, pady=(20, 0))
+        button_frame.grid(row=current_row, column=0, columnspan=2, pady=(20, 0))
         
         action_text = "Update" if self.record_id else "Add"
         ttk.Button(button_frame, text=action_text, command=self._save).pack(side=tk.LEFT, padx=(0, 10))
@@ -1413,6 +1500,28 @@ class AddEditDialog:
         
         self.window.bind('<Return>', lambda e: self._save())
         self.window.bind('<Escape>', lambda e: self._cancel())
+    
+    def _format_date(self, date_str):
+        """Format date string for display"""
+        if not date_str:
+            return "N/A"
+        
+        try:
+            # Try to parse and format the date nicely
+            from datetime import datetime
+            
+            # Handle different date formats
+            for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d']:
+                try:
+                    dt = datetime.strptime(date_str, fmt)
+                    return dt.strftime('%B %d, %Y at %I:%M %p')
+                except ValueError:
+                    continue
+            
+            # If parsing fails, return as is
+            return date_str
+        except:
+            return date_str
     
     def _save(self):
         """Save the record"""
@@ -1671,7 +1780,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.5")
+        self.root.title("RandPyPwGen v1.99.6")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -1704,7 +1813,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.5")
+        self.root.title("RandPyPwGen v1.99.6")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
