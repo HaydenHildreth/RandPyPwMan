@@ -20,17 +20,31 @@ os.mkdir('./db/')
 conn = sqlite3.connect('db/data.db')
 c = conn.cursor()
 
-c.execute("CREATE TABLE data(id INTEGER PRIMARY KEY,"
-          "site varchar(100) NOT NULL,"
-          "username varchar(100) NOT NULL,"
-          "password varchar(100) NOT NULL)")
+# Create 'data' table
+c.execute("""
+        CREATE TABLE data (
+            id INTEGER PRIMARY KEY,
+            site VARCHAR(100) NOT NULL,
+            username VARCHAR(100) NOT NULL,
+            password VARCHAR(100) NOT NULL,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+conn.commit()
+conn.close()
 
 
 conn2 = sqlite3.connect('db/unlock.db')
 c2 = conn2.cursor()
 
-c2.execute("CREATE TABLE master(key varchar(255), "
-           "enc_key varchar(255))")
+c2.execute("""
+        CREATE TABLE master (
+            key VARCHAR(255), 
+            enc_key VARCHAR(255)
+        )
+    """)
 
 window = tk.Tk()
 window.title('RandPyPwMan setup')
