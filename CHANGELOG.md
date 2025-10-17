@@ -1,6 +1,24 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 10-17-2025
+  
+Minor database changes. Two new fields added to data DB, if you need help updating from a previous version please reach out to me directly.
+
+### Added
+
+Added last_modified and date_created fields to database. Added label to display new fields.
+
+- Date modified and date created values, and labels. ([https://github.com/HaydenHildreth/RandPyPwMan/issues/76](https://github.com/HaydenHildreth/RandPyPwMan/issues/100))
+ 
+### Fixed
+
+- Logic in import function to work with new fields.
+
+### Notes
+
+- Thank you [JacquesJ44](https://github.com/JacquesJ44).
+
 ## [1.0.1] - 09-11-2025
   
 No database changes.
