@@ -5,6 +5,7 @@
 * [Hayden Hildreth](https://github.com/haydenhildreth)
 * [Justin Gheen](https://github.com/PurpleHam)
 * [Tyler Michaelsen](https://github.com/tylermichaelsen)
+* [JacquesJ44](https://github.com/JacquesJ44)
 
 ## I would like to join this list. How can I help the project?
 
