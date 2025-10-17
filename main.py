@@ -287,7 +287,7 @@ def insert_info():
         masked_password = '*' * min(len(password_str), 12)
         tvData.insert(parent='', index='end', values=(index_insert, site_name, username, masked_password))
     
-    c.execute("INSERT INTO data VALUES (?,?,?,?)", (index_insert, site_name, username, enc))
+    c.execute("INSERT INTO data (id, site, username, password) VALUES (?,?,?,?)", (index_insert, site_name, username, enc))
     conn.commit()
     new.destroy()
 
@@ -419,7 +419,13 @@ def update_info():
     values.append(temp_sn)
     values.append(temp_un)
     values.append(enc)
-    c.execute("UPDATE data SET site = (?), username = (?), password = (?) WHERE id = (?)", (values[0], values[1], values[2], selected_index))
+    c.execute("""
+              UPDATE data 
+              SET site = ?, username = ?, password = ?, date_modified = CURRENT_TIMESTAMP
+              WHERE id = ?
+            """, (values[0], values[1], values[2], selected_index)
+        )
+        
     conn.commit()
     new.destroy()
 

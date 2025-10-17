@@ -4,3 +4,9 @@
 .idea/workspace.xml
 *.xml
 *.iml
+/venv
+__pycache__/
+.DS_Store
+instance/
+.env
+/db
