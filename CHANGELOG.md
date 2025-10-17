@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.2] - 10-17-2025
   
-Minor database changes. Two new fields added to data DB, if you need help updating from a previous version please reach out to me directly.
+Minor database changes. Two new fields added to data DB, if you need help updating from a previous version see updates folder or reach out to me directly.
 
 ### Added
 
