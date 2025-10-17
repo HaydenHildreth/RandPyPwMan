@@ -202,7 +202,7 @@ splashscreen.mainloop()
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.1.0.1')
+window.title('RandPyPwGen v.1.0.2')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
@@ -287,7 +287,7 @@ def insert_info():
         masked_password = '*' * min(len(password_str), 12)
         tvData.insert(parent='', index='end', values=(index_insert, site_name, username, masked_password))
     
-    c.execute("INSERT INTO data (id, site, username, password) VALUES (?,?,?,?)", (index_insert, site_name, username, enc))
+    c.execute("INSERT INTO data (id, site, username, password, date_created, date_modified) VALUES (?,?,?,?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", (index_insert, site_name, username, enc))
     conn.commit()
     new.destroy()
 
@@ -357,27 +357,45 @@ def editRecord():
         else:
             pw = stored_passwords.get(item_id, d[3])
         
+        # Fetch the date_created and date_modified from database
+        c.execute("SELECT date_created, date_modified FROM data WHERE id = ?", (item_id,))
+        dates = c.fetchone()
+        date_created = dates[0] if dates else "N/A"
+        date_modified = dates[1] if dates else "N/A"
+        
         new = tk.Toplevel(window)
         new.title("Edit record...")
-        new.geometry("200x200")
+        new.geometry("300x250")
+        
         lblsn = Label(new, text="Site name:")
         lblsn.grid()
         ipsn = tk.Entry(new, textvariable=site_name)
         ipsn.grid()
+        
         lblun = Label(new, text="Username:")
         lblun.grid()
         ipun = tk.Entry(new, textvariable=username)
         ipun.grid()
+        
         lblpw = Label(new, text="Password:")
         lblpw.grid()
         ippw = tk.Entry(new, textvariable=password_str)
         ippw.grid()
+        
+        # Add date labels
+        lblDateCreated = Label(new, text=f"Date Created: {date_created}")
+        lblDateCreated.grid(pady=5)
+        
+        lblDateModified = Label(new, text=f"Date Modified: {date_modified}")
+        lblDateModified.grid(pady=5)
+        
         btnSubmit = Button(new, text="Update", command=update_info)
         btnSubmit.grid()
         btnCancel = Button(new, text="Cancel", command=cancel_edit)
         btnCancel.grid()
         btnExit = Button(new, text="Exit", command=exit_button)
         btnExit.grid()
+        
         ipsn.insert(0, sn)
         ipun.insert(0, un)
         ippw.insert(0, pw)
@@ -423,8 +441,7 @@ def update_info():
               UPDATE data 
               SET site = ?, username = ?, password = ?, date_modified = CURRENT_TIMESTAMP
               WHERE id = ?
-            """, (values[0], values[1], values[2], selected_index)
-        )
+            """, (values[0], values[1], values[2], selected_index))
         
     conn.commit()
     new.destroy()
@@ -520,7 +537,7 @@ def import_passwords():
                     masked_password = '*' * min(len(line[3]), 12)
                     tvData.insert(parent='', index='end', values=(last_index, line[0],  line[2],  masked_password))
                 
-                c.execute("INSERT INTO data VALUES (?,?,?,?)", (last_index, line[0],  line[2],  enc_insert))
+                c.execute("INSERT INTO data (id, site, username, password, date_created, date_modified) VALUES (?,?,?,?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", (last_index, line[0], line[2], enc_insert))
                 last_index += 1
                 conn.commit()
                 new_import_window.destroy()
@@ -538,7 +555,7 @@ def import_passwords():
                     masked_password = '*' * min(len(line[2]), 12)
                     tvData.insert(parent='', index='end', values=(last_index, line[0], line[1], masked_password))
                 
-                c.execute("INSERT INTO data VALUES (?,?,?,?)", (last_index, line[0], line[1], enc_insert))
+                c.execute("INSERT INTO data (id, site, username, password, date_created, date_modified) VALUES (?,?,?,?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", (last_index, line[0], line[1], enc_insert))
                 last_index += 1
                 conn.commit()
                 new_import_window.destroy()
