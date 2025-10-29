@@ -439,7 +439,7 @@ class DatabaseManager:
             return False
     
     def search_records(self, search_term: str, group_filter: str = "All") -> List[Tuple]:
-        """Search for records by site name or username, optionally filtered by group"""
+        """Search for records on site or username"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
@@ -459,7 +459,7 @@ class DatabaseManager:
             return []
     
     def add_record(self, site: str, username: str, password: str, group_name: Optional[str] = None) -> Optional[int]:
-        """Add a new password record"""
+        """Add a new password"""
         try:
             encrypted_password = self.fernet.encrypt(password.encode('utf-8'))
             
@@ -480,7 +480,7 @@ class DatabaseManager:
             return None
     
     def update_record(self, record_id: int, site: str, username: str, password: str, group_name: Optional[str] = None) -> bool:
-        """Update an existing password record"""
+        """Update existing password"""
         try:
             encrypted_password = self.fernet.encrypt(password.encode('utf-8'))
             
@@ -500,7 +500,7 @@ class DatabaseManager:
             return False
     
     def get_record_by_id(self, record_id: int) -> Optional[Tuple]:
-        """Get a single record by ID with all fields including dates"""
+        """Return one password/record using ID"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
@@ -513,7 +513,7 @@ class DatabaseManager:
             return None
     
     def delete_record(self, record_id: int) -> bool:
-        """Delete a password record"""
+        """Delete a password"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
@@ -526,14 +526,14 @@ class DatabaseManager:
             return False
     
     def decrypt_password(self, encrypted_password: bytes) -> str:
-        """Decrypt a password"""
+        """Decrypt password"""
         try:
             return self.fernet.decrypt(encrypted_password).decode('utf-8')
         except Exception as e:
             raise Exception(f"Failed to decrypt password: {str(e)}")
     
     def change_master_password(self, new_password: str) -> bool:
-        """Change the master password and re-encrypt all data"""
+        """Update master password and re-encrypt all data"""
         try:
             new_enc_key = Fernet.generate_key()
             new_fernet = Fernet(new_enc_key)
@@ -544,7 +544,7 @@ class DatabaseManager:
             c = conn.cursor()
             
             for record in records:
-                # Handle different record lengths
+                # Handle different value lengths
                 if len(record) >= 7:
                     record_id, site, username, encrypted_password, group_name, date_added, date_modified = record[:7]
                 elif len(record) == 5:
@@ -582,7 +582,7 @@ class PasswordGenerator:
         self.alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
     
     def generate(self, length: int) -> str:
-        """Generate a random password of specified length"""
+        """Generate a random password of desired length"""
         if length <= 0 or length > 100:
             raise ValueError("Password length must be between 1 and 100")
         
@@ -590,7 +590,7 @@ class PasswordGenerator:
 
 
 class LoginFrame(ttk.Frame):
-    """Login frame for master password authentication"""
+    """Frame for master password authentication"""
     
     def __init__(self, parent, db_manager, on_success_callback):
         super().__init__(parent, padding="20")
@@ -628,7 +628,7 @@ class LoginFrame(ttk.Frame):
 
 
 class MainFrame(ttk.Frame):
-    """Main application frame"""
+    """Main app frame"""
     
     def __init__(self, parent, db_manager, lock_callback):
         super().__init__(parent)
@@ -661,7 +661,7 @@ class MainFrame(ttk.Frame):
         self._create_menu()
     
     def _create_password_generation_section(self):
-        """Create password generation widgets"""
+        """Create password generation section. This is the top frame"""
         gen_frame = ttk.LabelFrame(self, text="Password Generation", padding="10")
         gen_frame.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
         gen_frame.grid_columnconfigure(1, weight=1)
@@ -685,7 +685,7 @@ class MainFrame(ttk.Frame):
         self.password_label.grid(row=1, column=0, columnspan=5, sticky=(tk.W, tk.E), pady=(10, 0))
     
     def _create_group_filter_section(self):
-        """Create group filter widgets"""
+        """Create group filter section. This is the second frame from top, below password generation"""
         group_frame = ttk.LabelFrame(self, text="Group Filter", padding="10")
         group_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
         group_frame.grid_columnconfigure(1, weight=1)
@@ -703,7 +703,7 @@ class MainFrame(ttk.Frame):
         self._refresh_groups()
     
     def _create_search_section(self):
-        """Create search widgets"""
+        """Create search section. This is the third frame from top, and is below group filter"""
         search_frame = ttk.LabelFrame(self, text="Search", padding="10")
         search_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
         search_frame.grid_columnconfigure(1, weight=1)
@@ -719,7 +719,7 @@ class MainFrame(ttk.Frame):
         ttk.Button(search_frame, text="Clear", command=self._clear_search).grid(row=0, column=3)
     
     def _create_treeview_section(self):
-        """Create treeview and scrollbar"""
+        """Create treeview section and its scrollbar. This is the fourth from the top. This is below search"""
         tree_frame = ttk.Frame(self)
         tree_frame.grid(row=3, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         tree_frame.grid_rowconfigure(0, weight=1)
@@ -750,14 +750,14 @@ class MainFrame(ttk.Frame):
         self.tree.bind('<Delete>', self._delete_selected)
     
     def _on_double_click(self, event):
-        """Handle double-click events on treeview, ignoring header clicks"""
+        """Double click event, calls edit function"""
         region = self.tree.identify_region(event.x, event.y)
         
         if region == "cell":
             self._show_edit_dialog()
     
     def _create_button_section(self):
-        """Create action buttons"""
+        """Create buttons. This is the fifth from the top, and is the bottom most section/frame. This is below the treeview."""
         button_frame = ttk.Frame(self)
         button_frame.grid(row=4, column=0, columnspan=4, sticky=(tk.W, tk.E))
         
@@ -775,7 +775,7 @@ class MainFrame(ttk.Frame):
             button_frame.grid_columnconfigure(i, weight=1)
     
     def _create_menu(self):
-        """Create application menu"""
+        """Create toolbar menus"""
         menubar = tk.Menu(self.master)
         self.master.config(menu=menubar)
         
@@ -796,7 +796,7 @@ class MainFrame(ttk.Frame):
         help_menu.add_command(label="Help", command=self._open_help)
     
     def _start_activity_monitoring(self):
-        """Start monitoring user activity for auto-lock"""
+        """Begin to monitor activity"""
         self._register_activity()
         self._check_auto_lock()
     
@@ -805,7 +805,7 @@ class MainFrame(ttk.Frame):
         self.last_activity_time = time.time()
     
     def _check_auto_lock(self):
-        """Check if auto-lock should trigger"""
+        """Check if auto-lock should apply"""
         if self.auto_lock_timer:
             self.after_cancel(self.auto_lock_timer)
         
@@ -831,7 +831,7 @@ class MainFrame(ttk.Frame):
         self.lock_callback()
     
     def _show_autolock_settings(self):
-        """Show auto-lock settings dialog"""
+        """Show auto-lock settings"""
         self._register_activity()
         AutoLockSettingsDialog(self, self.db_manager)
     
@@ -851,12 +851,12 @@ class MainFrame(ttk.Frame):
         self._populate_treeview()
     
     def _show_new_group_dialog(self):
-        """Show dialog to create a new group"""
+        """Show window to create a new group"""
         self._register_activity()
         NewGroupDialog(self, self.db_manager, callback=self._on_data_changed)
     
     def _show_manage_groups_dialog(self):
-        """Show dialog to manage existing groups"""
+        """Show window to manage existing groups"""
         self._register_activity()
         ManageGroupsDialog(self, self.db_manager, callback=self._on_data_changed)
     
@@ -880,7 +880,7 @@ class MainFrame(ttk.Frame):
         self._current_generated_password = ""
     
     def _show_add_dialog(self):
-        """Show add password dialog"""
+        """Show add password window"""
         self._register_activity()
         default_group = None if self.current_group == "All" else self.current_group
         AddEditDialog(self, self.db_manager, callback=self._on_data_changed,
@@ -888,7 +888,7 @@ class MainFrame(ttk.Frame):
                      default_group=default_group)
     
     def _show_edit_dialog(self):
-        """Show edit password dialog"""
+        """Show edit password window"""
         self._register_activity()
         selection = self.tree.selection()
         if not selection:
@@ -899,7 +899,7 @@ class MainFrame(ttk.Frame):
         values = item['values']
         record_id = values[0]
         
-        # Get full record from database to include dates
+        # Get full record from database
         full_record = self.db_manager.get_record_by_id(record_id)
         
         if not full_record:
@@ -1031,7 +1031,7 @@ class MainFrame(ttk.Frame):
             self.tree.insert('', 'end', values=(record_id, site, username, display_password, display_group))
     
     def _show_import_dialog(self):
-        """Show import dialog"""
+        """Show import window"""
         self._register_activity()
         default_group = None if self.current_group == "All" else self.current_group
         ImportDialog(self, self.db_manager, callback=self._on_data_changed, current_group=default_group)
@@ -1042,7 +1042,7 @@ class MainFrame(ttk.Frame):
         ChangeMasterPasswordDialog(self, self.db_manager)
     
     def _show_about(self):
-        """Show about dialog"""
+        """Show about window"""
         self._register_activity()
         messagebox.showinfo("About", "RandPyPwGen v1.99.6\nA secure password manager\n\nWith auto-lock timer and groups feature")
     
