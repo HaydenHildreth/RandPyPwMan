@@ -31,7 +31,7 @@ class DatabaseManager:
         self._ensure_db_setup()
     
     def _ensure_db_setup(self):
-        """Ensure database directory and files exist"""
+        """Verify database directory and files exist"""
         if not self.db_path.exists() or not self.data_db.exists() or not self.unlock_db.exists():
             if not self._setup_databases():
                 sys.exit(1)
@@ -40,7 +40,7 @@ class DatabaseManager:
         self._migrate_database()
     
     def _load_encryption_key(self):
-        """Load the encryption key from database"""
+        """Load encryption key from database"""
         try:
             conn = sqlite3.connect(self.unlock_db)
             c = conn.cursor()
@@ -58,12 +58,12 @@ class DatabaseManager:
             sys.exit(1)
     
     def _migrate_database(self):
-        """Add group column if it doesn't exist and create groups table"""
+        """Add fields to table if they do not exist. This is useful for updating to new versions"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             
-            # Check if group_name column exists in data table
+            # Check if group_name column exists
             c.execute("PRAGMA table_info(data)")
             columns = [column[1] for column in c.fetchall()]
             
@@ -74,12 +74,12 @@ class DatabaseManager:
                 c.execute("UPDATE data SET group_name = NULL WHERE group_name = 'All'")
                 conn.commit()
             
-            # Add date_added column if it doesn't exist
+            # Check if date_added column exists
             if 'date_added' not in columns:
                 c.execute("ALTER TABLE data ADD COLUMN date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
                 conn.commit()
             
-            # Add date_modified column if it doesn't exist
+            # Check if date_modified column exists
             if 'date_modified' not in columns:
                 c.execute("ALTER TABLE data ADD COLUMN date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
                 conn.commit()
@@ -92,7 +92,7 @@ class DatabaseManager:
             )""")
             conn.commit()
             
-            # Migrate existing groups from data table to groups table
+            # Move existing groups from data table to groups table
             c.execute("SELECT DISTINCT group_name FROM data WHERE group_name IS NOT NULL AND group_name != ''")
             existing_groups = [row[0] for row in c.fetchall()]
             
@@ -158,7 +158,7 @@ class DatabaseManager:
             return False
     
     def _set_default_settings(self):
-        """Set default settings for new installations"""
+        """Set default values for new installs"""
         try:
             conn = sqlite3.connect(self.unlock_db)
             c = conn.cursor()
@@ -201,7 +201,7 @@ class DatabaseManager:
             return False
     
     def _has_master_password(self) -> bool:
-        """Check if master password is configured"""
+        """Check if master password is setup"""
         try:
             conn = sqlite3.connect(self.unlock_db)
             c = conn.cursor()
@@ -213,7 +213,7 @@ class DatabaseManager:
             return False
     
     def _setup_master_password(self) -> bool:
-        """Setup initial master password"""
+        """Create initial master password"""
         class MasterPasswordSetup:
             def __init__(self, db_manager):
                 self.db_manager = db_manager
@@ -316,7 +316,7 @@ class DatabaseManager:
         return setup.run()
     
     def verify_master_password(self, password: str) -> bool:
-        """Verify the master password"""
+        """Check the master password"""
         try:
             conn = sqlite3.connect(self.unlock_db)
             c = conn.cursor()
@@ -333,7 +333,7 @@ class DatabaseManager:
             return False
     
     def get_all_records(self, group_filter: str = "All") -> List[Tuple]:
-        """Get all password records from database, optionally filtered by group"""
+        """Return all records from data table"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
@@ -351,7 +351,7 @@ class DatabaseManager:
             return []
     
     def get_all_groups(self) -> List[str]:
-        """Get list of all groups from groups table"""
+        """Return all groups from groups table"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
@@ -359,7 +359,7 @@ class DatabaseManager:
             groups = [row[0] for row in c.fetchall()]
             conn.close()
             
-            # Always add "All" at the beginning
+            # Always add "All" for group at start
             groups.insert(0, 'All')
             
             return groups
@@ -368,7 +368,7 @@ class DatabaseManager:
             return ['All']
     
     def add_group(self, group_name: str) -> bool:
-        """Add a new group to the groups table"""
+        """Create new group in the groups table"""
         try:
             if not group_name or group_name.strip() == '':
                 return False
@@ -392,15 +392,15 @@ class DatabaseManager:
             return False
     
     def delete_group(self, group_name: str) -> bool:
-        """Delete a group from the groups table"""
+        """Remove a group from the groups table"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             
-            # Remove group from groups table
+            # Delete group from table
             c.execute("DELETE FROM groups WHERE name=?", (group_name,))
             
-            # Set group_name to NULL for all passwords in this group
+            # Set passwords with that group to NULL
             c.execute("UPDATE data SET group_name=NULL WHERE group_name=?", (group_name,))
             
             conn.commit()
@@ -419,13 +419,13 @@ class DatabaseManager:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             
-            # Update the groups table
+            # Update the groups table with new name
             if new_name:
                 c.execute("UPDATE groups SET name=? WHERE name=?", (new_name, old_name))
             else:
                 c.execute("DELETE FROM groups WHERE name=?", (old_name,))
             
-            # Update all passwords with this group
+            # Update all passwords with this group to new group name
             c.execute("UPDATE data SET group_name=? WHERE group_name=?", (new_name, old_name))
             
             conn.commit()
