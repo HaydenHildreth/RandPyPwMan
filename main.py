@@ -13,6 +13,8 @@ import bcrypt
 import os
 import sys
 from tkinter import messagebox
+from tkinter import ttk
+import json
 
 
 # SPLASHSCREEN + PATH validation
@@ -215,6 +217,307 @@ username = ''
 password_str = ''
 
 
+# THEME SYSTEM
+current_theme = 'Light'
+SETTINGS_PATH = os.path.join('db', 'settings.json')
+
+THEMES = {
+    'Light': {
+        'bg': '#FFFFFF',
+        'fg': '#1F2937',
+        'accent': '#2563EB',
+        'button_bg': '#F3F4F6',
+        'button_fg': '#1F2937',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#1F2937',
+        'active_bg': '#E5E7EB',
+        'active_fg': '#111827',
+        'tree_bg': '#FFFFFF',
+        'tree_fg': '#111827',
+        'tree_sel_bg': '#2563EB',
+        'tree_sel_fg': '#FFFFFF',
+        'menu_bg': '#FFFFFF',
+        'menu_fg': '#111827',
+    },
+    'Dark': {
+        'bg': '#1E1E1E',
+        'fg': '#E5E5E5',
+        'accent': '#569CD6',
+        'button_bg': '#2D2D2D',
+        'button_fg': '#E5E5E5',
+        'entry_bg': '#252526',
+        'entry_fg': '#E5E5E5',
+        'active_bg': '#3A3A3A',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#1E1E1E',
+        'tree_fg': '#E5E5E5',
+        'tree_sel_bg': '#094771',
+        'tree_sel_fg': '#FFFFFF',
+        'menu_bg': '#2D2D2D',
+        'menu_fg': '#E5E5E5',
+    },
+    'Nord': {
+        'bg': '#2E3440',
+        'fg': '#D8DEE9',
+        'accent': '#88C0D0',
+        'button_bg': '#3B4252',
+        'button_fg': '#ECEFF4',
+        'entry_bg': '#3B4252',
+        'entry_fg': '#ECEFF4',
+        'active_bg': '#4C566A',
+        'active_fg': '#ECEFF4',
+        'tree_bg': '#2E3440',
+        'tree_fg': '#D8DEE9',
+        'tree_sel_bg': '#5E81AC',
+        'tree_sel_fg': '#ECEFF4',
+        'menu_bg': '#3B4252',
+        'menu_fg': '#ECEFF4',
+    },
+    'Dracula': {
+        'bg': '#282A36',
+        'fg': '#F8F8F2',
+        'accent': '#BD93F9',
+        'button_bg': '#44475A',
+        'button_fg': '#F8F8F2',
+        'entry_bg': '#44475A',
+        'entry_fg': '#F8F8F2',
+        'active_bg': '#6272A4',
+        'active_fg': '#F8F8F2',
+        'tree_bg': '#282A36',
+        'tree_fg': '#F8F8F2',
+        'tree_sel_bg': '#6272A4',
+        'tree_sel_fg': '#F8F8F2',
+        'menu_bg': '#44475A',
+        'menu_fg': '#F8F8F2',
+    },
+    'Solarized Dark': {
+        'bg': '#002B36',
+        'fg': '#EEE8D5',
+        'accent': '#268BD2',
+        'button_bg': '#073642',
+        'button_fg': '#EEE8D5',
+        'entry_bg': '#073642',
+        'entry_fg': '#EEE8D5',
+        'active_bg': '#094352',
+        'active_fg': '#FDF6E3',
+        'tree_bg': '#002B36',
+        'tree_fg': '#EEE8D5',
+        'tree_sel_bg': '#268BD2',
+        'tree_sel_fg': '#FDF6E3',
+        'menu_bg': '#073642',
+        'menu_fg': '#EEE8D5',
+    },
+    'Solarized Light': {
+        'bg': '#FDF6E3',
+        'fg': '#073642',
+        'accent': '#268BD2',
+        'button_bg': '#EEE8D5',
+        'button_fg': '#073642',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#073642',
+        'active_bg': '#E1DBC9',
+        'active_fg': '#002B36',
+        'tree_bg': '#FDF6E3',
+        'tree_fg': '#073642',
+        'tree_sel_bg': '#268BD2',
+        'tree_sel_fg': '#FDF6E3',
+        'menu_bg': '#EEE8D5',
+        'menu_fg': '#073642',
+    },
+    'Gruvbox Dark': {
+        'bg': '#282828',
+        'fg': '#EBDBB2',
+        'accent': '#83A598',
+        'button_bg': '#3C3836',
+        'button_fg': '#EBDBB2',
+        'entry_bg': '#3C3836',
+        'entry_fg': '#EBDBB2',
+        'active_bg': '#504945',
+        'active_fg': '#FBF1C7',
+        'tree_bg': '#282828',
+        'tree_fg': '#EBDBB2',
+        'tree_sel_bg': '#83A598',
+        'tree_sel_fg': '#1D2021',
+        'menu_bg': '#3C3836',
+        'menu_fg': '#EBDBB2',
+    },
+    'Monokai': {
+        'bg': '#272822',
+        'fg': '#F8F8F2',
+        'accent': '#A6E22E',
+        'button_bg': '#3E3D32',
+        'button_fg': '#F8F8F2',
+        'entry_bg': '#3E3D32',
+        'entry_fg': '#F8F8F2',
+        'active_bg': '#75715E',
+        'active_fg': '#F8F8F2',
+        'tree_bg': '#272822',
+        'tree_fg': '#F8F8F2',
+        'tree_sel_bg': '#A6E22E',
+        'tree_sel_fg': '#272822',
+        'menu_bg': '#3E3D32',
+        'menu_fg': '#F8F8F2',
+    },
+}
+
+
+def _style_treeview(theme):
+    style = ttk.Style()
+    # Use a theme that respects fg/bg settings for headings (vista/xpnative often ignore)
+    try:
+        if 'clam' in style.theme_names():
+            style.theme_use('clam')
+    except Exception:
+        pass
+    style.configure(
+        'Treeview',
+        background=theme['tree_bg'],
+        fieldbackground=theme['tree_bg'],
+        foreground=theme['tree_fg'],
+        bordercolor=theme['bg'],
+        lightcolor=theme['bg'],
+        darkcolor=theme['bg'],
+        troughcolor=theme['bg'],
+    )
+    style.map(
+        'Treeview',
+        background=[('selected', theme['tree_sel_bg'])],
+        foreground=[('selected', theme['tree_sel_fg'])],
+    )
+    style.configure('Treeview.Heading', background=theme['button_bg'], foreground=theme['button_fg'])
+    style.map(
+        'Treeview.Heading',
+        background=[('active', theme['active_bg']), ('!active', theme['button_bg'])],
+        foreground=[('!disabled', theme['button_fg'])],
+    )
+
+
+def _apply_widget_colors(widget, theme):
+    options = widget.keys() if hasattr(widget, 'keys') else []
+    try:
+        if 'bg' in options:
+            widget.configure(bg=theme['bg'])
+        if isinstance(widget, tk.Label):
+            if 'fg' in options:
+                widget.configure(fg=theme['fg'])
+        if isinstance(widget, tk.Entry):
+            if 'bg' in options:
+                widget.configure(bg=theme['entry_bg'])
+            if 'fg' in options:
+                widget.configure(fg=theme['entry_fg'])
+            if 'insertbackground' in options:
+                widget.configure(insertbackground=theme['entry_fg'])
+        if isinstance(widget, tk.Button):
+            if 'bg' in options:
+                widget.configure(bg=theme['button_bg'])
+            if 'fg' in options:
+                widget.configure(fg=theme['button_fg'])
+            if 'activebackground' in options:
+                widget.configure(activebackground=theme['active_bg'])
+            if 'activeforeground' in options:
+                widget.configure(activeforeground=theme['active_fg'])
+        if isinstance(widget, tk.Text):
+            if 'bg' in options:
+                widget.configure(bg=theme['entry_bg'])
+            if 'fg' in options:
+                widget.configure(fg=theme['entry_fg'])
+            if 'insertbackground' in options:
+                widget.configure(insertbackground=theme['entry_fg'])
+    except Exception:
+        pass
+
+    for child in widget.winfo_children():
+        _apply_widget_colors(child, theme)
+
+
+def _apply_menu_colors(menu, theme):
+    try:
+        menu.configure(bg=theme['menu_bg'], fg=theme['menu_fg'], activebackground=theme['active_bg'], activeforeground=theme['active_fg'])
+        end_index = menu.index('end')
+        if end_index is not None:
+            for i in range(end_index + 1):
+                try:
+                    t = menu.type(i)
+                    # Explicitly set item colors for all entries
+                    menu.entryconfig(i,
+                        foreground=theme['menu_fg'],
+                        background=theme['menu_bg'],
+                        activeforeground=theme['active_fg'],
+                        activebackground=theme['active_bg']
+                    )
+                    if t == 'cascade':
+                        sub = menu.nametowidget(menu.entrycget(i, 'menu'))
+                        _apply_menu_colors(sub, theme)
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
+
+def apply_theme_to_window(root_window):
+    theme = THEMES.get(current_theme, THEMES['Light'])
+    try:
+        root_window.configure(bg=theme['bg'])
+    except Exception:
+        pass
+    # Hint the Tk option database for menu colors (helps on some platforms)
+    try:
+        root_window.option_add('*Menu*foreground', theme['menu_fg'])
+        root_window.option_add('*Menu*background', theme['menu_bg'])
+        root_window.option_add('*Menu*activeForeground', theme['active_fg'])
+        root_window.option_add('*Menu*activeBackground', theme['active_bg'])
+    except Exception:
+        pass
+    _style_treeview(theme)
+    _apply_widget_colors(root_window, theme)
+
+
+def set_theme(name):
+    global current_theme
+    if name not in THEMES:
+        return
+    current_theme = name
+    apply_theme_to_window(window)
+    # Re-apply menu colors after switch
+    try:
+        _apply_menu_colors(menubar, THEMES.get(current_theme, THEMES['Light']))
+    except Exception:
+        pass
+
+    # Persist selected theme
+    try:
+        os.makedirs(os.path.dirname(SETTINGS_PATH), exist_ok=True)
+        with open(SETTINGS_PATH, 'w', encoding='utf-8') as fset:
+            json.dump({'theme': current_theme}, fset)
+    except Exception:
+        pass
+
+
+def build_theme_menu(menu):
+    try:
+        menu.delete(0, 'end')
+    except Exception:
+        pass
+    for theme_name in THEMES.keys():
+        menu.add_command(label=theme_name, command=lambda n=theme_name: set_theme(n))
+
+
+# Load persisted theme at startup
+def _load_persisted_theme():
+    global current_theme
+    try:
+        if os.path.exists(SETTINGS_PATH):
+            with open(SETTINGS_PATH, 'r', encoding='utf-8') as fset:
+                data = json.load(fset)
+                saved = data.get('theme')
+                if saved in THEMES:
+                    current_theme = saved
+    except Exception:
+        pass
+
+_load_persisted_theme()
+
+
 # Global variable to track password visibility state
 passwords_visible = True
 stored_passwords = {}  # Dictionary to store passwords while hidden
@@ -266,6 +569,7 @@ def new_window():
     btnExit = Button(new, text="Exit", command=exit_button)
     btnExit.grid()
     ippw.insert(0, password)
+    apply_theme_to_window(new)
 
 
 def insert_info():
@@ -399,6 +703,7 @@ def editRecord():
         ipsn.insert(0, sn)
         ipun.insert(0, un)
         ippw.insert(0, pw)
+        apply_theme_to_window(new)
     except IndexError:
         tkinter.messagebox.showerror(title="Cannot edit record", message="Please choose a record to edit.")
 
@@ -593,6 +898,7 @@ def import_window():
     
     btn_import_exit = Button(new_import_window, text="Exit", command=new_import_window.destroy)
     btn_import_exit.grid()
+    apply_theme_to_window(new_import_window)
 
 
 def browse_files():
@@ -740,6 +1046,7 @@ def change_master_pw():
     btn_cancel = tk.Button(change_pw_window, text='Cancel', command=change_pw_window.destroy)
     btn_cancel.grid(column=0, row=2, columnspan=2, padx=10, pady=5)
 
+    apply_theme_to_window(change_pw_window)
     change_pw_window.mainloop()
     
     
@@ -962,6 +1269,11 @@ helpmenu = tk.Menu(menubar, tearoff=0)
 helpmenu.add_command(label="Help index", command=open_help)
 menubar.add_cascade(label="Help", menu=helpmenu)
 
+# THEME MENU (auto-populated)
+thememenu = tk.Menu(menubar, tearoff=0)
+build_theme_menu(thememenu)
+menubar.add_cascade(label="Theme", menu=thememenu)
+
 
 # UNENCRYPT PASSWORDS AND POPULATE TREEVIEW
 count = 0
@@ -976,4 +1288,6 @@ last = find_last_index()
 
 
 window.config(menu=menubar)
+_apply_menu_colors(menubar, THEMES.get(current_theme, THEMES['Light']))
+apply_theme_to_window(window)
 window.mainloop()
