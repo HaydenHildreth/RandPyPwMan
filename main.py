@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-RandPyPwGen version 1.99.6
-"""
 
 import os
 import sys
@@ -21,8 +18,7 @@ from cryptography.fernet import Fernet
 
 
 class DatabaseManager:
-    """Handles all database operations and encryption"""
-    
+    """Handles all database operations and encryption"""   
     def __init__(self, db_path: str = "./db"):
         self.db_path = Path(db_path)
         self.data_db = self.db_path / "data.db"
