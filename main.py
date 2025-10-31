@@ -204,7 +204,7 @@ splashscreen.mainloop()
 
 
 window = tk.Tk()
-window.title('RandPyPwGen v.1.0.2')
+window.title('RandPyPwGen v.1.0.3')
 window.geometry('800x600')
 alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 password = ""
