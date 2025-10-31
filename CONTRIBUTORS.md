@@ -5,6 +5,8 @@
 * [Hayden Hildreth](https://github.com/haydenhildreth)
 * [Justin Gheen](https://github.com/PurpleHam)
 * [Tyler Michaelsen](https://github.com/tylermichaelsen)
+* [JacquesJ44](https://github.com/JacquesJ44)
+* [Jaideep Vishnu Kathiresan](https://github.com/jaideepkathiresan)
 
 ## I would like to join this list. How can I help the project?
 
@@ -12,9 +14,8 @@
 
 We're currently looking for contributions for the following:
 
-- [ ] Updating to 2.0 milestone
-- [ ] Adding rest of features from "Issues" tab
-- [ ] Tkinter cleanup (Frames, etc...)
+- [ ] Maintaining existing code
+- [ ] Adding additional new features
 
 For more information, please refer to our [CONTRIBUTING](CONTRIBUTING.md) guide.
 
