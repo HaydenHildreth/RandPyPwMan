@@ -6,6 +6,7 @@
 * [Justin Gheen](https://github.com/PurpleHam)
 * [Tyler Michaelsen](https://github.com/tylermichaelsen)
 * [JacquesJ44](https://github.com/JacquesJ44)
+* [Jaideep Vishnu Kathiresan](https://github.com/jaideepkathiresan)
 
 ## I would like to join this list. How can I help the project?
 
