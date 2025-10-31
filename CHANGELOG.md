@@ -1,6 +1,30 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 10-31-2025
+  
+No database changes. This update adds a ton of new themes, they are: Light, Dark, Nord, Dracula, Solarized Light/Dark, Gruvbox Dark and Monokai.
+
+### Added
+
+- Themes ([https://github.com/HaydenHildreth/RandPyPwMan/issues/105](https://github.com/HaydenHildreth/RandPyPwMan/issues/105))
+* Light
+* Dark
+* Nord
+* Dracula
+* Solarized Light
+* Solarized Dark
+* Gruvbox Dark
+* Monokai
+
+### Fixed
+
+- None.
+
+### Notes
+
+- Thank you [Jaideep Vishnu Kathiresan](https://github.com/jaideepkathiresan). I am still working towards v2.0.0 before the end of the year. I am working add adding these themes over to that build in my next commit. In my implementation for this into 2.0, I will be adding a new column to the settings database, so we can store the users theme to persist between sessions.
+
 ## [1.0.2] - 10-17-2025
   
 Minor database changes. Two new fields added to data DB, if you need help updating from a previous version see updates folder or reach out to me directly.
