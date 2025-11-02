@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.8] - 11-02-2025
+  
+Minor database changes. This update adds an additional columns to the settings table (in unlock database) to keep track of user's selected theme.
+
+### Added
+
+Themes. [Issue #105](https://github.com/HaydenHildreth/RandPyPwMan/issues/105)
+ 
+### Fixed
+
+Theme select dialog geometry.
+
+### Notes
+
+- There is logic to handle backwards compatability, so if user was using prior version, or an older one, it should be handled in this.
+
 ## [1.99.5] - 10-07-2025
   
 Major database changes. This update changed group logic, a new database was added to fix some minor flaws in prior version's implementation.
