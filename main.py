@@ -17,8 +17,149 @@ from tkinter import ttk, messagebox, filedialog
 from cryptography.fernet import Fernet
 
 
+THEMES = {
+    'Light': {
+        'bg': '#FFFFFF',
+        'fg': '#1F2937',
+        'accent': '#2563EB',
+        'button_bg': '#F3F4F6',
+        'button_fg': '#1F2937',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#1F2937',
+        'active_bg': '#E5E7EB',
+        'active_fg': '#111827',
+        'tree_bg': '#FFFFFF',
+        'tree_fg': '#111827',
+        'tree_sel_bg': '#2563EB',
+        'tree_sel_fg': '#FFFFFF',
+        'menu_bg': '#FFFFFF',
+        'menu_fg': '#111827',
+    },
+    'Dark': {
+        'bg': '#1E1E1E',
+        'fg': '#E5E5E5',
+        'accent': '#569CD6',
+        'button_bg': '#2D2D2D',
+        'button_fg': '#E5E5E5',
+        'entry_bg': '#252526',
+        'entry_fg': '#E5E5E5',
+        'active_bg': '#3A3A3A',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#1E1E1E',
+        'tree_fg': '#E5E5E5',
+        'tree_sel_bg': '#094771',
+        'tree_sel_fg': '#FFFFFF',
+        'menu_bg': '#2D2D2D',
+        'menu_fg': '#E5E5E5',
+    },
+    'Nord': {
+        'bg': '#2E3440',
+        'fg': '#D8DEE9',
+        'accent': '#88C0D0',
+        'button_bg': '#3B4252',
+        'button_fg': '#ECEFF4',
+        'entry_bg': '#3B4252',
+        'entry_fg': '#ECEFF4',
+        'active_bg': '#4C566A',
+        'active_fg': '#ECEFF4',
+        'tree_bg': '#2E3440',
+        'tree_fg': '#D8DEE9',
+        'tree_sel_bg': '#5E81AC',
+        'tree_sel_fg': '#ECEFF4',
+        'menu_bg': '#3B4252',
+        'menu_fg': '#ECEFF4',
+    },
+    'Dracula': {
+        'bg': '#282A36',
+        'fg': '#F8F8F2',
+        'accent': '#BD93F9',
+        'button_bg': '#44475A',
+        'button_fg': '#F8F8F2',
+        'entry_bg': '#44475A',
+        'entry_fg': '#F8F8F2',
+        'active_bg': '#6272A4',
+        'active_fg': '#F8F8F2',
+        'tree_bg': '#282A36',
+        'tree_fg': '#F8F8F2',
+        'tree_sel_bg': '#6272A4',
+        'tree_sel_fg': '#F8F8F2',
+        'menu_bg': '#44475A',
+        'menu_fg': '#F8F8F2',
+    },
+    'Solarized Dark': {
+        'bg': '#002B36',
+        'fg': '#EEE8D5',
+        'accent': '#268BD2',
+        'button_bg': '#073642',
+        'button_fg': '#EEE8D5',
+        'entry_bg': '#073642',
+        'entry_fg': '#EEE8D5',
+        'active_bg': '#094352',
+        'active_fg': '#FDF6E3',
+        'tree_bg': '#002B36',
+        'tree_fg': '#EEE8D5',
+        'tree_sel_bg': '#268BD2',
+        'tree_sel_fg': '#FDF6E3',
+        'menu_bg': '#073642',
+        'menu_fg': '#EEE8D5',
+    },
+    'Solarized Light': {
+        'bg': '#FDF6E3',
+        'fg': '#073642',
+        'accent': '#268BD2',
+        'button_bg': '#EEE8D5',
+        'button_fg': '#073642',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#073642',
+        'active_bg': '#E1DBC9',
+        'active_fg': '#002B36',
+        'tree_bg': '#FDF6E3',
+        'tree_fg': '#073642',
+        'tree_sel_bg': '#268BD2',
+        'tree_sel_fg': '#FDF6E3',
+        'menu_bg': '#EEE8D5',
+        'menu_fg': '#073642',
+    },
+    'Gruvbox Dark': {
+        'bg': '#282828',
+        'fg': '#EBDBB2',
+        'accent': '#83A598',
+        'button_bg': '#3C3836',
+        'button_fg': '#EBDBB2',
+        'entry_bg': '#3C3836',
+        'entry_fg': '#EBDBB2',
+        'active_bg': '#504945',
+        'active_fg': '#FBF1C7',
+        'tree_bg': '#282828',
+        'tree_fg': '#EBDBB2',
+        'tree_sel_bg': '#83A598',
+        'tree_sel_fg': '#1D2021',
+        'menu_bg': '#3C3836',
+        'menu_fg': '#EBDBB2',
+    },
+    'Monokai': {
+        'bg': '#272822',
+        'fg': '#F8F8F2',
+        'accent': '#A6E22E',
+        'button_bg': '#3E3D32',
+        'button_fg': '#F8F8F2',
+        'entry_bg': '#3E3D32',
+        'entry_fg': '#F8F8F2',
+        'active_bg': '#75715E',
+        'active_fg': '#F8F8F2',
+        'tree_bg': '#272822',
+        'tree_fg': '#F8F8F2',
+        'tree_sel_bg': '#A6E22E',
+        'tree_sel_fg': '#272822',
+        'menu_bg': '#3E3D32',
+        'menu_fg': '#F8F8F2',
+    },
+}
+
+
 class DatabaseManager:
-    """Handles all database operations and encryption"""   
+    """Handles all database operations and encryption"""
+    
     def __init__(self, db_path: str = "./db"):
         self.db_path = Path(db_path)
         self.data_db = self.db_path / "data.db"
@@ -163,13 +304,36 @@ class DatabaseManager:
             count = c.fetchone()[0]
             
             if count == 0:
+                # New installation - set all defaults
                 c.execute("INSERT OR IGNORE INTO settings VALUES ('auto_lock_enabled', '1')")
                 c.execute("INSERT OR IGNORE INTO settings VALUES ('auto_lock_minutes', '5')")
+                c.execute("INSERT OR IGNORE INTO settings VALUES ('theme', 'Light')")
                 conn.commit()
+            else:
+                # Existing installation - check for missing settings and add them
+                # This upgrades the databases and tables for older versions
+                
+                # Check if theme setting exists
+                c.execute("SELECT COUNT(*) FROM settings WHERE key='theme'")
+                if c.fetchone()[0] == 0:
+                    c.execute("INSERT INTO settings VALUES ('theme', 'Light')")
+                    conn.commit()
+                
+                # Check if auto_lock_enabled exists
+                c.execute("SELECT COUNT(*) FROM settings WHERE key='auto_lock_enabled'")
+                if c.fetchone()[0] == 0:
+                    c.execute("INSERT INTO settings VALUES ('auto_lock_enabled', '1')")
+                    conn.commit()
+                
+                # Check if auto_lock_minutes exists
+                c.execute("SELECT COUNT(*) FROM settings WHERE key='auto_lock_minutes'")
+                if c.fetchone()[0] == 0:
+                    c.execute("INSERT INTO settings VALUES ('auto_lock_minutes', '5')")
+                    conn.commit()
             
             conn.close()
-        except:
-            pass
+        except Exception as e:
+            print(f"Settings initialization warning: {e}")
     
     def get_setting(self, key: str, default: str = '') -> str:
         """Get a setting value"""
@@ -585,7 +749,15 @@ class PasswordGenerator:
         return ''.join(secrets.choice(self.alphabet) for _ in range(length))
 
 
-class LoginFrame(ttk.Frame):
+class ThemedWidget:
+    """Mixin class for themed widgets"""
+    
+    def apply_theme(self, theme_name: str):
+        """Apply theme to widget - to be implemented by subclasses"""
+        pass
+
+
+class LoginFrame(ttk.Frame, ThemedWidget):
     """Frame for master password authentication"""
     
     def __init__(self, parent, db_manager, on_success_callback):
@@ -593,10 +765,11 @@ class LoginFrame(ttk.Frame):
         self.db_manager = db_manager
         self.on_success_callback = on_success_callback
         self._create_widgets()
+        self._apply_current_theme()
     
     def _create_widgets(self):
-        ttk.Label(self, text="RandPyPwGen", font=("Arial", 16, "bold")).grid(
-            row=0, column=0, columnspan=2, pady=(0, 20))
+        self.title_label = ttk.Label(self, text="RandPyPwGen", font=("Arial", 16, "bold"))
+        self.title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
         
         ttk.Label(self, text="Master Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
         
@@ -621,9 +794,34 @@ class LoginFrame(ttk.Frame):
             messagebox.showerror("Authentication Failed", "Incorrect master password.")
             self.password_var.set("")
             self.password_entry.focus()
+    
+    def _apply_current_theme(self):
+        """Apply the saved theme"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        self.apply_theme(theme_name)
+    
+    def apply_theme(self, theme_name: str):
+        """Apply theme to login frame"""
+        if theme_name not in THEMES:
+            theme_name = 'Light'
+        
+        theme = THEMES[theme_name]
+        
+        # Apply to self
+        self.configure(style='Themed.TFrame')
+        
+        # Configure styles
+        style = ttk.Style()
+        style.configure('Themed.TFrame', background=theme['bg'])
+        style.configure('Themed.TLabel', background=theme['bg'], foreground=theme['fg'])
+        style.configure('Themed.TEntry', fieldbackground=theme['entry_bg'], foreground=theme['entry_fg'])
+        style.configure('Themed.TButton', background=theme['button_bg'], foreground=theme['button_fg'])
+        
+        # Apply to root window
+        self.master.configure(bg=theme['bg'])
 
 
-class MainFrame(ttk.Frame):
+class MainFrame(ttk.Frame, ThemedWidget):
     """Main app frame"""
     
     def __init__(self, parent, db_manager, lock_callback):
@@ -641,6 +839,7 @@ class MainFrame(ttk.Frame):
         self._create_widgets()
         self._populate_treeview()
         self._start_activity_monitoring()
+        self._apply_current_theme()
     
     def _create_widgets(self):
         self.grid_rowconfigure(3, weight=1)
@@ -785,6 +984,7 @@ class MainFrame(ttk.Frame):
         options_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Options", menu=options_menu)
         options_menu.add_command(label="Auto-Lock Settings...", command=self._show_autolock_settings)
+        options_menu.add_command(label="Theme Settings...", command=self._show_theme_settings)
         
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Help", menu=help_menu)
@@ -830,6 +1030,91 @@ class MainFrame(ttk.Frame):
         """Show auto-lock settings"""
         self._register_activity()
         AutoLockSettingsDialog(self, self.db_manager)
+    
+    def _show_theme_settings(self):
+        """Show theme settings"""
+        self._register_activity()
+        ThemeSettingsDialog(self, self.db_manager, self._apply_current_theme)
+    
+    def _apply_current_theme(self):
+        """Apply the saved theme"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        self.apply_theme(theme_name)
+    
+    def apply_theme(self, theme_name: str):
+        """Apply theme to main frame"""
+        if theme_name not in THEMES:
+            theme_name = 'Light'
+        
+        theme = THEMES[theme_name]
+        
+        # Configure ttk styles
+        style = ttk.Style()
+        style.theme_use('clam')  # Use clam theme as base for better customization
+        
+        # Frame styles
+        style.configure('TFrame', background=theme['bg'])
+        style.configure('TLabelframe', background=theme['bg'], foreground=theme['fg'])
+        style.configure('TLabelframe.Label', background=theme['bg'], foreground=theme['fg'])
+        
+        # Label styles
+        style.configure('TLabel', background=theme['bg'], foreground=theme['fg'])
+        
+        # Entry styles
+        style.configure('TEntry', fieldbackground=theme['entry_bg'], foreground=theme['entry_fg'], 
+                       insertcolor=theme['fg'])
+        style.map('TEntry',
+                 fieldbackground=[('readonly', theme['active_bg'])],
+                 foreground=[('readonly', theme['active_fg'])])
+        
+        # Button styles
+        style.configure('TButton', background=theme['button_bg'], foreground=theme['button_fg'])
+        style.map('TButton',
+                 background=[('active', theme['active_bg']), ('pressed', theme['active_bg'])],
+                 foreground=[('active', theme['active_fg']), ('pressed', theme['active_fg'])])
+        
+        # Combobox styles
+        style.configure('TCombobox', fieldbackground=theme['entry_bg'], background=theme['button_bg'],
+                       foreground=theme['entry_fg'], arrowcolor=theme['fg'])
+        style.map('TCombobox',
+                 fieldbackground=[('readonly', theme['entry_bg'])],
+                 selectbackground=[('readonly', theme['entry_bg'])],
+                 selectforeground=[('readonly', theme['entry_fg'])])
+        
+        # Treeview styles
+        style.configure('Treeview', background=theme['tree_bg'], foreground=theme['tree_fg'],
+                       fieldbackground=theme['tree_bg'])
+        style.map('Treeview',
+                 background=[('selected', theme['tree_sel_bg'])],
+                 foreground=[('selected', theme['tree_sel_fg'])])
+        style.configure('Treeview.Heading', background=theme['button_bg'], foreground=theme['button_fg'])
+        
+        # Scrollbar styles
+        style.configure('Vertical.TScrollbar', background=theme['button_bg'], 
+                       troughcolor=theme['bg'], arrowcolor=theme['fg'])
+        
+        # Apply to root window and menu
+        self.master.configure(bg=theme['bg'])
+        
+        # Update password label color
+        if hasattr(self, 'password_label'):
+            self.password_label.configure(foreground=theme['accent'])
+        
+        # Try to update menu colors (note: this may not work on all platforms)
+        try:
+            menubar = self.master.nametowidget(self.master.cget('menu'))
+            menubar.configure(bg=theme['menu_bg'], fg=theme['menu_fg'],
+                            activebackground=theme['active_bg'], activeforeground=theme['active_fg'])
+            
+            for i in range(menubar.index('end') + 1):
+                try:
+                    submenu = menubar.nametowidget(menubar.entrycget(i, 'menu'))
+                    submenu.configure(bg=theme['menu_bg'], fg=theme['menu_fg'],
+                                    activebackground=theme['active_bg'], activeforeground=theme['active_fg'])
+                except:
+                    pass
+        except:
+            pass
     
     def _refresh_groups(self):
         """Refresh the list of groups in the dropdown"""
@@ -1040,12 +1325,128 @@ class MainFrame(ttk.Frame):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.6\nA secure password manager\n\nWith auto-lock timer and groups feature")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.8\nA secure password manager\n\nWith auto-lock timer, groups, and theming features")
     
     def _open_help(self):
         """Open help in browser"""
         self._register_activity()
         webbrowser.open("https://github.com/HaydenHildreth/RandPyPwMan")
+
+
+class ThemeSettingsDialog:
+    """Dialog for configuring theme settings"""
+    
+    def __init__(self, parent, db_manager, theme_callback):
+        self.db_manager = db_manager
+        self.theme_callback = theme_callback
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Theme Settings")
+        self.window.geometry("450x550")
+        self.window.resizable(True, True)  # Allow resizing
+        self.window.minsize(400, 500)  # Set minimum size
+        
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 100
+        y = parent_y + 100
+        self.window.geometry(f"450x550+{x}+{y}")
+        
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Make the main frame expandable
+        self.window.grid_rowconfigure(0, weight=1)
+        self.window.grid_columnconfigure(0, weight=1)
+        main_frame.grid_rowconfigure(10, weight=1)  # Make space expandable
+        
+        ttk.Label(main_frame, text="Theme Configuration", 
+                 font=("Arial", 11, "bold")).grid(row=0, column=0, pady=(0, 20), sticky=tk.W)
+        
+        ttk.Label(main_frame, text="Select Theme:", 
+                 font=("Arial", 10)).grid(row=1, column=0, sticky=tk.W, pady=(0, 10))
+        
+        # Get current theme
+        current_theme = self.db_manager.get_setting('theme', 'Light')
+        
+        # Create radio buttons for each theme
+        self.theme_var = tk.StringVar(value=current_theme)
+        
+        themes_list = list(THEMES.keys())
+        
+        for i, theme_name in enumerate(themes_list):
+            ttk.Radiobutton(main_frame, text=theme_name, 
+                          variable=self.theme_var, 
+                          value=theme_name,
+                          command=self._preview_theme).grid(row=i+2, column=0, sticky=tk.W, pady=2)
+        
+        # Preview label
+        preview_frame = ttk.LabelFrame(main_frame, text="Preview", padding="10")
+        preview_frame.grid(row=len(themes_list)+2, column=0, sticky=(tk.W, tk.E), pady=(15, 15))
+        
+        self.preview_label = ttk.Label(preview_frame, text="Preview colors will appear here")
+        self.preview_label.pack()
+        
+        self.preview_canvas = tk.Canvas(preview_frame, width=350, height=60)
+        self.preview_canvas.pack(pady=(10, 0))
+        
+        # Show initial preview
+        self._preview_theme()
+        
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=len(themes_list)+3, column=0, pady=(20, 0), sticky=tk.S)
+        
+        ttk.Button(button_frame, text="Apply", command=self._apply_theme).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+    
+    def _preview_theme(self):
+        """Show a preview of the selected theme"""
+        theme_name = self.theme_var.get()
+        if theme_name not in THEMES:
+            return
+        
+        theme = THEMES[theme_name]
+        
+        # Clear canvas
+        self.preview_canvas.delete('all')
+        
+        # Draw color swatches
+        x_start = 10
+        y = 10
+        width = 60
+        height = 40
+        
+        colors = [
+            ('BG', theme['bg']),
+            ('Text', theme['fg']),
+            ('Accent', theme['accent']),
+            ('Button', theme['button_bg']),
+            ('Entry', theme['entry_bg']),
+        ]
+        
+        for i, (label, color) in enumerate(colors):
+            x = x_start + (i * (width + 10))
+            self.preview_canvas.create_rectangle(x, y, x + width, y + height, 
+                                                fill=color, outline='gray')
+            self.preview_canvas.create_text(x + width//2, y + height + 10, 
+                                           text=label, font=('Arial', 8))
+    
+    def _apply_theme(self):
+        """Apply the selected theme"""
+        theme_name = self.theme_var.get()
+        
+        if self.db_manager.set_setting('theme', theme_name):
+            messagebox.showinfo("Success", f"Theme '{theme_name}' applied successfully!")
+            self.theme_callback()
+            self.window.destroy()
+        else:
+            messagebox.showerror("Error", "Failed to save theme setting.")
 
 
 class NewGroupDialog:
@@ -1773,7 +2174,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.6")
+        self.root.title("RandPyPwGen v1.99.8")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -1806,7 +2207,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.6")
+        self.root.title("RandPyPwGen v1.99.8")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
