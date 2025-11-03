@@ -54,19 +54,29 @@ git clone https://github.com/HaydenHildreth/RandPyPwMan.git
 cd <path-to-repo>\
 ```
 
-* Install dependencies:
+* Make setup script executable:
 ```
-brew install -r requirements.txt
+chmod +x ./mac_setup.sh
 ```
 
-* Run install script:
+* Run setup script:
 ```
-python install.py
+./mac_setup.sh
+```
+
+* Activate virtual enviroment
+```
+source ./venv/bin/activate
 ```
 
 * Run main script:
 ```
 python main.py
+```
+
+* (Optional) Deactivate virtual enviroment:
+```
+deactivate
 ```
 
 ### Linux
