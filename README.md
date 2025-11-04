@@ -109,6 +109,8 @@ python main.py
 
 ## Major Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
+- In version 1.0.3 I've added additional themes, Light, Dark, Nord, Dracula, Solarized Light/Dark, Gruvbox Dark and Monokai. See CHANGELOG.md.
+- In version 1.0.2 I've added some new database fields, last_modified and date_created. See CHANGELOG.md.
 - In version 1.0.1 I've added a hotkey to delete passwords from the software. I've also made minor verbiage changes to several window titles. See CHANGELOG.md.
 - In version 1.0.0 I've added much more additional error checking. The program has better capacity to handle misuse from input user. See CHANGELOG.md.
 - In version 0.9.3 I've added hiding of passwords, and have added logic to prevent errors from user error. Also, this build features a major bug fix. See CHANGELOG.md.
