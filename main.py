@@ -286,10 +286,26 @@ class DatabaseManager:
             self._set_default_settings()
             
             if not self._has_master_password():
-                return self._setup_master_password()
+                setup_success = self._setup_master_password()
+                
+                # Handle if setup fails, like if user cancels before setting password
+                if not setup_success:
+                    try:
+                        if self.data_db.exists():
+                            self.data_db.unlink()
+                        if self.unlock_db.exists():
+                            self.unlock_db.unlink()
+                        if self.db_path.exists() and not any(self.db_path.iterdir()):
+                            self.db_path.rmdir()
+                    except Exception as e:
+                        print(f"Warning: Failed to clean up database files: {e}")
+                    
+                    return False
+                
+                return True
             
             return True
-            
+        
         except Exception as e:
             messagebox.showerror("Database Error", f"Failed to setup databases: {str(e)}")
             return False
@@ -311,7 +327,7 @@ class DatabaseManager:
                 conn.commit()
             else:
                 # Existing installation - check for missing settings and add them
-                # This upgrades the databases and tables for older versions
+                # This handles upgrades from older versions
                 
                 # Check if theme setting exists
                 c.execute("SELECT COUNT(*) FROM settings WHERE key='theme'")
@@ -1070,8 +1086,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
         # Button styles
         style.configure('TButton', background=theme['button_bg'], foreground=theme['button_fg'])
         style.map('TButton',
-                 background=[('active', theme['active_bg']), ('pressed', theme['active_bg'])],
-                 foreground=[('active', theme['active_fg']), ('pressed', theme['active_fg'])])
+                 background=[('active', theme['accent']), ('pressed', theme['accent'])],
+                 foreground=[('active', theme['button_fg']), ('pressed', theme['button_fg'])])
         
         # Combobox styles
         style.configure('TCombobox', fieldbackground=theme['entry_bg'], background=theme['button_bg'],
@@ -1103,14 +1119,14 @@ class MainFrame(ttk.Frame, ThemedWidget):
         # Try to update menu colors (note: this may not work on all platforms)
         try:
             menubar = self.master.nametowidget(self.master.cget('menu'))
-            menubar.configure(bg=theme['menu_bg'], fg=theme['menu_fg'],
+            menubar.configure(bg=theme['accent'], fg=theme['bg'],
                             activebackground=theme['active_bg'], activeforeground=theme['active_fg'])
             
             for i in range(menubar.index('end') + 1):
                 try:
                     submenu = menubar.nametowidget(menubar.entrycget(i, 'menu'))
                     submenu.configure(bg=theme['menu_bg'], fg=theme['menu_fg'],
-                                    activebackground=theme['active_bg'], activeforeground=theme['active_fg'])
+                                    activebackground=theme['accent'], activeforeground=theme['bg'])
                 except:
                     pass
         except:
@@ -1871,19 +1887,22 @@ class AddEditDialog:
             if self.date_added:
                 ttk.Label(main_frame, text="Date Added:", font=("Arial", 9, "bold")).grid(
                     row=current_row, column=0, sticky=tk.W, pady=3)
-                date_added_label = ttk.Label(main_frame, text=self._format_date(self.date_added), 
-                                             font=("Arial", 9), foreground="blue")
-                date_added_label.grid(row=current_row, column=1, sticky=tk.W, padx=(10, 0), pady=3)
+                self.date_added_label = ttk.Label(main_frame, text=self._format_date(self.date_added), 
+                                             font=("Arial", 9))
+                self.date_added_label.grid(row=current_row, column=1, sticky=tk.W, padx=(10, 0), pady=3)
                 current_row += 1
             
             # Date Modified
             if self.date_modified:
                 ttk.Label(main_frame, text="Last Modified:", font=("Arial", 9, "bold")).grid(
                     row=current_row, column=0, sticky=tk.W, pady=3)
-                date_modified_label = ttk.Label(main_frame, text=self._format_date(self.date_modified), 
-                                                font=("Arial", 9), foreground="blue")
-                date_modified_label.grid(row=current_row, column=1, sticky=tk.W, padx=(10, 0), pady=3)
+                self.date_modified_label = ttk.Label(main_frame, text=self._format_date(self.date_modified), 
+                                                font=("Arial", 9))
+                self.date_modified_label.grid(row=current_row, column=1, sticky=tk.W, padx=(10, 0), pady=3)
                 current_row += 1
+        
+        # Apply theme colors to date labels
+        self._apply_theme_to_dialog()
         
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=current_row, column=0, columnspan=2, pady=(20, 0))
@@ -1894,6 +1913,21 @@ class AddEditDialog:
         
         self.window.bind('<Return>', lambda e: self._save())
         self.window.bind('<Escape>', lambda e: self._cancel())
+    
+    def _apply_theme_to_dialog(self):
+        """Apply theme colors to date labels in dialog"""
+        try:
+            theme_name = self.db_manager.get_setting('theme', 'Light')
+            if theme_name in THEMES:
+                theme = THEMES[theme_name]
+                
+                # Apply accent color to date labels
+                if hasattr(self, 'date_added_label'):
+                    self.date_added_label.configure(foreground=theme['accent'])
+                if hasattr(self, 'date_modified_label'):
+                    self.date_modified_label.configure(foreground=theme['accent'])
+        except:
+            pass
     
     def _format_date(self, date_str):
         """Format date string for display"""
