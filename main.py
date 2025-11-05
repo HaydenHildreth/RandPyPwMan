@@ -154,7 +154,571 @@ THEMES = {
         'menu_bg': '#3E3D32',
         'menu_fg': '#F8F8F2',
     },
+    'Tokyo Night': {
+        'bg': '#1a1b26',
+        'fg': '#c0caf5',
+        'accent': '#7aa2f7',
+        'button_bg': '#24283b',
+        'button_fg': '#c0caf5',
+        'entry_bg': '#24283b',
+        'entry_fg': '#c0caf5',
+        'active_bg': '#414868',
+        'active_fg': '#c0caf5',
+        'tree_bg': '#1a1b26',
+        'tree_fg': '#c0caf5',
+        'tree_sel_bg': '#7aa2f7',
+        'tree_sel_fg': '#1a1b26',
+        'menu_bg': '#24283b',
+        'menu_fg': '#c0caf5',
+    },
+    'Catppuccin Mocha': {
+        'bg': '#1e1e2e',
+        'fg': '#cdd6f4',
+        'accent': '#89b4fa',
+        'button_bg': '#313244',
+        'button_fg': '#cdd6f4',
+        'entry_bg': '#313244',
+        'entry_fg': '#cdd6f4',
+        'active_bg': '#45475a',
+        'active_fg': '#cdd6f4',
+        'tree_bg': '#1e1e2e',
+        'tree_fg': '#cdd6f4',
+        'tree_sel_bg': '#89b4fa',
+        'tree_sel_fg': '#1E1E2E',
+        'menu_bg': '#313244',
+        'menu_fg': '#cdd6f4',
+    },
+    'Catppuccin Latte': {
+        'bg': '#eff1f5',
+        'fg': '#4c4f69',
+        'accent': '#1e66f5',
+        'button_bg': '#e6e9ef',
+        'button_fg': '#4c4f69',
+        'entry_bg': '#ffffff',
+        'entry_fg': '#4c4f69',
+        'active_bg': '#dce0e8',
+        'active_fg': '#1e1e2e',
+        'tree_bg': '#eff1f5',
+        'tree_fg': '#4c4f69',
+        'tree_sel_bg': '#1e66f5',
+        'tree_sel_fg': '#eff1f5',
+        'menu_bg': '#e6e9ef',
+        'menu_fg': '#4c4f69',
+    },
+    'One Dark': {
+        'bg': '#282c34',
+        'fg': '#abb2bf',
+        'accent': '#61afef',
+        'button_bg': '#3a3f4b',
+        'button_fg': '#abb2bf',
+        'entry_bg': '#3a3f4b',
+        'entry_fg': '#abb2bf',
+        'active_bg': '#4b5263',
+        'active_fg': '#ffffff',
+        'tree_bg': '#282c34',
+        'tree_fg': '#abb2bf',
+        'tree_sel_bg': '#61afef',
+        'tree_sel_fg': '#1e222a',
+        'menu_bg': '#3a3f4b',
+        'menu_fg': '#abb2bf',
+    },
+    'Everforest Dark': {
+        'bg': '#2b3339',
+        'fg': '#d3c6aa',
+        'accent': '#a7c080',
+        'button_bg': '#323c41',
+        'button_fg': '#d3c6aa',
+        'entry_bg': '#323c41',
+        'entry_fg': '#d3c6aa',
+        'active_bg': '#3c474d',
+        'active_fg': '#d3c6aa',
+        'tree_bg': '#2b3339',
+        'tree_fg': '#d3c6aa',
+        'tree_sel_bg': '#a7c080',
+        'tree_sel_fg': '#2b3339',
+        'menu_bg': '#323c41',
+        'menu_fg': '#d3c6aa',
+    },
+    'Kanagawa': {
+        'bg': '#1f1f28',
+        'fg': '#dcd7ba',
+        'accent': '#7e9cd8',
+        'button_bg': '#2a2a37',
+        'button_fg': '#dcd7ba',
+        'entry_bg': '#2a2a37',
+        'entry_fg': '#dcd7ba',
+        'active_bg': '#363646',
+        'active_fg': '#dcd7ba',
+        'tree_bg': '#1f1f28',
+        'tree_fg': '#dcd7ba',
+        'tree_sel_bg': '#7e9cd8',
+        'tree_sel_fg': '#1f1f28',
+        'menu_bg': '#2a2a37',
+        'menu_fg': '#dcd7ba',
+    },
+    'Night Owl': {
+        'bg': '#011627',
+        'fg': '#d6deeb',
+        'accent': '#82aaff',
+        'button_bg': '#02233c',
+        'button_fg': '#d6deeb',
+        'entry_bg': '#02233c',
+        'entry_fg': '#d6deeb',
+        'active_bg': '#073042',
+        'active_fg': '#d6deeb',
+        'tree_bg': '#011627',
+        'tree_fg': '#d6deeb',
+        'tree_sel_bg': '#82aaff',
+        'tree_sel_fg': '#011627',
+        'menu_bg': '#02233c',
+        'menu_fg': '#d6deeb',
+    },
+    'Rose Pine': {
+        'bg': '#191724',
+        'fg': '#e0def4',
+        'accent': '#9ccfd8',
+        'button_bg': '#26233a',
+        'button_fg': '#e0def4',
+        'entry_bg': '#26233a',
+        'entry_fg': '#e0def4',
+        'active_bg': '#403d52',
+        'active_fg': '#e0def4',
+        'tree_bg': '#191724',
+        'tree_fg': '#e0def4',
+        'tree_sel_bg': '#9ccfd8',
+        'tree_sel_fg': '#191724',
+        'menu_bg': '#26233a',
+        'menu_fg': '#e0def4',
+    },
+    'GitHub Dark': {
+        'bg': '#0d1117',
+        'fg': '#c9d1d9',
+        'accent': '#58a6ff',
+        'button_bg': '#21262d',
+        'button_fg': '#c9d1d9',
+        'entry_bg': '#21262d',
+        'entry_fg': '#c9d1d9',
+        'active_bg': '#30363d',
+        'active_fg': '#ffffff',
+        'tree_bg': '#0d1117',
+        'tree_fg': '#c9d1d9',
+        'tree_sel_bg': '#58a6ff',
+        'tree_sel_fg': '#0d1117',
+        'menu_bg': '#21262d',
+        'menu_fg': '#c9d1d9',
+    },
+    'GitHub Light': {
+        'bg': '#ffffff',
+        'fg': '#24292f',
+        'accent': '#0969da',
+        'button_bg': '#f6f8fa',
+        'button_fg': '#24292f',
+        'entry_bg': '#ffffff',
+        'entry_fg': '#24292f',
+        'active_bg': '#eaeef2',
+        'active_fg': '#24292f',
+        'tree_bg': '#ffffff',
+        'tree_fg': '#24292f',
+        'tree_sel_bg': '#0969da',
+        'tree_sel_fg': '#ffffff',
+        'menu_bg': '#f6f8fa',
+        'menu_fg': '#24292f',
+    },
+    
+        'Ayu Dark': {
+        'bg': '#0A0E14',
+        'fg': '#B3B1AD',
+        'accent': '#39BAE6',
+        'button_bg': '#1F2430',
+        'button_fg': '#B3B1AD',
+        'entry_bg': '#1F2430',
+        'entry_fg': '#B3B1AD',
+        'active_bg': '#27303B',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#0A0E14',
+        'tree_fg': '#B3B1AD',
+        'tree_sel_bg': '#39BAE6',
+        'tree_sel_fg': '#0A0E14',
+        'menu_bg': '#1F2430',
+        'menu_fg': '#B3B1AD',
+    },
+    'Ayu Mirage': {
+        'bg': '#1F2430',
+        'fg': '#CBCCC6',
+        'accent': '#36A3D9',
+        'button_bg': '#242B38',
+        'button_fg': '#CBCCC6',
+        'entry_bg': '#242B38',
+        'entry_fg': '#CBCCC6',
+        'active_bg': '#3A4352',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#1F2430',
+        'tree_fg': '#CBCCC6',
+        'tree_sel_bg': '#36A3D9',
+        'tree_sel_fg': '#1F2430',
+        'menu_bg': '#242B38',
+        'menu_fg': '#CBCCC6',
+    },
+    'Ayu Light': {
+        'bg': '#FAFAFA',
+        'fg': '#5C6166',
+        'accent': '#55B4D4',
+        'button_bg': '#E7E8E9',
+        'button_fg': '#5C6166',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#5C6166',
+        'active_bg': '#DDE1E3',
+        'active_fg': '#2C2F31',
+        'tree_bg': '#FAFAFA',
+        'tree_fg': '#5C6166',
+        'tree_sel_bg': '#55B4D4',
+        'tree_sel_fg': '#FFFFFF',
+        'menu_bg': '#E7E8E9',
+        'menu_fg': '#5C6166',
+    },
+    'Horizon': {
+        'bg': '#1C1E26',
+        'fg': '#D5D8DA',
+        'accent': '#E27878',
+        'button_bg': '#232530',
+        'button_fg': '#D5D8DA',
+        'entry_bg': '#232530',
+        'entry_fg': '#D5D8DA',
+        'active_bg': '#2E3038',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#1C1E26',
+        'tree_fg': '#D5D8DA',
+        'tree_sel_bg': '#E27878',
+        'tree_sel_fg': '#1C1E26',
+        'menu_bg': '#232530',
+        'menu_fg': '#D5D8DA',
+    },
+    'Everforest Light': {
+        'bg': '#F3EAD3',
+        'fg': '#5C6A72',
+        'accent': '#A7C080',
+        'button_bg': '#E8DFC4',
+        'button_fg': '#5C6A72',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#5C6A72',
+        'active_bg': '#D9D2B9',
+        'active_fg': '#2E383C',
+        'tree_bg': '#F3EAD3',
+        'tree_fg': '#5C6A72',
+        'tree_sel_bg': '#A7C080',
+        'tree_sel_fg': '#F3EAD3',
+        'menu_bg': '#E8DFC4',
+        'menu_fg': '#5C6A72',
+    },
+    'Oceanic Next': {
+        'bg': '#1B2B34',
+        'fg': '#D8DEE9',
+        'accent': '#6699CC',
+        'button_bg': '#2E3C43',
+        'button_fg': '#D8DEE9',
+        'entry_bg': '#2E3C43',
+        'entry_fg': '#D8DEE9',
+        'active_bg': '#34444C',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#1B2B34',
+        'tree_fg': '#D8DEE9',
+        'tree_sel_bg': '#6699CC',
+        'tree_sel_fg': '#1B2B34',
+        'menu_bg': '#2E3C43',
+        'menu_fg': '#D8DEE9',
+    },
+    'Cyberpunk': {
+        'bg': '#0A0A12',
+        'fg': '#F5F5F5',
+        'accent': '#FF007C',
+        'button_bg': '#1B1B2B',
+        'button_fg': '#F5F5F5',
+        'entry_bg': '#1B1B2B',
+        'entry_fg': '#F5F5F5',
+        'active_bg': '#2D2D44',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#0A0A12',
+        'tree_fg': '#F5F5F5',
+        'tree_sel_bg': '#FF007C',
+        'tree_sel_fg': '#0A0A12',
+        'menu_bg': '#1B1B2B',
+        'menu_fg': '#F5F5F5',
+    },
+    'Synthwave': {
+        'bg': '#1A0B2E',
+        'fg': '#E0E0FF',
+        'accent': '#FF6BFF',
+        'button_bg': '#2B1450',
+        'button_fg': '#E0E0FF',
+        'entry_bg': '#2B1450',
+        'entry_fg': '#E0E0FF',
+        'active_bg': '#40256B',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#1A0B2E',
+        'tree_fg': '#E0E0FF',
+        'tree_sel_bg': '#FF6BFF',
+        'tree_sel_fg': '#1A0B2E',
+        'menu_bg': '#2B1450',
+        'menu_fg': '#E0E0FF',
+    },
+    'Terminal Green': {
+        'bg': '#000000',
+        'fg': '#00FF00',
+        'accent': '#00AA00',
+        'button_bg': '#002200',
+        'button_fg': '#00FF00',
+        'entry_bg': '#002200',
+        'entry_fg': '#00FF00',
+        'active_bg': '#004400',
+        'active_fg': '#00FF00',
+        'tree_bg': '#000000',
+        'tree_fg': '#00FF00',
+        'tree_sel_bg': '#00AA00',
+        'tree_sel_fg': '#000000',
+        'menu_bg': '#002200',
+        'menu_fg': '#00FF00',
+    },
+    'Amber CRT': {
+        'bg': '#000000',
+        'fg': '#FFB000',
+        'accent': '#FF8C00',
+        'button_bg': '#331A00',
+        'button_fg': '#FFB000',
+        'entry_bg': '#331A00',
+        'entry_fg': '#FFB000',
+        'active_bg': '#553300',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#000000',
+        'tree_fg': '#FFB000',
+        'tree_sel_bg': '#FF8C00',
+        'tree_sel_fg': '#000000',
+        'menu_bg': '#331A00',
+        'menu_fg': '#FFB000',
+    },
+    
+        'Catppuccin Frappé': {
+        'bg': '#303446',
+        'fg': '#c6d0f5',
+        'accent': '#8caaee',
+        'button_bg': '#414559',
+        'button_fg': '#c6d0f5',
+        'entry_bg': '#414559',
+        'entry_fg': '#c6d0f5',
+        'active_bg': '#51576d',
+        'active_fg': '#ffffff',
+        'tree_bg': '#303446',
+        'tree_fg': '#c6d0f5',
+        'tree_sel_bg': '#8caaee',
+        'tree_sel_fg': '#303446',
+        'menu_bg': '#414559',
+        'menu_fg': '#c6d0f5',
+    },
+    'Catppuccin Macchiato': {
+        'bg': '#24273a',
+        'fg': '#cad3f5',
+        'accent': '#8aadf4',
+        'button_bg': '#363a4f',
+        'button_fg': '#cad3f5',
+        'entry_bg': '#363a4f',
+        'entry_fg': '#cad3f5',
+        'active_bg': '#494d64',
+        'active_fg': '#ffffff',
+        'tree_bg': '#24273a',
+        'tree_fg': '#cad3f5',
+        'tree_sel_bg': '#8aadf4',
+        'tree_sel_fg': '#24273a',
+        'menu_bg': '#363a4f',
+        'menu_fg': '#cad3f5',
+    },
+    'Glacier': {
+        'bg': '#eaf4f4',
+        'fg': '#00332e',
+        'accent': '#4e8098',
+        'button_bg': '#d8eaea',
+        'button_fg': '#00332e',
+        'entry_bg': '#ffffff',
+        'entry_fg': '#00332e',
+        'active_bg': '#cddfde',
+        'active_fg': '#002522',
+        'tree_bg': '#eaf4f4',
+        'tree_fg': '#00332e',
+        'tree_sel_bg': '#4e8098',
+        'tree_sel_fg': '#ffffff',
+        'menu_bg': '#d8eaea',
+        'menu_fg': '#00332e',
+    },
+    'Forest Dew': {
+        'bg': '#e7f0e4',
+        'fg': '#2a3b1f',
+        'accent': '#84a98c',
+        'button_bg': '#d7e7d4',
+        'button_fg': '#2a3b1f',
+        'entry_bg': '#ffffff',
+        'entry_fg': '#2a3b1f',
+        'active_bg': '#c6d8c2',
+        'active_fg': '#1e2c16',
+        'tree_bg': '#e7f0e4',
+        'tree_fg': '#2a3b1f',
+        'tree_sel_bg': '#84a98c',
+        'tree_sel_fg': '#ffffff',
+        'menu_bg': '#d7e7d4',
+        'menu_fg': '#2a3b1f',
+    },
+    'Sakura': {
+        'bg': '#fff0f6',
+        'fg': '#3a2e3c',
+        'accent': '#ff77a8',
+        'button_bg': '#f8dce9',
+        'button_fg': '#3a2e3c',
+        'entry_bg': '#ffffff',
+        'entry_fg': '#3a2e3c',
+        'active_bg': '#f1c8d9',
+        'active_fg': '#3a2e3c',
+        'tree_bg': '#fff0f6',
+        'tree_fg': '#3a2e3c',
+        'tree_sel_bg': '#ff77a8',
+        'tree_sel_fg': '#fff0f6',
+        'menu_bg': '#f8dce9',
+        'menu_fg': '#3a2e3c',
+    },
+    'Lavender Mist': {
+        'bg': '#f4f0ff',
+        'fg': '#362b44',
+        'accent': '#a882dd',
+        'button_bg': '#e7ddff',
+        'button_fg': '#362b44',
+        'entry_bg': '#ffffff',
+        'entry_fg': '#362b44',
+        'active_bg': '#d8caff',
+        'active_fg': '#2a2235',
+        'tree_bg': '#f4f0ff',
+        'tree_fg': '#362b44',
+        'tree_sel_bg': '#a882dd',
+        'tree_sel_fg': '#ffffff',
+        'menu_bg': '#e7ddff',
+        'menu_fg': '#362b44',
+    },
+    'Vaporwave': {
+        'bg': '#2b1d47',
+        'fg': '#ffb7ff',
+        'accent': '#7df9ff',
+        'button_bg': '#3a2963',
+        'button_fg': '#ffb7ff',
+        'entry_bg': '#3a2963',
+        'entry_fg': '#ffb7ff',
+        'active_bg': '#4f3b82',
+        'active_fg': '#ffffff',
+        'tree_bg': '#2b1d47',
+        'tree_fg': '#ffb7ff',
+        'tree_sel_bg': '#7df9ff',
+        'tree_sel_fg': '#2b1d47',
+        'menu_bg': '#3a2963',
+        'menu_fg': '#ffb7ff',
+    },
+    'DOS Blue': {
+        'bg': '#0000AA',
+        'fg': '#FFFFFF',
+        'accent': '#FFFF55',
+        'button_bg': '#000088',
+        'button_fg': '#FFFFFF',
+        'entry_bg': '#000088',
+        'entry_fg': '#FFFFFF',
+        'active_bg': '#000066',
+        'active_fg': '#FFFF55',
+        'tree_bg': '#0000AA',
+        'tree_fg': '#FFFFFF',
+        'tree_sel_bg': '#FFFF55',
+        'tree_sel_fg': '#000000',
+        'menu_bg': '#000088',
+        'menu_fg': '#FFFFFF',
+    },
+    'High Contrast Dark': {
+        'bg': '#000000',
+        'fg': '#FFFFFF',
+        'accent': '#00FFFF',
+        'button_bg': '#1a1a1a',
+        'button_fg': '#FFFFFF',
+        'entry_bg': '#1a1a1a',
+        'entry_fg': '#FFFFFF',
+        'active_bg': '#333333',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#000000',
+        'tree_fg': '#FFFFFF',
+        'tree_sel_bg': '#00FFFF',
+        'tree_sel_fg': '#000000',
+        'menu_bg': '#1a1a1a',
+        'menu_fg': '#FFFFFF',
+    },
+    'High Contrast Light': {
+        'bg': '#FFFFFF',
+        'fg': '#000000',
+        'accent': '#0000FF',
+        'button_bg': '#EEEEEE',
+        'button_fg': '#000000',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#000000',
+        'active_bg': '#DDDDDD',
+        'active_fg': '#000000',
+        'tree_bg': '#FFFFFF',
+        'tree_fg': '#000000',
+        'tree_sel_bg': '#0000FF',
+        'tree_sel_fg': '#FFFFFF',
+        'menu_bg': '#EEEEEE',
+        'menu_fg': '#000000',
+    },
+    'Material Blue': {
+        'bg': '#0D1B2A',
+        'fg': '#E0E5EB',
+        'accent': '#3D8DFF',
+        'button_bg': '#1B263B',
+        'button_fg': '#E0E5EB',
+        'entry_bg': '#1B263B',
+        'entry_fg': '#E0E5EB',
+        'active_bg': '#415A77',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#0D1B2A',
+        'tree_fg': '#E0E5EB',
+        'tree_sel_bg': '#3D8DFF',
+        'tree_sel_fg': '#0D1B2A',
+        'menu_bg': '#1B263B',
+        'menu_fg': '#E0E5EB',
+    },
+    'Material Teal': {
+        'bg': '#0C2524',
+        'fg': '#D8F3DC',
+        'accent': '#52B69A',
+        'button_bg': '#143433',
+        'button_fg': '#D8F3DC',
+        'entry_bg': '#143433',
+        'entry_fg': '#D8F3DC',
+        'active_bg': '#2D6A4F',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#0C2524',
+        'tree_fg': '#D8F3DC',
+        'tree_sel_bg': '#52B69A',
+        'tree_sel_fg': '#0C2524',
+        'menu_bg': '#143433',
+        'menu_fg': '#D8F3DC',
+    },
+    'Material Purple': {
+        'bg': '#1A102A',
+        'fg': '#ECE0FF',
+        'accent': '#A066FF',
+        'button_bg': '#26163B',
+        'button_fg': '#ECE0FF',
+        'entry_bg': '#26163B',
+        'entry_fg': '#ECE0FF',
+        'active_bg': '#3B2670',
+        'active_fg': '#FFFFFF',
+        'tree_bg': '#1A102A',
+        'tree_fg': '#ECE0FF',
+        'tree_sel_bg': '#A066FF',
+        'tree_sel_fg': '#1A102A',
+        'menu_bg': '#26163B',
+        'menu_fg': '#ECE0FF',
+    },
 }
+    
 
 
 class DatabaseManager:
@@ -1341,7 +1905,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.8\nA secure password manager\n\nWith auto-lock timer, groups, and theming features")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.8\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -1369,9 +1933,17 @@ class ThemeSettingsDialog:
         y = parent_y + 100
         self.window.geometry(f"450x550+{x}+{y}")
         
+        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
         self.window.transient(parent)
         self.window.grab_set()
+        
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
     
     def _create_widgets(self):
         main_frame = ttk.Frame(self.window, padding="20")
@@ -1380,7 +1952,8 @@ class ThemeSettingsDialog:
         # Make the main frame expandable
         self.window.grid_rowconfigure(0, weight=1)
         self.window.grid_columnconfigure(0, weight=1)
-        main_frame.grid_rowconfigure(10, weight=1)  # Make space expandable
+        main_frame.grid_rowconfigure(2, weight=1)  # Make the listbox frame expandable
+        main_frame.grid_columnconfigure(0, weight=1)
         
         ttk.Label(main_frame, text="Theme Configuration", 
                  font=("Arial", 11, "bold")).grid(row=0, column=0, pady=(0, 20), sticky=tk.W)
@@ -1390,21 +1963,41 @@ class ThemeSettingsDialog:
         
         # Get current theme
         current_theme = self.db_manager.get_setting('theme', 'Light')
-        
-        # Create radio buttons for each theme
         self.theme_var = tk.StringVar(value=current_theme)
         
-        themes_list = list(THEMES.keys())
+        # Create a frame for the listbox and scrollbar
+        list_frame = ttk.Frame(main_frame)
+        list_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 15))
+        list_frame.grid_rowconfigure(0, weight=1)
+        list_frame.grid_columnconfigure(0, weight=1)
         
-        for i, theme_name in enumerate(themes_list):
-            ttk.Radiobutton(main_frame, text=theme_name, 
-                          variable=self.theme_var, 
-                          value=theme_name,
-                          command=self._preview_theme).grid(row=i+2, column=0, sticky=tk.W, pady=2)
+        # Create listbox with scrollbar
+        self.theme_listbox = tk.Listbox(list_frame, height=12, exportselection=False)
+        self.theme_listbox.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.theme_listbox.yview)
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        self.theme_listbox.configure(yscrollcommand=scrollbar.set)
+        
+        # Populate listbox with themes
+        themes_list = list(THEMES.keys())
+        for theme_name in themes_list:
+            self.theme_listbox.insert(tk.END, theme_name)
+        
+        # Select current theme
+        try:
+            current_index = themes_list.index(current_theme)
+            self.theme_listbox.selection_set(current_index)
+            self.theme_listbox.see(current_index)
+        except ValueError:
+            self.theme_listbox.selection_set(0)
+        
+        # Bind selection event
+        self.theme_listbox.bind('<<ListboxSelect>>', self._on_theme_select)
         
         # Preview label
         preview_frame = ttk.LabelFrame(main_frame, text="Preview", padding="10")
-        preview_frame.grid(row=len(themes_list)+2, column=0, sticky=(tk.W, tk.E), pady=(15, 15))
+        preview_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
         
         self.preview_label = ttk.Label(preview_frame, text="Preview colors will appear here")
         self.preview_label.pack()
@@ -1416,10 +2009,18 @@ class ThemeSettingsDialog:
         self._preview_theme()
         
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=len(themes_list)+3, column=0, pady=(20, 0), sticky=tk.S)
+        button_frame.grid(row=4, column=0, pady=(0, 0))
         
         ttk.Button(button_frame, text="Apply", command=self._apply_theme).pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+    
+    def _on_theme_select(self, event=None):
+        """Handle theme selection from listbox"""
+        selection = self.theme_listbox.curselection()
+        if selection:
+            theme_name = self.theme_listbox.get(selection[0])
+            self.theme_var.set(theme_name)
+            self._preview_theme()
     
     def _preview_theme(self):
         """Show a preview of the selected theme"""
@@ -1484,9 +2085,17 @@ class NewGroupDialog:
         y = parent_y + 100
         self.window.geometry(f"350x130+{x}+{y}")
         
+        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
         self.window.transient(parent)
         self.window.grab_set()
+        
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
     
     def _create_widgets(self):
         main_frame = ttk.Frame(self.window, padding="20")
@@ -1550,9 +2159,17 @@ class ManageGroupsDialog:
         y = parent_y + 75
         self.window.geometry(f"400x350+{x}+{y}")
         
+        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
         self.window.transient(parent)
         self.window.grab_set()
+        
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
     
     def _create_widgets(self):
         main_frame = ttk.Frame(self.window, padding="20")
@@ -1660,9 +2277,17 @@ class RenameGroupDialog:
         y = parent_y + 50
         self.window.geometry(f"350x150+{x}+{y}")
         
+        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
         self.window.transient(parent)
         self.window.grab_set()
+        
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
     
     def _create_widgets(self):
         main_frame = ttk.Frame(self.window, padding="20")
@@ -1728,9 +2353,17 @@ class AutoLockSettingsDialog:
         y = parent_y + 100
         self.window.geometry(f"400x180+{x}+{y}")
         
+        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
         self.window.transient(parent)
         self.window.grab_set()
+    
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
     
     def _create_widgets(self):
         main_frame = ttk.Frame(self.window, padding="20")
@@ -1835,9 +2468,17 @@ class AddEditDialog:
         y = parent_y + 50
         self.window.geometry(f"450x{window_height}+{x}+{y}")
         
+        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets(site, username, password, group)
         self.window.transient(parent)
         self.window.grab_set()
+        
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
     
     def _create_widgets(self, site, username, password, group):
         main_frame = ttk.Frame(self.window, padding="20")
@@ -2015,9 +2656,17 @@ class ImportDialog:
         y = parent_y + 75
         self.window.geometry(f"350x250+{x}+{y}")
         
+        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
         self.window.transient(parent)
         self.window.grab_set()
+        
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
     
     def _create_widgets(self):
         main_frame = ttk.Frame(self.window, padding="20")
@@ -2157,9 +2806,17 @@ class ChangeMasterPasswordDialog:
         y = parent_y + 100
         self.window.geometry(f"400x150+{x}+{y}")
         
+        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
         self.window.transient(parent)
         self.window.grab_set()
+        
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
     
     def _create_widgets(self):
         main_frame = ttk.Frame(self.window, padding="20")
@@ -2271,3 +2928,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
