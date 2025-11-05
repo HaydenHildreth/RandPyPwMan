@@ -1,6 +1,38 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.10] - 11-05-2025
+  
+No database changes. This update fixed an issue where the user could put in a password with a group which did not exist.
+
+### Added
+
+None.
+
+### Fixed
+
+Group logic issue. [Issue #112](https://github.com/HaydenHildreth/RandPyPwMan/issues/112)
+
+### Notes
+
+- None.
+
+## [1.99.9] - 11-05-2025
+  
+No database changes. This update added more themes and fixed how the themes are displayed.
+
+### Added
+
+More themes. [Issue #113](https://github.com/HaydenHildreth/RandPyPwMan/issues/113)
+ 
+### Fixed
+
+Theme not applying to entirety of window. [Issue #114](https://github.com/HaydenHildreth/RandPyPwMan/issues/114)
+
+### Notes
+
+- None.
+
 ## [1.99.8] - 11-02-2025
   
 Minor database changes. This update adds an additional columns to the settings table (in unlock database) to keep track of user's selected theme.
