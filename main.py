@@ -1206,6 +1206,19 @@ class DatabaseManager:
             if group_name == '':
                 group_name = None
             
+            # Add group to groups table if it doesn't exist and is not None
+            if group_name is not None and group_name.strip() != '':
+                group_name = group_name.strip()
+                conn_temp = sqlite3.connect(self.data_db)
+                c_temp = conn_temp.cursor()
+                try:
+                    c_temp.execute("INSERT OR IGNORE INTO groups (name) VALUES (?)", (group_name,))
+                    conn_temp.commit()
+                except:
+                    pass
+                finally:
+                    conn_temp.close()
+            
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             c.execute("""INSERT INTO data (site, username, password, group_name, date_added, date_modified) 
@@ -1218,7 +1231,7 @@ class DatabaseManager:
         except Exception as e:
             messagebox.showerror("Database Error", f"Failed to add record: {str(e)}")
             return None
-    
+
     def update_record(self, record_id: int, site: str, username: str, password: str, group_name: Optional[str] = None) -> bool:
         """Update existing password"""
         try:
@@ -1226,6 +1239,19 @@ class DatabaseManager:
             
             if group_name == '':
                 group_name = None
+            
+            # Add group to groups table if it doesn't exist and is not None
+            if group_name is not None and group_name.strip() != '':
+                group_name = group_name.strip()
+                conn_temp = sqlite3.connect(self.data_db)
+                c_temp = conn_temp.cursor()
+                try:
+                    c_temp.execute("INSERT OR IGNORE INTO groups (name) VALUES (?)", (group_name,))
+                    conn_temp.commit()
+                except:
+                    pass
+                finally:
+                    conn_temp.close()
             
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
@@ -1905,7 +1931,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.8\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.9\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -2865,7 +2891,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.8")
+        self.root.title("RandPyPwGen v1.99.9")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -2898,7 +2924,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.8")
+        self.root.title("RandPyPwGen v1.99.9")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
