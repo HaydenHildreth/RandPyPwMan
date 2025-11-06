@@ -1931,7 +1931,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.10\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.11\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -2007,6 +2007,28 @@ class ThemeSettingsDialog:
         
         # Populate listbox with themes
         themes_list = list(THEMES.keys())
+
+        # Separate main themes from the rest
+        priority_themes = []
+        other_themes = []
+
+        for theme in themes_list:
+            if theme == 'Light':
+                priority_themes.insert(0, theme)  # Light first
+            elif theme == 'Dark':
+                if 'Light' in priority_themes:
+                    priority_themes.insert(1, theme)  # Dark second
+                else:
+                    priority_themes.append(theme)
+            else:
+                other_themes.append(theme)
+
+        # Sort themes alphabetically
+        other_themes.sort()
+
+        # Combine two lists
+        themes_list = priority_themes + other_themes
+
         for theme_name in themes_list:
             self.theme_listbox.insert(tk.END, theme_name)
         
@@ -2020,6 +2042,9 @@ class ThemeSettingsDialog:
         
         # Bind selection event
         self.theme_listbox.bind('<<ListboxSelect>>', self._on_theme_select)
+        # Set double-click to apply theme
+        self.theme_listbox.bind('<Double-Button-1>', lambda e: self._apply_theme())
+
         
         # Preview label
         preview_frame = ttk.LabelFrame(main_frame, text="Preview", padding="10")
@@ -2217,6 +2242,9 @@ class ManageGroupsDialog:
         scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.groups_listbox.yview)
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.groups_listbox.configure(yscrollcommand=scrollbar.set)
+        
+        # Set double-click to open the group clicked for manage groups
+        self.groups_listbox.bind('<Double-Button-1>', lambda e: self._rename_group())
         
         self._populate_groups()
         
@@ -2891,7 +2919,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.10")
+        self.root.title("RandPyPwGen v1.99.11")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -2924,7 +2952,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.10")
+        self.root.title("RandPyPwGen v1.99.11")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
