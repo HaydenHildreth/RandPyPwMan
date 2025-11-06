@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.11] - 11-06-2025
+  
+No database changes. This update added some new shortcuts to better navigate the program.
+
+### Added
+
+Double clicking shortcuts to both Manage Groups and Theme settings. Now you can double-click to select these like you could passwords in the Treeview. [Issue #117](https://github.com/HaydenHildreth/RandPyPwMan/issues/117)
+
+### Fixed
+
+Theme display order. [Issue #112](https://github.com/HaydenHildreth/RandPyPwMan/issues/116)
+
+### Notes
+
+- None.
+
 ## [1.99.10] - 11-05-2025
   
 No database changes. This update fixed an issue where the user could put in a password with a group which did not exist.
