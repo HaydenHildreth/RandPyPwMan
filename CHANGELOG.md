@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.12] - 11-10-2025
+  
+No database changes. This update only features minor cosmetic changes which improve the users quality of life when using software.
+
+### Added
+
+None. 
+
+### Fixed
+
+Treeview headers not following theme, making them unreadable upon hover for certain themes. [Issue #112](https://github.com/HaydenHildreth/RandPyPwMan/issues/120)
+
+### Notes
+
+- None.
+
 ## [1.99.11] - 11-06-2025
   
 No database changes. This update added some new shortcuts to better navigate the program.
