@@ -962,7 +962,7 @@ class DatabaseManager:
                 self.window = tk.Tk()
                 self.window.title('RandPyPwGen Setup')
                 self.window.geometry('400x200')
-                self.window.resizable(False, False)
+                self.window.resizable(True, True)
                 
                 self.window.update_idletasks()
                 x = (self.window.winfo_screenwidth() // 2) - (400 // 2)
@@ -1356,10 +1356,10 @@ class PasswordGenerator:
 
 
 class ThemedWidget:
-    """Mixin class for themed widgets"""
+    """Class for theme widgets"""
     
     def apply_theme(self, theme_name: str):
-        """Apply theme to widget - to be implemented by subclasses"""
+        """Apply theme to widget"""
         pass
 
 
@@ -1936,7 +1936,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.12\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.13\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -2058,7 +2058,7 @@ class ThemeSettingsDialog:
         self.preview_label = ttk.Label(preview_frame, text="Preview colors will appear here")
         self.preview_label.pack()
         
-        self.preview_canvas = tk.Canvas(preview_frame, width=350, height=60)
+        self.preview_canvas = tk.Canvas(preview_frame, width=356, height=65)
         self.preview_canvas.pack(pady=(10, 0))
         
         # Show initial preview
@@ -2131,15 +2131,15 @@ class NewGroupDialog:
         
         self.window = tk.Toplevel(parent)
         self.window.title("New Group")
-        self.window.geometry("350x130")
-        self.window.resizable(False, False)
+        self.window.geometry("350x160")
+        self.window.resizable(True, True)
         
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
         parent_y = parent.winfo_rooty()
         x = parent_x + 100
         y = parent_y + 100
-        self.window.geometry(f"350x130+{x}+{y}")
+        self.window.geometry(f"350x160+{x}+{y}")
         
         self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
@@ -2206,7 +2206,7 @@ class ManageGroupsDialog:
         self.window = tk.Toplevel(parent)
         self.window.title("Manage Groups")
         self.window.geometry("400x350")
-        self.window.resizable(False, False)
+        self.window.resizable(True, True)
         
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
@@ -2327,7 +2327,7 @@ class RenameGroupDialog:
         self.window = tk.Toplevel(parent)
         self.window.title("Rename Group")
         self.window.geometry("350x150")
-        self.window.resizable(False, False)
+        self.window.resizable(True, True)
         
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
@@ -2403,7 +2403,7 @@ class AutoLockSettingsDialog:
         self.window = tk.Toplevel(parent)
         self.window.title("Auto-Lock Settings")
         self.window.geometry("400x180")
-        self.window.resizable(False, False)
+        self.window.resizable(True, True)
         
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
@@ -2518,7 +2518,7 @@ class AddEditDialog:
         # Adjust window height if editing (to show dates)
         window_height = 340 if record_id and (date_added or date_modified) else 250
         self.window.geometry(f"450x{window_height}")
-        self.window.resizable(False, False)
+        self.window.resizable(True, True)
         
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
@@ -2705,15 +2705,15 @@ class ImportDialog:
         
         self.window = tk.Toplevel(parent)
         self.window.title("Import Passwords")
-        self.window.geometry("350x250")
-        self.window.resizable(False, False)
+        self.window.geometry("350x275")
+        self.window.resizable(True, True)
         
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
         parent_y = parent.winfo_rooty()
         x = parent_x + 75
         y = parent_y + 75
-        self.window.geometry(f"350x250+{x}+{y}")
+        self.window.geometry(f"350x275+{x}+{y}")
         
         self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
         self._create_widgets()
@@ -2856,7 +2856,7 @@ class ChangeMasterPasswordDialog:
         self.window = tk.Toplevel(parent)
         self.window.title("Change Master Password")
         self.window.geometry("400x150")
-        self.window.resizable(False, False)
+        self.window.resizable(True, True)
         
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
@@ -2924,7 +2924,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.12")
+        self.root.title("RandPyPwGen v1.99.13")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -2957,7 +2957,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.12")
+        self.root.title("RandPyPwGen v1.99.13")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
