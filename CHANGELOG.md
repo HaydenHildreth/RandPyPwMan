@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.14] - 11-11-2025
+  
+No database changes. This update only changes window geometry.
+
+### Added
+
+Delete hotkey in Manage Groups screen. [Issue #122](https://github.com/HaydenHildreth/RandPyPwMan/issues/122)
+
+### Fixed
+
+None. 
+
+### Notes
+
+- None.
+
 ## [1.99.13] - 11-11-2025
   
 No database changes. This update only changes window geometry.
