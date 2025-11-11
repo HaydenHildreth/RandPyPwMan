@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.13] - 11-11-2025
+  
+No database changes. This update only changes window geometry.
+
+### Added
+
+None. 
+
+### Fixed
+
+Default window sizes. As well as, changing windows to be allowed to Resize. [Issue #118](https://github.com/HaydenHildreth/RandPyPwMan/issues/118)
+
+### Notes
+
+- None.
+
 ## [1.99.12] - 11-10-2025
   
 No database changes. This update only features minor cosmetic changes which improve the users quality of life when using software.
@@ -11,7 +27,7 @@ None.
 
 ### Fixed
 
-Treeview headers not following theme, making them unreadable upon hover for certain themes. [Issue #112](https://github.com/HaydenHildreth/RandPyPwMan/issues/120)
+Treeview headers not following theme, making them unreadable upon hover for certain themes. [Issue #120](https://github.com/HaydenHildreth/RandPyPwMan/issues/120)
 
 ### Notes
 
@@ -27,7 +43,7 @@ Double clicking shortcuts to both Manage Groups and Theme settings. Now you can 
 
 ### Fixed
 
-Theme display order. [Issue #112](https://github.com/HaydenHildreth/RandPyPwMan/issues/116)
+Theme display order. [Issue #116](https://github.com/HaydenHildreth/RandPyPwMan/issues/116)
 
 ### Notes
 
