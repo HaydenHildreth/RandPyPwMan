@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.15] - 11-12-2025
+  
+No database changes. This update only changes lockscreen appearance.
+
+### Added
+
+None.
+
+### Fixed
+
+Lockscreen appearance when using themes. [Issue #123](https://github.com/HaydenHildreth/RandPyPwMan/issues/123)
+
+### Notes
+
+- None.
+
 ## [1.99.14] - 11-11-2025
   
 No database changes. This update only changes window geometry.
