@@ -1374,23 +1374,27 @@ class LoginFrame(ttk.Frame, ThemedWidget):
         self._apply_current_theme()
     
     def _create_widgets(self):
-        self.title_label = ttk.Label(self, text="RandPyPwGen", font=("Arial", 16, "bold"))
-        self.title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
-        
-        ttk.Label(self, text="Master Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        
-        self.password_var = tk.StringVar()
-        self.password_entry = ttk.Entry(self, textvariable=self.password_var, show='*', width=30)
-        self.password_entry.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
-        self.password_entry.focus()
-        
-        button_frame = ttk.Frame(self)
-        button_frame.grid(row=3, column=0, columnspan=2, pady=(20, 0))
-        
-        ttk.Button(button_frame, text="Unlock", command=self._authenticate).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Exit", command=self.quit).pack(side=tk.LEFT)
-        
-        self.password_entry.bind('<Return>', lambda e: self._authenticate())
+            self.grid_columnconfigure(0, weight=1)
+            self.grid_columnconfigure(1, weight=1)
+            
+            self.title_label = ttk.Label(self, text="RandPyPwGen", font=("Arial", 16, "bold"))
+            self.title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
+            
+            self.password_label = ttk.Label(self, text="Master Password:")
+            self.password_label.grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=5)
+            
+            self.password_var = tk.StringVar()
+            self.password_entry = ttk.Entry(self, textvariable=self.password_var, show='*', width=30)
+            self.password_entry.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+            self.password_entry.focus()
+            
+            button_frame = ttk.Frame(self)
+            button_frame.grid(row=3, column=0, columnspan=2, pady=(20, 0))
+            
+            ttk.Button(button_frame, text="Unlock", command=self._authenticate).pack(side=tk.LEFT, padx=(0, 10))
+            ttk.Button(button_frame, text="Exit", command=self.quit).pack(side=tk.LEFT)
+            
+            self.password_entry.bind('<Return>', lambda e: self._authenticate())
     
     def _authenticate(self):
         password = self.password_var.get()
@@ -1413,15 +1417,33 @@ class LoginFrame(ttk.Frame, ThemedWidget):
         
         theme = THEMES[theme_name]
         
-        # Apply to self
-        self.configure(style='Themed.TFrame')
-        
-        # Configure styles
+        # Configure ttk styles with unique style names for login
         style = ttk.Style()
-        style.configure('Themed.TFrame', background=theme['bg'])
-        style.configure('Themed.TLabel', background=theme['bg'], foreground=theme['fg'])
-        style.configure('Themed.TEntry', fieldbackground=theme['entry_bg'], foreground=theme['entry_fg'])
-        style.configure('Themed.TButton', background=theme['button_bg'], foreground=theme['button_fg'])
+        style.theme_use('clam')
+        
+        # Frame styles
+        style.configure('Login.TFrame', background=theme['bg'])
+        
+        # Label styles  
+        style.configure('Login.TLabel', background=theme['bg'], foreground=theme['fg'])
+        style.configure('LoginTitle.TLabel', background=theme['bg'], foreground=theme['accent'], 
+                       font=("Arial", 16, "bold"))
+        
+        # Entry styles
+        style.configure('Login.TEntry', fieldbackground=theme['entry_bg'], foreground=theme['entry_fg'],
+                       insertcolor=theme['fg'])
+        
+        # Button styles
+        style.configure('Login.TButton', background=theme['button_bg'], foreground=theme['button_fg'])
+        style.map('Login.TButton',
+                 background=[('active', theme['accent']), ('pressed', theme['accent'])],
+                 foreground=[('active', theme['button_fg']), ('pressed', theme['button_fg'])])
+        
+        # Apply styles to widgets
+        self.configure(style='Login.TFrame')
+        self.title_label.configure(style='LoginTitle.TLabel')
+        self.password_label.configure(style='Login.TLabel')
+        self.password_entry.configure(style='Login.TEntry')
         
         # Apply to root window
         self.master.configure(bg=theme['bg'])
@@ -1936,7 +1958,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.14\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.15\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -2927,7 +2949,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.14")
+        self.root.title("RandPyPwGen v1.99.15")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -2960,7 +2982,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.14")
+        self.root.title("RandPyPwGen v1.99.15")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
