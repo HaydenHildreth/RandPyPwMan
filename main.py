@@ -717,6 +717,57 @@ THEMES = {
         'menu_bg': '#26163B',
         'menu_fg': '#ECE0FF',
     },
+    'High Contrast Light': {
+        'bg': '#FFFFFF',
+        'fg': '#000000',
+        'accent': '#0078D4',
+        'button_bg': '#F0F0F0',
+        'button_fg': '#000000',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#000000',
+        'active_bg': '#DCDCDC',
+        'active_fg': '#000000',
+        'tree_bg': '#FFFFFF',
+        'tree_fg': '#000000',
+        'tree_sel_bg': '#0078D4',
+        'tree_sel_fg': '#FFFFFF',
+        'menu_bg': '#F0F0F0',
+        'menu_fg': '#000000',
+        },
+    'Sepia': {
+        'bg': '#FAF0E6',
+        'fg': '#4D3C2F',
+        'accent': '#A0522D',
+        'button_bg': '#EADFCF',
+        'button_fg': '#4D3C2F',
+        'entry_bg': '#FFFFFF',
+        'entry_fg': '#4D3C2F',
+        'active_bg': '#DCD4C4',
+        'active_fg': '#3C2C1F',
+        'tree_bg': '#FAF0E6',
+        'tree_fg': '#4D3C2F',
+        'tree_sel_bg': '#A0522D',
+        'tree_sel_fg': '#FAF0E6',
+        'menu_bg': '#EADFCF',
+        'menu_fg': '#4D3C2F',
+    },
+    'Tango': {
+        'bg': '#2E3436',
+        'fg': '#EEEEEC',
+        'accent': '#F57900',
+        'button_bg': '#343D41',
+        'button_fg': '#EEEEEC',
+        'entry_bg': '#3D4448',
+        'entry_fg': '#EEEEEC',
+        'active_bg': '#4A5358',
+        'active_fg': '#FCE94F',
+        'tree_bg': '#2E3436',
+        'tree_fg': '#EEEEEC',
+        'tree_sel_bg': '#F57900',
+        'tree_sel_fg': '#2E3436',
+        'menu_bg': '#343D41',
+        'menu_fg': '#EEEEEC',
+    },
 }
     
 
@@ -1958,7 +2009,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.15\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.16\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -2949,7 +3000,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.15")
+        self.root.title("RandPyPwGen v1.99.16")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -2982,7 +3033,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.15")
+        self.root.title("RandPyPwGen v1.99.16")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))

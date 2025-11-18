@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.16] - 11-18-2025
+  
+No database changes. This update only added a few new themes.
+
+### Added
+
+Additional Themes. (High Contrast Light, Sepia, and Tango) [Issue #124](https://github.com/HaydenHildreth/RandPyPwMan/issues/124)
+
+### Fixed
+
+None.
+
+### Notes
+
+- None.
+
 ## [1.99.15] - 11-12-2025
   
 No database changes. This update only changes lockscreen appearance.
