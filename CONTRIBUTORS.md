@@ -14,9 +14,8 @@
 
 We're currently looking for contributions for the following:
 
-- [ ] Updating to 2.0 milestone
-- [ ] Adding rest of features from "Issues" tab
-- [ ] Tkinter cleanup (Frames, etc...)
+- [ ] Maintaining existing code
+- [ ] Adding additional new features
 
 For more information, please refer to our [CONTRIBUTING](CONTRIBUTING.md) guide.
 

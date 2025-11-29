@@ -1,6 +1,235 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.16] - 11-18-2025
+  
+No database changes. This update only added a few new themes.
+
+### Added
+
+Additional Themes. (High Contrast Light, Sepia, and Tango) [Issue #124](https://github.com/HaydenHildreth/RandPyPwMan/issues/124)
+
+### Fixed
+
+None.
+
+### Notes
+
+- None.
+
+## [1.99.15] - 11-12-2025
+  
+No database changes. This update only changes lockscreen appearance.
+
+### Added
+
+None.
+
+### Fixed
+
+Lockscreen appearance when using themes. [Issue #123](https://github.com/HaydenHildreth/RandPyPwMan/issues/123)
+
+### Notes
+
+- None.
+
+## [1.99.14] - 11-11-2025
+  
+No database changes. This update only changes window geometry.
+
+### Added
+
+Delete hotkey in Manage Groups screen. [Issue #122](https://github.com/HaydenHildreth/RandPyPwMan/issues/122)
+
+### Fixed
+
+None. 
+
+### Notes
+
+- None.
+
+## [1.99.13] - 11-11-2025
+  
+No database changes. This update only changes window geometry.
+
+### Added
+
+None. 
+
+### Fixed
+
+Default window sizes. As well as, changing windows to be allowed to Resize. [Issue #118](https://github.com/HaydenHildreth/RandPyPwMan/issues/118)
+
+### Notes
+
+- None.
+
+## [1.99.12] - 11-10-2025
+  
+No database changes. This update only features minor cosmetic changes which improve the users quality of life when using software.
+
+### Added
+
+None. 
+
+### Fixed
+
+Treeview headers not following theme, making them unreadable upon hover for certain themes. [Issue #120](https://github.com/HaydenHildreth/RandPyPwMan/issues/120)
+
+### Notes
+
+- None.
+
+## [1.99.11] - 11-06-2025
+  
+No database changes. This update added some new shortcuts to better navigate the program.
+
+### Added
+
+Double clicking shortcuts to both Manage Groups and Theme settings. Now you can double-click to select these like you could passwords in the Treeview. [Issue #117](https://github.com/HaydenHildreth/RandPyPwMan/issues/117)
+
+### Fixed
+
+Theme display order. [Issue #116](https://github.com/HaydenHildreth/RandPyPwMan/issues/116)
+
+### Notes
+
+- None.
+
+## [1.99.10] - 11-05-2025
+  
+No database changes. This update fixed an issue where the user could put in a password with a group which did not exist.
+
+### Added
+
+None.
+
+### Fixed
+
+Group logic issue. [Issue #112](https://github.com/HaydenHildreth/RandPyPwMan/issues/112)
+
+### Notes
+
+- None.
+
+## [1.99.9] - 11-05-2025
+  
+No database changes. This update added more themes and fixed how the themes are displayed.
+
+### Added
+
+More themes. [Issue #113](https://github.com/HaydenHildreth/RandPyPwMan/issues/113)
+ 
+### Fixed
+
+Theme not applying to entirety of window. [Issue #114](https://github.com/HaydenHildreth/RandPyPwMan/issues/114)
+
+### Notes
+
+- None.
+
+## [1.99.8] - 11-02-2025
+  
+Minor database changes. This update adds an additional columns to the settings table (in unlock database) to keep track of user's selected theme.
+
+### Added
+
+Themes. [Issue #105](https://github.com/HaydenHildreth/RandPyPwMan/issues/105)
+ 
+### Fixed
+
+Theme select dialog geometry.
+
+### Notes
+
+- There is logic to handle backwards compatability, so if user was using prior version, or an older one, it should be handled in this.
+
+## [1.99.5] - 10-07-2025
+  
+Major database changes. This update changed group logic, a new database was added to fix some minor flaws in prior version's implementation.
+
+### Added
+
+Groups. [Issue #99](https://github.com/HaydenHildreth/RandPyPwMan/issues/99)
+ 
+### Fixed
+
+None.
+
+### Notes
+
+- In previous version, you couldn't see the group you had created unless it was actually assigned to a password. By adding a new DB it has fixed this issue.
+
+## [1.99.4] - 10-06-2025
+  
+Minor database changes. This update added group logic, as well as a new column to facilitate the assigment of a group to the password.
+
+### Added
+
+Groups. [Issue #99](https://github.com/HaydenHildreth/RandPyPwMan/issues/99)
+ 
+### Fixed
+
+None.
+
+### Notes
+
+- None.
+
+## [1.99.3] - 10-02-2025
+  
+Major database changes. This update added new database for user settings. To update from 1.99.2 or prior, use the 1.99.3.py update file in updates folder. Additional information will be added as we approach 2.0.
+
+### Added
+
+Settings DB (SETTINGS.db). [Issue #97](https://github.com/HaydenHildreth/RandPyPwMan/issues/97)
+ 
+### Fixed
+
+None.
+
+### Notes
+
+- SETTINGS.db database will help facilitate more customization down the road. Need to think of additional things that would be nice to add to this for 2.0 launch.
+
+## [1.99.2] - 09-30-2025
+  
+No database changes.
+
+### Added
+
+None.
+ 
+### Fixed
+
+- Error pop up when user tries to sort Treeview [Issue #96](https://github.com/HaydenHildreth/RandPyPwMan/issues/96)
+- Program hanging after initial password setup. [Issue #94](https://github.com/HaydenHildreth/RandPyPwMan/issues/94)
+
+### Notes
+
+- More work needs to be done but this is an entire codebase rewrite which is done and working.
+
+## [1.99.1] - 09-25-2025
+  
+No database changes.
+
+### Added
+
+Added multiple Classes to handle functionality at all levels of program. Added Frames to Tkinter GUI.
+
+- Codebase rewrite [Issue #34](https://github.com/HaydenHildreth/RandPyPwMan/issues/34)
+- Tkinter Frames. [Issue #33](https://github.com/HaydenHildreth/RandPyPwMan/issues/33)
+ 
+### Fixed
+
+- Bad code and codebase design.
+- Removed install.py program. [Issue #95](https://github.com/HaydenHildreth/RandPyPwMan/issues/95)
+
+### Notes
+
+- Almost done with v2.0.0.
+
 ## [1.0.3] - 10-31-2025
   
 No database changes. This update adds a ton of new themes, they are: Light, Dark, Nord, Dracula, Solarized Light/Dark, Gruvbox Dark and Monokai.
