@@ -2,7 +2,6 @@
 *.xml
 *.pyc
 .idea/workspace.xml
-*.xml
 *.iml
 /venv
 __pycache__/
