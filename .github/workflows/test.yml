@@ -1,0 +1,56 @@
+name: Test Multi-Platform
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov pytest-timeout
+        pip install -r requirements.txt
+    
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --cov=. --cov-report=xml --cov-report=term --timeout=30
+      continue-on-error: false
+    
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Test database creation
+      run: |
+        python -c "from pathlib import Path; import sys; import os; os.environ['DISPLAY'] = ':99' if sys.platform == 'linux' else ''; from main import DatabaseManager; db = DatabaseManager('./test_db'); print('Database test passed'); import shutil; shutil.rmtree('./test_db', ignore_errors=True)"
+      shell: bash
+      if: matrix.os != 'windows-latest'
+    
+    - name: Test database creation (Windows)
+      run: |
+        python -c "from pathlib import Path; from main import DatabaseManager; db = DatabaseManager('./test_db'); print('Database test passed'); import shutil; shutil.rmtree('./test_db', ignore_errors=True)"
+      if: matrix.os == 'windows-latest'
