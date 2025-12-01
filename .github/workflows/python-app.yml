@@ -28,6 +28,15 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyinstaller
         pip install -r requirements.txt
+		
+	- name: Test with pytest
+	  shell: bash
+	  run: |
+		if [ -d "tests" ]; then
+		  pytest tests/
+		else
+		  echo "No tests directory found, skipping tests"
+		fi
     
     - name: Build executable with PyInstaller
       run: |
