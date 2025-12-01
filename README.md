@@ -4,13 +4,13 @@
 It is a simple and easy to use password generator/manager that is open-source and made in Python 3 using Tkinter. It is cross-platform, and able to ran on most major Operating Systems. Program screenshots are available below, or you can view the screenshot folder in the repository.
 
 ## Screenshots
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot6.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot1.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot2.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot3.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot4.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot5.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/screenshot7.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot6.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot1.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot2.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot3.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot4.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot5.png)
+![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot7.png)
 
 ## How to use it?
 ### Windows
