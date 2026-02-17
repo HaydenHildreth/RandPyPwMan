@@ -775,13 +775,13 @@ THEMES = {
 class DatabaseManager:
     """Handles all database operations and encryption"""
     
-	def __init__(self, db_path: str = "./db", gui_mode: bool = True):
-		self.db_path = Path(db_path)
-		self.data_db = self.db_path / "data.db"
-		self.unlock_db = self.db_path / "unlock.db"
-		self.fernet: Optional[Fernet] = None
-		self.gui_mode = gui_mode
-		self._ensure_db_setup()
+    def __init__(self, db_path: str = "./db", gui_mode: bool = True):
+        self.db_path = Path(db_path)
+        self.data_db = self.db_path / "data.db"
+        self.unlock_db = self.db_path / "unlock.db"
+        self.fernet: Optional[Fernet] = None
+        self.gui_mode = gui_mode
+        self._ensure_db_setup()
     
     def _ensure_db_setup(self):
         """Verify database directory and files exist"""
@@ -806,10 +806,10 @@ class DatabaseManager:
             else:
                 raise Exception("No encryption key found")
                 
-		except Exception as e:
-			if self.gui_mode:
-				messagebox.showerror("Encryption Error", f"Failed to load encryption key: {str(e)}")
-			sys.exit(1)
+        except Exception as e:
+            if self.gui_mode:
+                messagebox.showerror("Encryption Error", f"Failed to load encryption key: {str(e)}")
+            sys.exit(1)
     
     def _migrate_database(self):
         """Add fields to table if they do not exist. This is useful for updating to new versions"""
