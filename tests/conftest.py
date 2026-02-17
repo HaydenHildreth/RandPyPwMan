@@ -6,6 +6,9 @@ Pytest configuration for RandPyPwGen tests
 import pytest
 import sys
 import os
+import tempfile
+import shutil
+from pathlib import Path
 
 def pytest_configure(config):
     """Configure pytest for cross-platform testing"""
@@ -37,6 +40,22 @@ def platform_info():
         'is_linux': sys.platform == 'linux',
         'python_version': sys.version
     }
+
+
+@pytest.fixture
+def temp_db():
+    """Create a temporary database directory for testing"""
+    temp_dir = tempfile.mkdtemp()
+    yield temp_dir
+    # Cleanup after test
+    shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@pytest.fixture
+def db_manager(temp_db):
+    """Provide a DatabaseManager instance with gui_mode=False for testing"""
+    from main import DatabaseManager
+    return DatabaseManager(db_path=temp_db, gui_mode=False)
 
 
 @pytest.fixture(autouse=True)
