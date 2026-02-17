@@ -1209,7 +1209,7 @@ class DatabaseManager:
             conn.commit()
             conn.close()
             return True
-		except Exception as e:
+        except Exception as e:
             if self.gui_mode:
                 messagebox.showerror("Database Error", f"Failed to delete group: {str(e)}")
             return False
@@ -3084,4 +3084,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+	
