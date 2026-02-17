@@ -1199,8 +1199,9 @@ class DatabaseManager:
             conn.commit()
             conn.close()
             return True
-        except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to delete group: {str(e)}")
+		except Exception as e:
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to delete group: {str(e)}")
             return False
     
     def rename_group(self, old_name: str, new_name: str) -> bool:
