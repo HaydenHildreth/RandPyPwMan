@@ -1057,7 +1057,7 @@ class DatabaseManager:
             
             def _setup_password(self):
                 if self.password_entry is None:
-                    if self.gui_mode:
+                    if self.db_manager.gui_mode:
                         messagebox.showerror("Error", "Internal error: password entry not found")
                     return
                 
@@ -1065,7 +1065,7 @@ class DatabaseManager:
                     password = self.password_entry.get()
                     
                     if not password:
-                        if self.gui_mode:
+                        if self.db_manager.gui_mode:
                             messagebox.showerror("Error", "Password cannot be empty!")
                         self.password_entry.focus_set()
                         return
@@ -1073,13 +1073,13 @@ class DatabaseManager:
                     password = password.strip()
                     
                     if not password:
-                        if self.gui_mode:
+                        if self.db_manager.gui_mode:
                             messagebox.showerror("Error", "Password cannot be empty!")
                         self.password_entry.focus_set()
                         return
                     
                     if len(password) < 4:
-                        if self.gui_mode:
+                        if self.db_manager.gui_mode:
                             messagebox.showerror("Error", "Password must be at least 4 characters long!")
                         self.password_entry.focus_set()
                         return
@@ -1094,14 +1094,14 @@ class DatabaseManager:
                     conn.commit()
                     conn.close()
                     
-                    if self.gui_mode:
+                    if self.db_manager.gui_mode:
                         messagebox.showinfo("Success", "Master password set successfully!")
                     self.success = True
                     self.window.quit()
                     self.window.destroy()
                     
                 except Exception as e:
-                    if self.gui_mode:
+                    if self.db_manager.gui_mode:
                         messagebox.showerror("Error", f"Failed to set master password: {str(e)}")
             
             def _on_close(self):
@@ -3084,4 +3084,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
