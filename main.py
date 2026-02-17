@@ -924,7 +924,8 @@ class DatabaseManager:
             return True
         
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to setup databases: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to setup databases: {str(e)}")
             return False
     
     def _set_default_settings(self):
@@ -1056,26 +1057,30 @@ class DatabaseManager:
             
             def _setup_password(self):
                 if self.password_entry is None:
-                    messagebox.showerror("Error", "Internal error: password entry not found")
+                    if self.gui_mode:
+                        messagebox.showerror("Error", "Internal error: password entry not found")
                     return
                 
                 try:
                     password = self.password_entry.get()
                     
                     if not password:
-                        messagebox.showerror("Error", "Password cannot be empty!")
+                        if self.gui_mode:
+                            messagebox.showerror("Error", "Password cannot be empty!")
                         self.password_entry.focus_set()
                         return
                     
                     password = password.strip()
                     
                     if not password:
-                        messagebox.showerror("Error", "Password cannot be empty!")
+                        if self.gui_mode:
+                            messagebox.showerror("Error", "Password cannot be empty!")
                         self.password_entry.focus_set()
                         return
                     
                     if len(password) < 4:
-                        messagebox.showerror("Error", "Password must be at least 4 characters long!")
+                        if self.gui_mode:
+                            messagebox.showerror("Error", "Password must be at least 4 characters long!")
                         self.password_entry.focus_set()
                         return
                     
@@ -1089,13 +1094,15 @@ class DatabaseManager:
                     conn.commit()
                     conn.close()
                     
-                    messagebox.showinfo("Success", "Master password set successfully!")
+                    if self.gui_mode:
+                        messagebox.showinfo("Success", "Master password set successfully!")
                     self.success = True
                     self.window.quit()
                     self.window.destroy()
                     
                 except Exception as e:
-                    messagebox.showerror("Error", f"Failed to set master password: {str(e)}")
+                    if self.gui_mode:
+                        messagebox.showerror("Error", f"Failed to set master password: {str(e)}")
             
             def _on_close(self):
                 self.window.quit()
@@ -1122,7 +1129,8 @@ class DatabaseManager:
             return False
             
         except Exception as e:
-            messagebox.showerror("Authentication Error", f"Failed to verify password: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Authentication Error", f"Failed to verify password: {str(e)}")
             return False
     
     def get_all_records(self, group_filter: str = "All") -> List[Tuple]:
@@ -1140,7 +1148,8 @@ class DatabaseManager:
             conn.close()
             return records
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to retrieve records: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to retrieve records: {str(e)}")
             return []
     
     def get_all_groups(self) -> List[str]:
@@ -1181,7 +1190,8 @@ class DatabaseManager:
             # Group already exists
             return False
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to add group: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to add group: {str(e)}")
             return False
     
     def delete_group(self, group_name: str) -> bool:
@@ -1226,10 +1236,12 @@ class DatabaseManager:
             conn.close()
             return True
         except sqlite3.IntegrityError:
-            messagebox.showerror("Error", f"Group '{new_name}' already exists!")
+            if self.gui_mode:
+                messagebox.showerror("Error", f"Group '{new_name}' already exists!")
             return False
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to rename group: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to rename group: {str(e)}")
             return False
     
     def search_records(self, search_term: str, group_filter: str = "All") -> List[Tuple]:
@@ -1249,7 +1261,8 @@ class DatabaseManager:
             conn.close()
             return records
         except Exception as e:
-            messagebox.showerror("Search Error", f"Failed to search records: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Search Error", f"Failed to search records: {str(e)}")
             return []
     
     def add_record(self, site: str, username: str, password: str, group_name: Optional[str] = None) -> Optional[int]:
@@ -1283,7 +1296,8 @@ class DatabaseManager:
             conn.close()
             return record_id
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to add record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to add record: {str(e)}")
             return None
 
     def update_record(self, record_id: int, site: str, username: str, password: str, group_name: Optional[str] = None) -> bool:
@@ -1316,7 +1330,8 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to update record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to update record: {str(e)}")
             return False
     
     def get_record_by_id(self, record_id: int) -> Optional[Tuple]:
@@ -1329,7 +1344,8 @@ class DatabaseManager:
             conn.close()
             return record
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to retrieve record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to retrieve record: {str(e)}")
             return None
     
     def delete_record(self, record_id: int) -> bool:
@@ -1342,7 +1358,8 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to delete record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to delete record: {str(e)}")
             return False
     
     def decrypt_password(self, encrypted_password: bytes) -> str:
@@ -1391,7 +1408,8 @@ class DatabaseManager:
             
             return True
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to change master password: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Error", f"Failed to change master password: {str(e)}")
             return False
 
 
