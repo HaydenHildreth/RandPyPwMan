@@ -31,11 +31,6 @@ cd <path-to-repo>\
 py -m pip install -r requirements.txt
 ```
 
-* Run install script:
-```
-python install.py
-```
-
 * Run main script:
 ```
 python main.py
