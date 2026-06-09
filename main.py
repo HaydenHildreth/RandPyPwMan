@@ -325,8 +325,7 @@ THEMES = {
         'menu_bg': '#f6f8fa',
         'menu_fg': '#24292f',
     },
-    
-        'Ayu Dark': {
+    'Ayu Dark': {
         'bg': '#0A0E14',
         'fg': '#B3B1AD',
         'accent': '#39BAE6',
@@ -496,8 +495,7 @@ THEMES = {
         'menu_bg': '#331A00',
         'menu_fg': '#FFB000',
     },
-    
-        'Catppuccin Frappé': {
+    'Catppuccin Frappé': {
         'bg': '#303446',
         'fg': '#c6d0f5',
         'accent': '#8caaee',
