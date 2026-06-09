@@ -2448,7 +2448,7 @@ class RenameGroupDialog:
             return
 
         # Limit character length, see issue #131
-        if len(group_name) > 20:
+        if len(new_name) > 20:
             messagebox.showerror("Error", "Group name must be 20 characters or fewer.")
             return
         
