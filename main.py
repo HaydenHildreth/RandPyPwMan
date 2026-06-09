@@ -15,6 +15,7 @@ import pyperclip
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from cryptography.fernet import Fernet
+from datetime import datetime
 
 
 THEMES = {
@@ -2694,9 +2695,6 @@ class AddEditDialog:
             return "N/A"
         
         try:
-            # Try to parse and format the date nicely
-            from datetime import datetime
-            
             # Handle different date formats
             for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d']:
                 try:
