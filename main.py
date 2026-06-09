@@ -2244,6 +2244,11 @@ class NewGroupDialog:
         if group_name.lower() == "all":
             messagebox.showerror("Error", "'All' is a reserved group name!")
             return
+
+        # Limit character length, see issue #131
+        if len(group_name) > 20:
+            messagebox.showerror("Error", "Group name must be 20 characters or fewer.")
+            return
         
         if self.db_manager.add_group(group_name):
             messagebox.showinfo("Success", f"Group '{group_name}' created successfully!")
@@ -2442,6 +2447,11 @@ class RenameGroupDialog:
         
         if new_name.lower() == "all":
             messagebox.showerror("Error", "'All' is a reserved name!")
+            return
+
+        # Limit character length, see issue #131
+        if len(group_name) > 20:
+            messagebox.showerror("Error", "Group name must be 20 characters or fewer.")
             return
         
         if new_name == self.old_name:
