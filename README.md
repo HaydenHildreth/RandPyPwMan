@@ -28,7 +28,7 @@ cd <path-to-repo>\
 
 * Install dependencies:
 ```
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 ```
 
 * Run install script:
