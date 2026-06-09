@@ -775,11 +775,12 @@ THEMES = {
 class DatabaseManager:
     """Handles all database operations and encryption"""
     
-    def __init__(self, db_path: str = "./db"):
+    def __init__(self, db_path: str = "./db", gui_mode: bool = True):
         self.db_path = Path(db_path)
         self.data_db = self.db_path / "data.db"
         self.unlock_db = self.db_path / "unlock.db"
         self.fernet: Optional[Fernet] = None
+        self.gui_mode = gui_mode
         self._ensure_db_setup()
     
     def _ensure_db_setup(self):
@@ -806,7 +807,8 @@ class DatabaseManager:
                 raise Exception("No encryption key found")
                 
         except Exception as e:
-            messagebox.showerror("Encryption Error", f"Failed to load encryption key: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Encryption Error", f"Failed to load encryption key: {str(e)}")
             sys.exit(1)
     
     def _migrate_database(self):
@@ -922,7 +924,8 @@ class DatabaseManager:
             return True
         
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to setup databases: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to setup databases: {str(e)}")
             return False
     
     def _set_default_settings(self):
@@ -1054,26 +1057,30 @@ class DatabaseManager:
             
             def _setup_password(self):
                 if self.password_entry is None:
-                    messagebox.showerror("Error", "Internal error: password entry not found")
+                    if self.db_manager.gui_mode:
+                        messagebox.showerror("Error", "Internal error: password entry not found")
                     return
                 
                 try:
                     password = self.password_entry.get()
                     
                     if not password:
-                        messagebox.showerror("Error", "Password cannot be empty!")
+                        if self.db_manager.gui_mode:
+                            messagebox.showerror("Error", "Password cannot be empty!")
                         self.password_entry.focus_set()
                         return
                     
                     password = password.strip()
                     
                     if not password:
-                        messagebox.showerror("Error", "Password cannot be empty!")
+                        if self.db_manager.gui_mode:
+                            messagebox.showerror("Error", "Password cannot be empty!")
                         self.password_entry.focus_set()
                         return
                     
                     if len(password) < 4:
-                        messagebox.showerror("Error", "Password must be at least 4 characters long!")
+                        if self.db_manager.gui_mode:
+                            messagebox.showerror("Error", "Password must be at least 4 characters long!")
                         self.password_entry.focus_set()
                         return
                     
@@ -1087,13 +1094,15 @@ class DatabaseManager:
                     conn.commit()
                     conn.close()
                     
-                    messagebox.showinfo("Success", "Master password set successfully!")
+                    if self.db_manager.gui_mode:
+                        messagebox.showinfo("Success", "Master password set successfully!")
                     self.success = True
                     self.window.quit()
                     self.window.destroy()
                     
                 except Exception as e:
-                    messagebox.showerror("Error", f"Failed to set master password: {str(e)}")
+                    if self.db_manager.gui_mode:
+                        messagebox.showerror("Error", f"Failed to set master password: {str(e)}")
             
             def _on_close(self):
                 self.window.quit()
@@ -1120,7 +1129,8 @@ class DatabaseManager:
             return False
             
         except Exception as e:
-            messagebox.showerror("Authentication Error", f"Failed to verify password: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Authentication Error", f"Failed to verify password: {str(e)}")
             return False
     
     def get_all_records(self, group_filter: str = "All") -> List[Tuple]:
@@ -1138,7 +1148,8 @@ class DatabaseManager:
             conn.close()
             return records
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to retrieve records: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to retrieve records: {str(e)}")
             return []
     
     def get_all_groups(self) -> List[str]:
@@ -1179,7 +1190,8 @@ class DatabaseManager:
             # Group already exists
             return False
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to add group: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to add group: {str(e)}")
             return False
     
     def delete_group(self, group_name: str) -> bool:
@@ -1198,7 +1210,8 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to delete group: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to delete group: {str(e)}")
             return False
     
     def rename_group(self, old_name: str, new_name: str) -> bool:
@@ -1223,10 +1236,12 @@ class DatabaseManager:
             conn.close()
             return True
         except sqlite3.IntegrityError:
-            messagebox.showerror("Error", f"Group '{new_name}' already exists!")
+            if self.gui_mode:
+                messagebox.showerror("Error", f"Group '{new_name}' already exists!")
             return False
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to rename group: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to rename group: {str(e)}")
             return False
     
     def search_records(self, search_term: str, group_filter: str = "All") -> List[Tuple]:
@@ -1246,7 +1261,8 @@ class DatabaseManager:
             conn.close()
             return records
         except Exception as e:
-            messagebox.showerror("Search Error", f"Failed to search records: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Search Error", f"Failed to search records: {str(e)}")
             return []
     
     def add_record(self, site: str, username: str, password: str, group_name: Optional[str] = None) -> Optional[int]:
@@ -1280,7 +1296,8 @@ class DatabaseManager:
             conn.close()
             return record_id
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to add record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to add record: {str(e)}")
             return None
 
     def update_record(self, record_id: int, site: str, username: str, password: str, group_name: Optional[str] = None) -> bool:
@@ -1313,7 +1330,8 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to update record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to update record: {str(e)}")
             return False
     
     def get_record_by_id(self, record_id: int) -> Optional[Tuple]:
@@ -1326,7 +1344,8 @@ class DatabaseManager:
             conn.close()
             return record
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to retrieve record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to retrieve record: {str(e)}")
             return None
     
     def delete_record(self, record_id: int) -> bool:
@@ -1339,7 +1358,8 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to delete record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Database Error", f"Failed to delete record: {str(e)}")
             return False
     
     def decrypt_password(self, encrypted_password: bytes) -> str:
@@ -1388,7 +1408,8 @@ class DatabaseManager:
             
             return True
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to change master password: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Error", f"Failed to change master password: {str(e)}")
             return False
 
 
@@ -1452,7 +1473,8 @@ class LoginFrame(ttk.Frame, ThemedWidget):
         if self.db_manager.verify_master_password(password):
             self.on_success_callback()
         else:
-            messagebox.showerror("Authentication Failed", "Incorrect master password.")
+            if self.gui_mode:
+                messagebox.showerror("Authentication Failed", "Incorrect master password.")
             self.password_var.set("")
             self.password_entry.focus()
     
@@ -1834,9 +1856,11 @@ class MainFrame(ttk.Frame, ThemedWidget):
             self.generated_password_var.set(f"Generated: {password}")
             self._current_generated_password = password
         except ValueError:
-            messagebox.showerror("Invalid Input", "Please enter a valid password length.")
+            if self.gui_mode:
+                messagebox.showerror("Invalid Input", "Please enter a valid password length.")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to generate password: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Error", f"Failed to generate password: {str(e)}")
     
     def _clear_password(self):
         """Clear generated password"""
@@ -1857,7 +1881,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select a record to edit.")
+            if self.gui_mode:
+                messagebox.showwarning("No Selection", "Please select a record to edit.")
             return
         
         item = self.tree.item(selection[0])
@@ -1868,7 +1893,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
         full_record = self.db_manager.get_record_by_id(record_id)
         
         if not full_record:
-            messagebox.showerror("Error", "Failed to retrieve record details.")
+            if self.gui_mode:
+                messagebox.showerror("Error", "Failed to retrieve record details.")
             return
         
         # Extract data from full record
@@ -1897,12 +1923,14 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select record(s) to delete.")
+            if self.gui_mode:
+                messagebox.showwarning("No Selection", "Please select record(s) to delete.")
             return
         
         count = len(selection)
         message = f"Are you sure you want to delete {count} record(s)?"
-        if not messagebox.askyesno("Confirm Deletion", message):
+        if self.gui_mode:
+            if not messagebox.askyesno("Confirm Deletion", message):
             return
         
         for item in selection:
@@ -1920,7 +1948,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select a record to copy password.")
+            if self.gui_mode:
+                messagebox.showwarning("No Selection", "Please select a record to copy password.")
             return
         
         item = self.tree.item(selection[0])
@@ -1933,7 +1962,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
             password = values[3]
         
         pyperclip.copy(password)
-        messagebox.showinfo("Copied", "Password copied to clipboard!")
+        if self.gui_mode:
+            messagebox.showinfo("Copied", "Password copied to clipboard!")
     
     def _toggle_password_visibility(self):
         """Toggle password visibility in treeview"""
@@ -2009,7 +2039,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.16\nA secure password manager\n\nBy Hayden Hildreth")
+        if self.gui_mode:
+            messagebox.showinfo("About", "RandPyPwGen v1.99.16\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -2188,11 +2219,13 @@ class ThemeSettingsDialog:
         theme_name = self.theme_var.get()
         
         if self.db_manager.set_setting('theme', theme_name):
-            messagebox.showinfo("Success", f"Theme '{theme_name}' applied successfully!")
+            if self.gui_mode:
+                messagebox.showinfo("Success", f"Theme '{theme_name}' applied successfully!")
             self.theme_callback()
             self.window.destroy()
         else:
-            messagebox.showerror("Error", "Failed to save theme setting.")
+            if self.gui_mode:
+                messagebox.showerror("Error", "Failed to save theme setting.")
 
 
 class NewGroupDialog:
@@ -2254,19 +2287,23 @@ class NewGroupDialog:
         group_name = self.group_var.get().strip()
         
         if not group_name:
-            messagebox.showerror("Error", "Group name cannot be empty!")
+            if self.gui_mode:
+                messagebox.showerror("Error", "Group name cannot be empty!")
             return
         
         if group_name.lower() == "all":
-            messagebox.showerror("Error", "'All' is a reserved group name!")
+            if self.gui_mode:
+                messagebox.showerror("Error", "'All' is a reserved group name!")
             return
         
         if self.db_manager.add_group(group_name):
-            messagebox.showinfo("Success", f"Group '{group_name}' created successfully!")
+            if self.gui_mode:
+                messagebox.showinfo("Success", f"Group '{group_name}' created successfully!")
             self.callback()
             self.window.destroy()
         else:
-            messagebox.showerror("Error", f"Group '{group_name}' already exists!")
+            if self.gui_mode:
+                messagebox.showerror("Error", f"Group '{group_name}' already exists!")
 
 
 class ManageGroupsDialog:
@@ -2355,7 +2392,8 @@ class ManageGroupsDialog:
         """Rename selected group"""
         selection = self.groups_listbox.curselection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select a group to rename.")
+            if self.gui_mode:
+                messagebox.showwarning("No Selection", "Please select a group to rename.")
             return
         
         old_name = self.groups_listbox.get(selection[0])
@@ -2369,7 +2407,8 @@ class ManageGroupsDialog:
         """Delete selected group"""
         selection = self.groups_listbox.curselection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select a group to delete.")
+            if self.gui_mode:
+                messagebox.showwarning("No Selection", "Please select a group to delete.")
             return
         
         group_name = self.groups_listbox.get(selection[0])
@@ -2377,13 +2416,15 @@ class ManageGroupsDialog:
         if group_name == "(No groups created yet)":
             return
         
-        if not messagebox.askyesno("Confirm Deletion", 
+        if self.gui_mode:
+            if not messagebox.askyesno("Confirm Deletion", 
                                    f"Are you sure you want to delete the group '{group_name}'?\n\n"
                                    "Passwords in this group will not be deleted, but will have no group assigned."):
             return
         
         if self.db_manager.delete_group(group_name):
-            messagebox.showinfo("Success", f"Group '{group_name}' deleted successfully!")
+            if self.gui_mode:
+                messagebox.showinfo("Success", f"Group '{group_name}' deleted successfully!")
             self._on_change_complete()
     
     def _on_change_complete(self):
@@ -2453,11 +2494,13 @@ class RenameGroupDialog:
         new_name = self.new_name_var.get().strip()
         
         if not new_name:
-            messagebox.showerror("Error", "Group name cannot be empty!")
+            if self.gui_mode:
+                messagebox.showerror("Error", "Group name cannot be empty!")
             return
         
         if new_name.lower() == "all":
-            messagebox.showerror("Error", "'All' is a reserved name!")
+            if self.gui_mode:
+                messagebox.showerror("Error", "'All' is a reserved name!")
             return
         
         if new_name == self.old_name:
@@ -2465,7 +2508,8 @@ class RenameGroupDialog:
             return
         
         if self.db_manager.rename_group(self.old_name, new_name):
-            messagebox.showinfo("Success", f"Group renamed from '{self.old_name}' to '{new_name}'!")
+            if self.gui_mode:
+                messagebox.showinfo("Success", f"Group renamed from '{self.old_name}' to '{new_name}'!")
             self.callback()
             self.window.destroy()
 
@@ -2555,20 +2599,24 @@ class AutoLockSettingsDialog:
             try:
                 minutes_int = int(minutes)
                 if minutes_int < 1 or minutes_int > 60:
-                    messagebox.showerror("Invalid Input", "Timeout must be between 1 and 60 minutes.")
+                    if self.gui_mode:
+                        messagebox.showerror("Invalid Input", "Timeout must be between 1 and 60 minutes.")
                     return
             except ValueError:
-                messagebox.showerror("Invalid Input", "Please enter a valid number of minutes.")
+                if self.gui_mode:
+                    messagebox.showerror("Invalid Input", "Please enter a valid number of minutes.")
                 return
             
             self.db_manager.set_setting('auto_lock_enabled', enabled)
             self.db_manager.set_setting('auto_lock_minutes', minutes)
             
-            messagebox.showinfo("Success", "Auto-lock settings saved successfully!")
+            if self.gui_mode:
+                messagebox.showinfo("Success", "Auto-lock settings saved successfully!")
             self.window.destroy()
             
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save settings: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Error", f"Failed to save settings: {str(e)}")
 
 
 class AddEditDialog:
@@ -2735,11 +2783,13 @@ class AddEditDialog:
         group = self.group_var.get().strip()
         
         if not site:
-            messagebox.showerror("Validation Error", "Site name is required!")
+            if self.gui_mode:
+                messagebox.showerror("Validation Error", "Site name is required!")
             return
         
         if not password:
-            messagebox.showerror("Validation Error", "Password is required!")
+            if self.gui_mode:
+                messagebox.showerror("Validation Error", "Password is required!")
             return
         
         if not group:
@@ -2749,13 +2799,15 @@ class AddEditDialog:
             if self.record_id:
                 success = self.db_manager.update_record(self.record_id, site, username, password, group)
                 if success:
-                    messagebox.showinfo("Success", "Record updated successfully!")
+                    if self.gui_mode:
+                        messagebox.showinfo("Success", "Record updated successfully!")
                 else:
                     return
             else:
                 record_id = self.db_manager.add_record(site, username, password, group)
                 if record_id:
-                    messagebox.showinfo("Success", "Record added successfully!")
+                    if self.gui_mode:
+                        messagebox.showinfo("Success", "Record added successfully!")
                 else:
                     return
             
@@ -2763,7 +2815,8 @@ class AddEditDialog:
             self.window.destroy()
             
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save record: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Error", f"Failed to save record: {str(e)}")
     
     def _cancel(self):
         """Cancel the dialog"""
@@ -2862,7 +2915,8 @@ class ImportDialog:
     def _import_passwords(self):
         """Import passwords from CSV file"""
         if not self.filename:
-            messagebox.showerror("Error", "Please select a file to import.")
+            if self.gui_mode:
+                messagebox.showerror("Error", "Please select a file to import.")
             return
         
         try:
@@ -2885,7 +2939,8 @@ class ImportDialog:
                         file.seek(0)
                         csv_reader = csv.reader(file)
                 except StopIteration:
-                    messagebox.showerror("Error", "The selected file appears to be empty.")
+                    if self.gui_mode:
+                        messagebox.showerror("Error", "The selected file appears to be empty.")
                     return
                 
                 for row in csv_reader:
@@ -2913,14 +2968,17 @@ class ImportDialog:
             
             if imported_count > 0:
                 group_msg = f"to group '{group}'" if group else "without a group"
-                messagebox.showinfo("Success", f"Successfully imported {imported_count} password(s) {group_msg}!")
+                if self.gui_mode:
+                    messagebox.showinfo("Success", f"Successfully imported {imported_count} password(s) {group_msg}!")
                 self.callback()
                 self.window.destroy()
             else:
-                messagebox.showwarning("No Data", "No valid password records were found in the file.")
+                if self.gui_mode:
+                    messagebox.showwarning("No Data", "No valid password records were found in the file.")
         
         except Exception as e:
-            messagebox.showerror("Import Error", f"Failed to import passwords: {str(e)}")
+            if self.gui_mode:
+                messagebox.showerror("Import Error", f"Failed to import passwords: {str(e)}")
 
 
 class ChangeMasterPasswordDialog:
@@ -2980,18 +3038,22 @@ class ChangeMasterPasswordDialog:
         new_password = self.password_var.get().strip()
         
         if not new_password:
-            messagebox.showerror("Error", "Password cannot be empty!")
+            if self.gui_mode:
+                messagebox.showerror("Error", "Password cannot be empty!")
             return
         
         if len(new_password) < 4:
-            messagebox.showerror("Error", "Password must be at least 4 characters long!")
+            if self.gui_mode:
+                messagebox.showerror("Error", "Password must be at least 4 characters long!")
             return
         
-        if not messagebox.askyesno("Confirm", "This will re-encrypt all your passwords. Continue?"):
+        if self.gui_mode:
+            if not messagebox.askyesno("Confirm", "This will re-encrypt all your passwords. Continue?"):
             return
         
         if self.db_manager.change_master_password(new_password):
-            messagebox.showinfo("Success", "Master password changed successfully!")
+            if self.gui_mode:
+                messagebox.showinfo("Success", "Master password changed successfully!")
             self.window.destroy()
 
 
@@ -3057,7 +3119,8 @@ def main():
         print("\nApplication interrupted by user.")
         sys.exit(0)
     except Exception as e:
-        messagebox.showerror("Fatal Error", f"An unexpected error occurred: {str(e)}")
+        if self.gui_mode:
+            messagebox.showerror("Fatal Error", f"An unexpected error occurred: {str(e)}")
         sys.exit(1)
 
 
