@@ -15,6 +15,7 @@ import pyperclip
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from cryptography.fernet import Fernet
+from datetime import datetime
 
 
 THEMES = {
@@ -324,8 +325,7 @@ THEMES = {
         'menu_bg': '#f6f8fa',
         'menu_fg': '#24292f',
     },
-    
-        'Ayu Dark': {
+    'Ayu Dark': {
         'bg': '#0A0E14',
         'fg': '#B3B1AD',
         'accent': '#39BAE6',
@@ -495,8 +495,7 @@ THEMES = {
         'menu_bg': '#331A00',
         'menu_fg': '#FFB000',
     },
-    
-        'Catppuccin Frappé': {
+    'Catppuccin Frappé': {
         'bg': '#303446',
         'fg': '#c6d0f5',
         'accent': '#8caaee',
@@ -717,23 +716,6 @@ THEMES = {
         'menu_bg': '#26163B',
         'menu_fg': '#ECE0FF',
     },
-    'High Contrast Light': {
-        'bg': '#FFFFFF',
-        'fg': '#000000',
-        'accent': '#0078D4',
-        'button_bg': '#F0F0F0',
-        'button_fg': '#000000',
-        'entry_bg': '#FFFFFF',
-        'entry_fg': '#000000',
-        'active_bg': '#DCDCDC',
-        'active_fg': '#000000',
-        'tree_bg': '#FFFFFF',
-        'tree_fg': '#000000',
-        'tree_sel_bg': '#0078D4',
-        'tree_sel_fg': '#FFFFFF',
-        'menu_bg': '#F0F0F0',
-        'menu_fg': '#000000',
-        },
     'Sepia': {
         'bg': '#FAF0E6',
         'fg': '#4D3C2F',
@@ -1273,8 +1255,10 @@ class DatabaseManager:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             c.execute("""INSERT INTO data (site, username, password, group_name, date_added, date_modified) 
-                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)""",
-                     (site, username, encrypted_password, group_name))
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (site, username, encrypted_password, group_name, 
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             record_id = c.lastrowid
             conn.commit()
             conn.close()
@@ -1306,9 +1290,11 @@ class DatabaseManager:
             
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("""UPDATE data SET site=?, username=?, password=?, group_name=?, date_modified=CURRENT_TIMESTAMP 
-                        WHERE id=?""",
-                     (site, username, encrypted_password, group_name, record_id))
+            c.execute("""UPDATE data SET site=?, username=?, password=?, group_name=?, date_modified=? 
+            WHERE id=?""",
+            (site, username, encrypted_password, group_name,
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            record_id))
             conn.commit()
             conn.close()
             return True
@@ -2260,6 +2246,11 @@ class NewGroupDialog:
         if group_name.lower() == "all":
             messagebox.showerror("Error", "'All' is a reserved group name!")
             return
+
+        # Limit character length, see issue #131
+        if len(group_name) > 20:
+            messagebox.showerror("Error", "Group name must be 20 characters or fewer.")
+            return
         
         if self.db_manager.add_group(group_name):
             messagebox.showinfo("Success", f"Group '{group_name}' created successfully!")
@@ -2458,6 +2449,11 @@ class RenameGroupDialog:
         
         if new_name.lower() == "all":
             messagebox.showerror("Error", "'All' is a reserved name!")
+            return
+
+        # Limit character length, see issue #131
+        if len(new_name) > 20:
+            messagebox.showerror("Error", "Group name must be 20 characters or fewer.")
             return
         
         if new_name == self.old_name:
@@ -2711,9 +2707,6 @@ class AddEditDialog:
             return "N/A"
         
         try:
-            # Try to parse and format the date nicely
-            from datetime import datetime
-            
             # Handle different date formats
             for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d']:
                 try:
