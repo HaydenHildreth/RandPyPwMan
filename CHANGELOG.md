@@ -1,6 +1,31 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.17] - 06-09-2026
+  
+No database changes.
+
+### Added
+
+Added limitation to group name length. [Issue #131](https://github.com/HaydenHildreth/RandPyPwMan/issues/131)
+
+Updated README.md to fix issue with pip statement under Windows Install section
+
+### Fixed
+Duplicate theme in THEMES dictionary. [Issue #129](https://github.com/HaydenHildreth/RandPyPwMan/issues/129)
+
+Datetime import being inside of function. [Issue #130](https://github.com/HaydenHildreth/RandPyPwMan/issues/130)
+
+Added limitation to group name length. [Issue #131](https://github.com/HaydenHildreth/RandPyPwMan/issues/131)
+
+Theme indentation consistency. [Issue #132](https://github.com/HaydenHildreth/RandPyPwMan/issues/132)
+
+Timestamp using UTC time instead of system time. [Issue #133](https://github.com/HaydenHildreth/RandPyPwMan/issues/133)
+
+### Notes
+
+- None.
+
 ## [1.99.16] - 11-18-2025
   
 No database changes. This update only added a few new themes.
