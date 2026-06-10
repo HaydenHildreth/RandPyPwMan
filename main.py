@@ -1355,7 +1355,7 @@ class DatabaseManager:
                     record_id, site, username, encrypted_password = record[:4]
                 else:
                     record_id_str = str(record[0]) if record else 'unknown'
-                    raise Exception(f"Record ID {record_id_str} has an unexpected format ({len(record)} columns) and cannot be re-encrypted. Master password change aborted.")
+                    raise Exception(f"Record {record_id_str} has unexpected format ({len(record)} columns) and cannot be re-encrypted. Master password change aborted.")
                 
                 decrypted = self.decrypt_password(encrypted_password)
                 new_encrypted = new_fernet.encrypt(decrypted.encode('utf-8'))
