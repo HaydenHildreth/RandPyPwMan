@@ -1255,8 +1255,10 @@ class DatabaseManager:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             c.execute("""INSERT INTO data (site, username, password, group_name, date_added, date_modified) 
-                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)""",
-                     (site, username, encrypted_password, group_name))
+            VALUES (?, ?, ?, ?, ?, ?)""",
+            (site, username, encrypted_password, group_name, 
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             record_id = c.lastrowid
             conn.commit()
             conn.close()
@@ -1288,9 +1290,11 @@ class DatabaseManager:
             
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("""UPDATE data SET site=?, username=?, password=?, group_name=?, date_modified=CURRENT_TIMESTAMP 
-                        WHERE id=?""",
-                     (site, username, encrypted_password, group_name, record_id))
+            c.execute("""UPDATE data SET site=?, username=?, password=?, group_name=?, date_modified=? 
+            WHERE id=?""",
+            (site, username, encrypted_password, group_name,
+            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            record_id))
             conn.commit()
             conn.close()
             return True
