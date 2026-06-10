@@ -1347,13 +1347,15 @@ class DatabaseManager:
             c = conn.cursor()
             
             for record in records:
-                # Handle different value lengths
                 if len(record) >= 7:
                     record_id, site, username, encrypted_password, group_name, date_added, date_modified = record[:7]
                 elif len(record) == 5:
                     record_id, site, username, encrypted_password, group_name = record
-                else:
+                elif len(record) >= 4:
                     record_id, site, username, encrypted_password = record[:4]
+                else:
+                    record_id_str = str(record[0]) if record else 'unknown'
+                    raise Exception(f"Record ID {record_id_str} has an unexpected format ({len(record)} columns) and cannot be re-encrypted. Master password change aborted.")
                 
                 decrypted = self.decrypt_password(encrypted_password)
                 new_encrypted = new_fernet.encrypt(decrypted.encode('utf-8'))
@@ -3057,3 +3059,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
