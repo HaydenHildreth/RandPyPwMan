@@ -1497,6 +1497,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self.passwords_visible = True
         self.stored_passwords: Dict[int, str] = {}
         self.current_group = "All"
+        self._current_generated_password = ''
         
         self.auto_lock_timer = None
         self.last_activity_time = None
