@@ -1,6 +1,28 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.18] - 06-11-2026
+  
+No database changes.
+
+### Added
+
+Added limitation to site name. [Issue #138](https://github.com/HaydenHildreth/RandPyPwMan/issues/138)
+Added limitation to username. [Issue #138](https://github.com/HaydenHildreth/RandPyPwMan/issues/138)
+
+Updated README.md to fix issue with pip statement under Windows Install section
+
+### Fixed
+Fixed issue where variable was never initialized. [Issue #135](https://github.com/HaydenHildreth/RandPyPwMan/issues/135)
+
+Logic in error handling for master password change. [Issue #136](https://github.com/HaydenHildreth/RandPyPwMan/issues/136)
+
+Added limitation to site name/username fields. [Issue #138](https://github.com/HaydenHildreth/RandPyPwMan/issues/138)
+
+### Notes
+
+- None.
+
 ## [1.99.17] - 06-09-2026
   
 No database changes.

@@ -1347,13 +1347,15 @@ class DatabaseManager:
             c = conn.cursor()
             
             for record in records:
-                # Handle different value lengths
                 if len(record) >= 7:
                     record_id, site, username, encrypted_password, group_name, date_added, date_modified = record[:7]
                 elif len(record) == 5:
                     record_id, site, username, encrypted_password, group_name = record
-                else:
+                elif len(record) >= 4:
                     record_id, site, username, encrypted_password = record[:4]
+                else:
+                    record_id_str = str(record[0]) if record else 'unknown'
+                    raise Exception(f"Record {record_id_str} has unexpected format ({len(record)} columns) and cannot be re-encrypted. Master password change aborted.")
                 
                 decrypted = self.decrypt_password(encrypted_password)
                 new_encrypted = new_fernet.encrypt(decrypted.encode('utf-8'))
@@ -1497,6 +1499,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self.passwords_visible = True
         self.stored_passwords: Dict[int, str] = {}
         self.current_group = "All"
+        self._current_generated_password = ''
         
         self.auto_lock_timer = None
         self.last_activity_time = None
@@ -1995,7 +1998,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.16\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.18\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -2731,6 +2734,14 @@ class AddEditDialog:
             messagebox.showerror("Validation Error", "Site name is required!")
             return
         
+        if len(site) > 100:
+            messagebox.showerror("Validation Error", "Site name must be 100 characters or fewer.")
+            return
+        
+        if len(username) > 100:
+            messagebox.showerror("Validation Error", "Username must be 100 characters or fewer.")
+            return
+        
         if not password:
             messagebox.showerror("Validation Error", "Password is required!")
             return
@@ -2993,7 +3004,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.16")
+        self.root.title("RandPyPwGen v1.99.18")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -3026,7 +3037,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.16")
+        self.root.title("RandPyPwGen v1.99.18")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -3056,3 +3067,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
