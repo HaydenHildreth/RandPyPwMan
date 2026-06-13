@@ -8,6 +8,7 @@ No database changes.
 ### Added
 
 Added limitation to site name. [Issue #138](https://github.com/HaydenHildreth/RandPyPwMan/issues/138)
+
 Added limitation to username. [Issue #138](https://github.com/HaydenHildreth/RandPyPwMan/issues/138)
 
 Updated README.md to fix issue with pip statement under Windows Install section
