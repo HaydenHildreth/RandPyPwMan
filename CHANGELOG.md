@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.19] - 06-19-2026
+  
+Minor database changes for new custom themes. Feel free to upgrade from previous versions without issues.
+
+### Added
+
+Added custom theme creation. [Issue #121](https://github.com/HaydenHildreth/RandPyPwMan/issues/121)
+
+### Fixed
+
+None.
+
+### Notes
+
+- None.
+
 ## [1.99.18] - 06-11-2026
   
 No database changes.
@@ -8,7 +24,6 @@ No database changes.
 ### Added
 
 Added limitation to site name. [Issue #138](https://github.com/HaydenHildreth/RandPyPwMan/issues/138)
-
 Added limitation to username. [Issue #138](https://github.com/HaydenHildreth/RandPyPwMan/issues/138)
 
 Updated README.md to fix issue with pip statement under Windows Install section
