@@ -9,13 +9,15 @@ Minor database changes for new custom themes. Feel free to upgrade from previous
 
 Added custom theme creation. [Issue #121](https://github.com/HaydenHildreth/RandPyPwMan/issues/121)
 
+Added preview theme (when creating a custom theme, you can set the theme to ALL windows to see it visually) [Issue #141](https://github.com/HaydenHildreth/RandPyPwMan/issues/141)
+
 ### Fixed
 
-None.
+Fixed issue which caused the preview swatch to be collapsed/squished. [Issue #139](https://github.com/HaydenHildreth/RandPyPwMan/issues/139)
 
 ### Notes
 
-- None.
+- Great idea, thank you to @TylerMichaelsen for this.
 
 ## [1.99.18] - 06-11-2026
   
