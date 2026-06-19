@@ -17,7 +17,7 @@ Fixed issue which caused the preview swatch to be collapsed/squished. [Issue #13
 
 ### Notes
 
-- Great idea, thank you to @TylerMichaelsen for this.
+- Great idea, thank you to [@TylerMichaelsen](https://github.com/tylermichaelsen) for this.
 
 ## [1.99.18] - 06-11-2026
   
