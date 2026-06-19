@@ -114,6 +114,7 @@ deactivate
 
 ## Major Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for more detailed information.
+- In version 1.99.19 I've added major changes. Most of them relating to Custom Themes. Please take the time to review the CHANGELOG.md to review all the changes.
 - In version 1.99.16 I've added major changes. There are too many features added and fixes to list them all here. Please take the time to review the CHANGELOG.md to review all the changes.
 - In version 1.0.3 I've added additional themes, Light, Dark, Nord, Dracula, Solarized Light/Dark, Gruvbox Dark and Monokai. See CHANGELOG.md.
 - In version 1.0.2 I've added some new database fields, last_modified and date_created. See CHANGELOG.md.
