@@ -2108,7 +2108,7 @@ class ThemeSettingsDialog:
 
     def _build_sorted_list(self, all_themes: dict) -> list:
         priority = [n for n in ('Light', 'Dark') if n in all_themes]
-        rest = sorted(k for k in all_themes if k not in priority)
+        rest = sorted(k for k in all_themes if k not in priority and not k.startswith('__'))
         return priority + rest
 
     def _create_widgets(self):
@@ -2322,6 +2322,8 @@ class CustomThemeCreatorDialog:
         self.on_saved_callback = on_saved_callback
         self.existing_name = existing_name
         self.color_vars: Dict[str, tk.StringVar] = {}
+        self._preview_previous_theme = None
+        self._preview_btn_ref = None
 
         self.window = tk.Toplevel(parent)
         self.window.title("Edit Custom Theme" if existing_name else "Create Custom Theme")
@@ -2413,14 +2415,16 @@ class CustomThemeCreatorDialog:
 
         preview_frame = ttk.LabelFrame(bottom, text="Preview", padding="8")
         preview_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
-        self.preview_canvas = tk.Canvas(preview_frame, height=65)
+        self.preview_canvas = tk.Canvas(preview_frame, height=80)
+        self.preview_canvas.bind('<Configure>', lambda e: self._draw_preview())
         self.preview_canvas.pack(fill=tk.X)
         self._draw_preview()
 
         btn_frame = ttk.Frame(bottom)
         btn_frame.grid(row=1, column=0)
-        ttk.Button(btn_frame, text="Preview",
-                   command=self._draw_preview).pack(side=tk.LEFT, padx=(0, 8))
+        self._preview_btn_ref = ttk.Button(btn_frame, text="Preview in App",
+                   command=self._preview_in_app)
+        self._preview_btn_ref.pack(side=tk.LEFT, padx=(0, 8))
         ttk.Button(btn_frame, text="Save Theme",
                    command=self._save).pack(side=tk.LEFT, padx=(0, 8))
         ttk.Button(btn_frame, text="Cancel",
@@ -2459,8 +2463,16 @@ class CustomThemeCreatorDialog:
 
     def _draw_preview(self):
         colors = self._current_colors()
+        self.preview_canvas.update_idletasks()
         self.preview_canvas.delete('all')
-        canvas_width = self.preview_canvas.winfo_width() or 460
+
+        canvas_width = self.preview_canvas.winfo_width()
+        canvas_height = self.preview_canvas.winfo_height()
+
+        # This should fix the issue where preview was made before screen drawn
+        if canvas_width <= 1:
+            return
+
         swatches = [
             ('BG',     colors['bg']),
             ('Text',   colors['fg']),
@@ -2469,16 +2481,24 @@ class CustomThemeCreatorDialog:
             ('Entry',  colors['entry_bg']),
         ]
         n = len(swatches)
-        margin = 10
-        w = max(1, (canvas_width - margin * (n + 1)) // n)
-        h = 35
+        margin = 8
+        label_height = 16
+        swatch_height = canvas_height - label_height - (margin * 2)
+        total_margin = margin * (n + 1)
+        w = max(1, (canvas_width - total_margin) // n)
+
         for i, (label, color) in enumerate(swatches):
             x = margin + i * (w + margin)
+            y_top = margin
+            y_bot = margin + swatch_height
             try:
                 self.preview_canvas.create_rectangle(
-                    x, 5, x + w, 5 + h, fill=color, outline='#888')
+                    x, y_top, x + w, y_bot,
+                    fill=color, outline='#888888', width=1)
                 self.preview_canvas.create_text(
-                    x + w // 2, 5 + h + 10, text=label, font=('Arial', 8))
+                    x + w // 2, y_bot + (label_height // 2) + 2,
+                    text=label, font=('Arial', 8),
+                    fill=self.preview_canvas.cget('bg') and '#000000')
             except Exception:
                 pass
 
@@ -2516,11 +2536,91 @@ class CustomThemeCreatorDialog:
             self._close()
 
     def _close(self):
+        # If closed while open go back
+        if getattr(self, '_preview_previous_theme', None) is not None:
+            self._revert_preview()
         try:
             self.window.unbind_all('<MouseWheel>')
         except Exception:
             pass
         self.window.destroy()
+
+    def _preview_in_app(self):
+        """Live preview of theme"""
+        colors = self._current_colors()
+
+        # Check hex values
+        for key, val in colors.items():
+            if not re.match(r'^#[0-9A-Fa-f]{6}$', val):
+                messagebox.showwarning(
+                    "Invalid Color",
+                    f"Cannot preview — invalid color for '{key}': {val}\n"
+                    "Must be a 6-digit hex code like #AABBCC.",
+                    parent=self.window)
+                return
+
+        # Save the current active theme
+        self._preview_previous_theme = self.db_manager.get_setting('theme', 'Light')
+
+        # Temporarily make preview colors/theme
+        _PREVIEW_KEY = '__preview__'
+        self.db_manager.save_custom_theme(_PREVIEW_KEY, colors)
+        self.db_manager.set_setting('theme', _PREVIEW_KEY)
+
+        # Refresh root window
+        root = self.window
+        while root.master:
+            root = root.master
+
+        try:
+            root.event_generate('<<ThemeChanged>>')
+        except Exception:
+            pass
+
+        # Apply to frames
+        for widget in root.winfo_children():
+            if hasattr(widget, 'apply_theme'):
+                widget.apply_theme(_PREVIEW_KEY)
+                break
+
+        messagebox.showinfo(
+            "Preview Active",
+            "You are now previewing this theme on the main window.\n"
+            "Click 'Revert Preview' to go back to your previous theme.",
+            parent=self.window)
+
+        # Change button
+        self._swap_preview_button(reverting=True)
+
+    def _revert_preview(self):
+        """Restore the theme that was active before previewing"""
+        _PREVIEW_KEY = '__preview__'
+
+        previous = getattr(self, '_preview_previous_theme', 'Light')
+        self.db_manager.set_setting('theme', previous)
+        self.db_manager.delete_custom_theme(_PREVIEW_KEY)
+
+        root = self.window
+        while root.master:
+            root = root.master
+
+        for widget in root.winfo_children():
+            if hasattr(widget, 'apply_theme'):
+                widget.apply_theme(previous)
+                break
+
+        self._swap_preview_button(reverting=False)
+
+    def _swap_preview_button(self, reverting: bool):
+        """Toggle between Preview in App and Revert Preview buttons"""
+        if not hasattr(self, '_preview_btn_ref'):
+            return
+        if reverting:
+            self._preview_btn_ref.config(text="Revert Preview",
+                                        command=self._revert_preview)
+        else:
+            self._preview_btn_ref.config(text="Preview in App",
+                                        command=self._preview_in_app)
 
 class NewGroupDialog:
     """Dialog for creating a new group"""
