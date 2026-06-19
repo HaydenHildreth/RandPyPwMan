@@ -13,9 +13,11 @@ from typing import Optional, List, Tuple, Dict, Any
 import bcrypt
 import pyperclip
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, colorchooser
 from cryptography.fernet import Fernet
 from datetime import datetime
+import re
+import json
 
 
 THEMES = {
@@ -972,6 +974,71 @@ class DatabaseManager:
         except Exception as e:
             print(f"Failed to save setting: {e}")
             return False
+        
+    def _ensure_custom_themes_table(self):
+        """Make custom_themes table if it DNE"""
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("""CREATE TABLE IF NOT EXISTS custom_themes(
+                name varchar(100) PRIMARY KEY,
+                colors TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )""")
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Warning: could not make custom_themes table: {e}")
+
+    def get_custom_themes(self) -> dict:
+        """Return all custom themes as a dict"""
+        self._ensure_custom_themes_table()
+        result = {}
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("SELECT name, colors FROM custom_themes ORDER BY name")
+            rows = c.fetchall()
+            conn.close()
+            for name, colors_json in rows:
+                try:
+                    result[name] = json.loads(colors_json)
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"Error loading custom themes: {e}")
+        return result
+
+    def save_custom_theme(self, name: str, colors: dict) -> bool:
+        """Save custom theme"""
+        self._ensure_custom_themes_table()
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute(
+                "INSERT OR REPLACE INTO custom_themes (name, colors) VALUES (?, ?)",
+                (name, json.dumps(colors))
+            )
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to save custom theme: {e}")
+            return False
+
+    def delete_custom_theme(self, name: str) -> bool:
+        """Delete custom theme"""
+        self._ensure_custom_themes_table()
+        try:
+            conn = sqlite3.connect(self.unlock_db)
+            c = conn.cursor()
+            c.execute("DELETE FROM custom_themes WHERE name=?", (name,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            messagebox.showerror("Database Error", f"Failed to delete custom theme: {e}")
+            return False
     
     def _has_master_password(self) -> bool:
         """Check if master password is setup"""
@@ -1400,7 +1467,13 @@ class ThemedWidget:
     def apply_theme(self, theme_name: str):
         """Apply theme to widget"""
         pass
+    
 
+def _get_all_themes(db_manager) -> dict:
+    """Return dict of stock themes + custom themes"""
+    merged = dict(THEMES)
+    merged.update(db_manager.get_custom_themes())
+    return merged
 
 class LoginFrame(ttk.Frame, ThemedWidget):
     """Frame for master password authentication"""
@@ -1451,10 +1524,10 @@ class LoginFrame(ttk.Frame, ThemedWidget):
     
     def apply_theme(self, theme_name: str):
         """Apply theme to login frame"""
-        if theme_name not in THEMES:
+        all_themes = _get_all_themes(self.db_manager)
+        if theme_name not in all_themes:
             theme_name = 'Light'
-        
-        theme = THEMES[theme_name]
+        theme = all_themes[theme_name]
         
         # Configure ttk styles with unique style names for login
         style = ttk.Style()
@@ -1711,10 +1784,10 @@ class MainFrame(ttk.Frame, ThemedWidget):
     
     def apply_theme(self, theme_name: str):
         """Apply theme to main frame"""
-        if theme_name not in THEMES:
+        all_themes = _get_all_themes(self.db_manager)
+        if theme_name not in all_themes:
             theme_name = 'Light'
-        
-        theme = THEMES[theme_name]
+        theme = all_themes[theme_name]
         
         # Configure ttk styles
         style = ttk.Style()
@@ -1998,184 +2071,169 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v1.99.18\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v1.99.19\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
         self._register_activity()
         webbrowser.open("https://github.com/HaydenHildreth/RandPyPwMan")
 
-
 class ThemeSettingsDialog:
     """Dialog for configuring theme settings"""
-    
     def __init__(self, parent, db_manager, theme_callback):
         self.db_manager = db_manager
         self.theme_callback = theme_callback
-        
+
         self.window = tk.Toplevel(parent)
         self.window.title("Theme Settings")
-        self.window.geometry("450x550")
-        self.window.resizable(True, True)  # Allow resizing
-        self.window.minsize(400, 500)  # Set minimum size
-        
+        self.window.geometry("450x600")
+        self.window.resizable(True, True)
+        self.window.minsize(400, 520)
+
         self.window.update_idletasks()
         parent_x = parent.winfo_rootx()
         parent_y = parent.winfo_rooty()
-        x = parent_x + 100
-        y = parent_y + 100
-        self.window.geometry(f"450x550+{x}+{y}")
-        
-        self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
+        self.window.geometry(f"450x600+{parent_x + 100}+{parent_y + 100}")
+
+        self._apply_window_theme()
         self._create_widgets()
         self.window.transient(parent)
         self.window.grab_set()
-        
-    def _apply_window_theme(self):  
-        """Apply theme colors to the dialog window"""
+
+    def _apply_window_theme(self):
         theme_name = self.db_manager.get_setting('theme', 'Light')
-        if theme_name in THEMES:
-            theme = THEMES[theme_name]
-            self.window.configure(bg=theme['bg'])
-    
+        all_themes = _get_all_themes(self.db_manager)
+        if theme_name in all_themes:
+            self.window.configure(bg=all_themes[theme_name]['bg'])
+
+    def _build_sorted_list(self, all_themes: dict) -> list:
+        priority = [n for n in ('Light', 'Dark') if n in all_themes]
+        rest = sorted(k for k in all_themes if k not in priority)
+        return priority + rest
+
     def _create_widgets(self):
         main_frame = ttk.Frame(self.window, padding="20")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
-        # Make the main frame expandable
         self.window.grid_rowconfigure(0, weight=1)
         self.window.grid_columnconfigure(0, weight=1)
-        main_frame.grid_rowconfigure(2, weight=1)  # Make the listbox frame expandable
+        main_frame.grid_rowconfigure(2, weight=1)
         main_frame.grid_columnconfigure(0, weight=1)
-        
-        ttk.Label(main_frame, text="Theme Configuration", 
-                 font=("Arial", 11, "bold")).grid(row=0, column=0, pady=(0, 20), sticky=tk.W)
-        
-        ttk.Label(main_frame, text="Select Theme:", 
-                 font=("Arial", 10)).grid(row=1, column=0, sticky=tk.W, pady=(0, 10))
-        
-        # Get current theme
+
+        ttk.Label(main_frame, text="Theme Configuration",
+                  font=("Arial", 11, "bold")).grid(row=0, column=0, pady=(0, 20), sticky=tk.W)
+
+        ttk.Label(main_frame, text="Select Theme:",
+                  font=("Arial", 10)).grid(row=1, column=0, sticky=tk.W, pady=(0, 10))
+
         current_theme = self.db_manager.get_setting('theme', 'Light')
         self.theme_var = tk.StringVar(value=current_theme)
-        
-        # Create a frame for the listbox and scrollbar
+
         list_frame = ttk.Frame(main_frame)
-        list_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 15))
+        list_frame.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         list_frame.grid_rowconfigure(0, weight=1)
         list_frame.grid_columnconfigure(0, weight=1)
-        
-        # Create listbox with scrollbar
+
         self.theme_listbox = tk.Listbox(list_frame, height=12, exportselection=False)
         self.theme_listbox.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
+
         scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.theme_listbox.yview)
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.theme_listbox.configure(yscrollcommand=scrollbar.set)
-        
-        # Populate listbox with themes
-        themes_list = list(THEMES.keys())
 
-        # Separate main themes from the rest
-        priority_themes = []
-        other_themes = []
+        self._populate_listbox(current_theme)
 
-        for theme in themes_list:
-            if theme == 'Light':
-                priority_themes.insert(0, theme)  # Light first
-            elif theme == 'Dark':
-                if 'Light' in priority_themes:
-                    priority_themes.insert(1, theme)  # Dark second
-                else:
-                    priority_themes.append(theme)
-            else:
-                other_themes.append(theme)
-
-        # Sort themes alphabetically
-        other_themes.sort()
-
-        # Combine two lists
-        themes_list = priority_themes + other_themes
-
-        for theme_name in themes_list:
-            self.theme_listbox.insert(tk.END, theme_name)
-        
-        # Select current theme
-        try:
-            current_index = themes_list.index(current_theme)
-            self.theme_listbox.selection_set(current_index)
-            self.theme_listbox.see(current_index)
-        except ValueError:
-            self.theme_listbox.selection_set(0)
-        
-        # Bind selection event
         self.theme_listbox.bind('<<ListboxSelect>>', self._on_theme_select)
-        # Set double-click to apply theme
         self.theme_listbox.bind('<Double-Button-1>', lambda e: self._apply_theme())
 
-        
-        # Preview label
         preview_frame = ttk.LabelFrame(main_frame, text="Preview", padding="10")
-        preview_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
-        
+        preview_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+
         self.preview_label = ttk.Label(preview_frame, text="Preview colors will appear here")
         self.preview_label.pack()
-        
+
         self.preview_canvas = tk.Canvas(preview_frame, width=356, height=65)
         self.preview_canvas.pack(pady=(10, 0))
-        
-        # Show initial preview
+
         self._preview_theme()
-        
+
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=4, column=0, pady=(0, 0))
-        
-        ttk.Button(button_frame, text="Apply", command=self._apply_theme).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
-    
+
+        ttk.Button(button_frame, text="Apply",
+                   command=self._apply_theme).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(button_frame, text="New Custom Theme",
+                   command=self._open_creator).pack(side=tk.LEFT, padx=(0, 5))
+        self.edit_btn = ttk.Button(button_frame, text="Edit",
+                                   command=self._edit_custom_theme)
+        self.edit_btn.pack(side=tk.LEFT, padx=(0, 5))
+        self.delete_btn = ttk.Button(button_frame, text="Delete",
+                                     command=self._delete_custom_theme)
+        self.delete_btn.pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(button_frame, text="Cancel",
+                   command=self.window.destroy).pack(side=tk.LEFT)
+
+        self._update_button_states()
+
+    def _populate_listbox(self, select_name=None):
+        self.theme_listbox.delete(0, tk.END)
+        self._custom_theme_names = set(self.db_manager.get_custom_themes().keys())
+        all_themes = _get_all_themes(self.db_manager)
+        self._sorted_list = self._build_sorted_list(all_themes)
+
+        for theme_name in self._sorted_list:
+            label = f"{theme_name} ★" if theme_name in self._custom_theme_names else theme_name
+            self.theme_listbox.insert(tk.END, label)
+
+        target = select_name or self.theme_var.get()
+        try:
+            idx = self._sorted_list.index(target)
+            self.theme_listbox.selection_set(idx)
+            self.theme_listbox.see(idx)
+        except ValueError:
+            self.theme_listbox.selection_set(0)
+
+    def _selected_theme_name(self):
+        sel = self.theme_listbox.curselection()
+        if not sel:
+            return self.theme_var.get()
+        return self._sorted_list[sel[0]]
+
     def _on_theme_select(self, event=None):
-        """Handle theme selection from listbox"""
-        selection = self.theme_listbox.curselection()
-        if selection:
-            theme_name = self.theme_listbox.get(selection[0])
-            self.theme_var.set(theme_name)
-            self._preview_theme()
-    
+        name = self._selected_theme_name()
+        self.theme_var.set(name)
+        self._preview_theme()
+        self._update_button_states()
+
+    def _update_button_states(self):
+        is_custom = self._selected_theme_name() in getattr(self, '_custom_theme_names', set())
+        state = 'normal' if is_custom else 'disabled'
+        self.edit_btn.config(state=state)
+        self.delete_btn.config(state=state)
+
     def _preview_theme(self):
-        """Show a preview of the selected theme"""
-        theme_name = self.theme_var.get()
-        if theme_name not in THEMES:
+        name = self.theme_var.get()
+        all_themes = _get_all_themes(self.db_manager)
+        if name not in all_themes:
             return
-        
-        theme = THEMES[theme_name]
-        
-        # Clear canvas
+        theme = all_themes[name]
         self.preview_canvas.delete('all')
-        
-        # Draw color swatches
-        x_start = 10
-        y = 10
-        width = 60
-        height = 40
-        
+        x_start, y, width, height = 10, 10, 60, 40
         colors = [
-            ('BG', theme['bg']),
-            ('Text', theme['fg']),
+            ('BG',     theme['bg']),
+            ('Text',   theme['fg']),
             ('Accent', theme['accent']),
             ('Button', theme['button_bg']),
-            ('Entry', theme['entry_bg']),
+            ('Entry',  theme['entry_bg']),
         ]
-        
         for i, (label, color) in enumerate(colors):
-            x = x_start + (i * (width + 10))
-            self.preview_canvas.create_rectangle(x, y, x + width, y + height, 
-                                                fill=color, outline='gray')
-            self.preview_canvas.create_text(x + width//2, y + height + 10, 
-                                           text=label, font=('Arial', 8))
-    
+            x = x_start + i * (width + 10)
+            self.preview_canvas.create_rectangle(x, y, x + width, y + height,
+                                                 fill=color, outline='gray')
+            self.preview_canvas.create_text(x + width // 2, y + height + 10,
+                                            text=label, font=('Arial', 8))
+
     def _apply_theme(self):
-        """Apply the selected theme"""
-        theme_name = self.theme_var.get()
-        
+        theme_name = self._selected_theme_name()
         if self.db_manager.set_setting('theme', theme_name):
             messagebox.showinfo("Success", f"Theme '{theme_name}' applied successfully!")
             self.theme_callback()
@@ -2183,6 +2241,286 @@ class ThemeSettingsDialog:
         else:
             messagebox.showerror("Error", "Failed to save theme setting.")
 
+    def _open_creator(self, existing_name=None, existing_colors=None):
+        self.window.grab_release()
+        def on_saved(name):
+            self._populate_listbox(select_name=name)
+            self._preview_theme()
+            self._update_button_states()
+        CustomThemeCreatorDialog(self.window, self.db_manager, on_saved,
+                                 existing_name=existing_name,
+                                 existing_colors=existing_colors)
+        self.window.grab_set()
+
+    def _edit_custom_theme(self):
+        name = self._selected_theme_name()
+        custom = self.db_manager.get_custom_themes()
+        if name not in custom:
+            messagebox.showwarning("Not Editable", "Only custom themes can be edited.")
+            return
+        self._open_creator(existing_name=name, existing_colors=custom[name])
+
+    def _delete_custom_theme(self):
+        name = self._selected_theme_name()
+        custom = self.db_manager.get_custom_themes()
+        if name not in custom:
+            messagebox.showwarning("Not Deletable", "Only custom themes can be deleted.")
+            return
+        if not messagebox.askyesno("Confirm Delete", f"Delete custom theme '{name}'?"):
+            return
+        if self.db_manager.delete_custom_theme(name):
+            if self.db_manager.get_setting('theme') == name:
+                self.db_manager.set_setting('theme', 'Light')
+                self.theme_callback()
+            messagebox.showinfo("Deleted", f"Theme '{name}' deleted.")
+            self._populate_listbox(select_name='Light')
+            self._preview_theme()
+            self._update_button_states()
+
+class CustomThemeCreatorDialog:
+    """Dialog for creating or editing a custom theme via color pickers"""
+
+    COLOR_KEYS = [
+        ('bg',           'Background'),
+        ('fg',           'Foreground (text)'),
+        ('accent',       'Accent'),
+        ('button_bg',    'Button Background'),
+        ('button_fg',    'Button Text'),
+        ('entry_bg',     'Entry Background'),
+        ('entry_fg',     'Entry Text'),
+        ('active_bg',    'Active / Hover Background'),
+        ('active_fg',    'Active / Hover Text'),
+        ('tree_bg',      'Treeview Background'),
+        ('tree_fg',      'Treeview Text'),
+        ('tree_sel_bg',  'Treeview Selected Background'),
+        ('tree_sel_fg',  'Treeview Selected Text'),
+        ('menu_bg',      'Menu Background'),
+        ('menu_fg',      'Menu Text'),
+    ]
+
+    DEFAULTS = {
+        'bg':          '#FFFFFF',
+        'fg':          '#1F2937',
+        'accent':      '#2563EB',
+        'button_bg':   '#F3F4F6',
+        'button_fg':   '#1F2937',
+        'entry_bg':    '#FFFFFF',
+        'entry_fg':    '#1F2937',
+        'active_bg':   '#E5E7EB',
+        'active_fg':   '#111827',
+        'tree_bg':     '#FFFFFF',
+        'tree_fg':     '#111827',
+        'tree_sel_bg': '#2563EB',
+        'tree_sel_fg': '#FFFFFF',
+        'menu_bg':     '#FFFFFF',
+        'menu_fg':     '#111827',
+    }
+
+    def __init__(self, parent, db_manager, on_saved_callback,
+                 existing_name=None, existing_colors=None):
+        self.db_manager = db_manager
+        self.on_saved_callback = on_saved_callback
+        self.existing_name = existing_name
+        self.color_vars: Dict[str, tk.StringVar] = {}
+
+        self.window = tk.Toplevel(parent)
+        self.window.title("Edit Custom Theme" if existing_name else "Create Custom Theme")
+        self.window.geometry("560x620")
+        self.window.resizable(True, True)
+        self.window.minsize(480, 560)
+
+        self.window.update_idletasks()
+        px, py = parent.winfo_rootx(), parent.winfo_rooty()
+        self.window.geometry(f"560x620+{px + 60}+{py + 40}")
+
+        base = existing_colors if existing_colors else self.DEFAULTS
+        for key, _ in self.COLOR_KEYS:
+            self.color_vars[key] = tk.StringVar(
+                value=base.get(key, self.DEFAULTS.get(key, '#000000')))
+
+        theme_name = db_manager.get_setting('theme', 'Light')
+        all_themes = _get_all_themes(db_manager)
+        if theme_name in all_themes:
+            self.window.configure(bg=all_themes[theme_name]['bg'])
+
+        self._create_widgets(existing_name or '')
+        self.window.transient(parent)
+        self.window.grab_set()
+
+    def _create_widgets(self, initial_name: str):
+        outer = ttk.Frame(self.window, padding="15")
+        outer.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.window.grid_rowconfigure(0, weight=1)
+        self.window.grid_columnconfigure(0, weight=1)
+        outer.grid_rowconfigure(1, weight=1)
+        outer.grid_columnconfigure(0, weight=1)
+
+        # Theme name
+        name_frame = ttk.Frame(outer)
+        name_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 12))
+        name_frame.grid_columnconfigure(1, weight=1)
+
+        ttk.Label(name_frame, text="Theme Name:",
+                  font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        self.name_var = tk.StringVar(value=initial_name)
+        name_entry = ttk.Entry(name_frame, textvariable=self.name_var)
+        name_entry.grid(row=0, column=1, sticky=(tk.W, tk.E))
+        if not initial_name:
+            name_entry.focus()
+
+        # Scrollable color rows
+        canvas = tk.Canvas(outer, borderwidth=0, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(outer, orient=tk.VERTICAL, command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        scrollbar.grid(row=1, column=1, sticky=(tk.N, tk.S))
+
+        scroll_frame = ttk.Frame(canvas)
+        scroll_frame.bind('<Configure>',
+            lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+        canvas.create_window((0, 0), window=scroll_frame, anchor='nw')
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
+        canvas.bind_all('<MouseWheel>', _on_mousewheel)
+
+        scroll_frame.grid_columnconfigure(1, weight=1)
+        self._swatch_buttons: Dict[str, tk.Button] = {}
+
+        for row_i, (key, label) in enumerate(self.COLOR_KEYS):
+            ttk.Label(scroll_frame, text=label, width=28,
+                      anchor=tk.W).grid(row=row_i, column=0, sticky=tk.W,
+                                        pady=4, padx=(0, 10))
+
+            color_var = self.color_vars[key]
+            hex_entry = ttk.Entry(scroll_frame, textvariable=color_var, width=10)
+            hex_entry.grid(row=row_i, column=1, sticky=tk.W, padx=(0, 8))
+            hex_entry.bind('<FocusOut>', lambda e, k=key: self._on_hex_typed(k))
+            hex_entry.bind('<Return>',   lambda e, k=key: self._on_hex_typed(k))
+
+            swatch = tk.Button(
+                scroll_frame, text="   ", width=4,
+                bg=color_var.get(), relief=tk.RAISED, bd=2,
+                command=lambda k=key: self._pick_color(k)
+            )
+            swatch.grid(row=row_i, column=2, padx=(0, 4), pady=2)
+            self._swatch_buttons[key] = swatch
+
+        # Preview + buttons
+        bottom = ttk.Frame(outer)
+        bottom.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(12, 0))
+        bottom.grid_columnconfigure(0, weight=1)
+
+        preview_frame = ttk.LabelFrame(bottom, text="Preview", padding="8")
+        preview_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        self.preview_canvas = tk.Canvas(preview_frame, height=65)
+        self.preview_canvas.pack(fill=tk.X)
+        self._draw_preview()
+
+        btn_frame = ttk.Frame(bottom)
+        btn_frame.grid(row=1, column=0)
+        ttk.Button(btn_frame, text="Preview",
+                   command=self._draw_preview).pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Button(btn_frame, text="Save Theme",
+                   command=self._save).pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Button(btn_frame, text="Cancel",
+                   command=self._close).pack(side=tk.LEFT)
+
+    def _pick_color(self, key: str):
+        current = self.color_vars[key].get()
+        try:
+            result = colorchooser.askcolor(color=current,
+                                           title=f"Choose color — {key}",
+                                           parent=self.window)
+        except Exception:
+            result = colorchooser.askcolor(title=f"Choose color — {key}",
+                                           parent=self.window)
+        if result and result[1]:
+            hex_color = result[1].upper()
+            self.color_vars[key].set(hex_color)
+            self._swatch_buttons[key].configure(bg=hex_color)
+            self._draw_preview()
+
+    def _on_hex_typed(self, key: str):
+        value = self.color_vars[key].get().strip()
+        if not value.startswith('#'):
+            value = '#' + value
+        if re.match(r'^#[0-9A-Fa-f]{6}$', value):
+            value = value.upper()
+            self.color_vars[key].set(value)
+            try:
+                self._swatch_buttons[key].configure(bg=value)
+            except Exception:
+                pass
+            self._draw_preview()
+
+    def _current_colors(self) -> dict:
+        return {key: self.color_vars[key].get() for key, _ in self.COLOR_KEYS}
+
+    def _draw_preview(self):
+        colors = self._current_colors()
+        self.preview_canvas.delete('all')
+        canvas_width = self.preview_canvas.winfo_width() or 460
+        swatches = [
+            ('BG',     colors['bg']),
+            ('Text',   colors['fg']),
+            ('Accent', colors['accent']),
+            ('Button', colors['button_bg']),
+            ('Entry',  colors['entry_bg']),
+        ]
+        n = len(swatches)
+        margin = 10
+        w = max(1, (canvas_width - margin * (n + 1)) // n)
+        h = 35
+        for i, (label, color) in enumerate(swatches):
+            x = margin + i * (w + margin)
+            try:
+                self.preview_canvas.create_rectangle(
+                    x, 5, x + w, 5 + h, fill=color, outline='#888')
+                self.preview_canvas.create_text(
+                    x + w // 2, 5 + h + 10, text=label, font=('Arial', 8))
+            except Exception:
+                pass
+
+    def _save(self):
+        name = self.name_var.get().strip()
+        if not name:
+            messagebox.showerror("Validation", "Theme name cannot be empty.",
+                                 parent=self.window)
+            return
+        if name.lower() == 'all':
+            messagebox.showerror("Validation", "'All' is a reserved name.",
+                                 parent=self.window)
+            return
+        if name in THEMES:
+            messagebox.showerror("Validation",
+                f"A built-in theme named '{name}' already exists. Choose a different name.",
+                parent=self.window)
+            return
+
+        colors = self._current_colors()
+        for key, val in colors.items():
+            if not re.match(r'^#[0-9A-Fa-f]{6}$', val):
+                messagebox.showerror("Validation",
+                    f"Invalid color for '{key}': {val}\nMust be a 6-digit hex code like #AABBCC.",
+                    parent=self.window)
+                return
+
+        if self.existing_name and self.existing_name != name:
+            self.db_manager.delete_custom_theme(self.existing_name)
+
+        if self.db_manager.save_custom_theme(name, colors):
+            messagebox.showinfo("Saved", f"Custom theme '{name}' saved!",
+                                parent=self.window)
+            self.on_saved_callback(name)
+            self._close()
+
+    def _close(self):
+        try:
+            self.window.unbind_all('<MouseWheel>')
+        except Exception:
+            pass
+        self.window.destroy()
 
 class NewGroupDialog:
     """Dialog for creating a new group"""
@@ -3004,7 +3342,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v1.99.18")
+        self.root.title("RandPyPwGen v1.99.19")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -3037,7 +3375,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v1.99.18")
+        self.root.title("RandPyPwGen v1.99.19")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
