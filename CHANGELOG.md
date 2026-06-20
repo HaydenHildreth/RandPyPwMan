@@ -1,6 +1,24 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.99.20] - 06-20-2026
+  
+No database changes.
+
+### Added
+
+None
+
+### Fixed
+
+Fixed issue where theme background would not apply to entire frame when window was expanded. [Issue #145](https://github.com/HaydenHildreth/RandPyPwMan/issues/145)
+
+Fixed issue where scrollbar would try to keep scrolling when using mousewheel. [Issue #144](https://github.com/HaydenHildreth/RandPyPwMan/issues/144)
+
+### Notes
+
+- None.
+
 ## [1.99.19] - 06-19-2026
   
 Minor database changes for new custom themes. Feel free to upgrade from previous versions without issues.
@@ -17,7 +35,7 @@ Fixed issue which caused the preview swatch to be collapsed/squished. [Issue #13
 
 ### Notes
 
-- Great idea, thank you to [@TylerMichaelsen](https://github.com/tylermichaelsen) for this.
+- Great idea, thank you to @TylerMichaelsen for this.
 
 ## [1.99.18] - 06-11-2026
   
