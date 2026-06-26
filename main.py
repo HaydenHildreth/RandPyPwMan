@@ -2354,7 +2354,9 @@ class CustomThemeCreatorDialog:
         outer.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.window.grid_rowconfigure(0, weight=1)
         self.window.grid_columnconfigure(0, weight=1)
+        outer.grid_rowconfigure(0, weight=0)
         outer.grid_rowconfigure(1, weight=1)
+        outer.grid_rowconfigure(2, weight=0)
         outer.grid_columnconfigure(0, weight=1)
 
         # Theme name
@@ -2371,7 +2373,8 @@ class CustomThemeCreatorDialog:
             name_entry.focus()
 
         # Scrollable color rows
-        canvas = tk.Canvas(outer, borderwidth=0, highlightthickness=0)
+        canvas = tk.Canvas(outer, borderwidth=0, highlightthickness=0,
+                   bg=self.window.cget('bg'))
         scrollbar = ttk.Scrollbar(outer, orient=tk.VERTICAL, command=canvas.yview)
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -2380,13 +2383,24 @@ class CustomThemeCreatorDialog:
         scroll_frame = ttk.Frame(canvas)
         scroll_frame.bind('<Configure>',
             lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
-        canvas.create_window((0, 0), window=scroll_frame, anchor='nw')
+
+        def _on_canvas_resize(event):
+            canvas.itemconfig(_canvas_window, width=event.width)
+
+        _canvas_window = canvas.create_window((0, 0), window=scroll_frame, anchor='nw')
+        canvas.bind('<Configure>', _on_canvas_resize)
 
         def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
+            try:
+                canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
+            except Exception:
+                pass
         canvas.bind_all('<MouseWheel>', _on_mousewheel)
+        canvas.bind('<Destroy>', lambda e: canvas.unbind_all('<MouseWheel>'))
 
-        scroll_frame.grid_columnconfigure(1, weight=1)
+        scroll_frame.grid_columnconfigure(0, weight=0)
+        scroll_frame.grid_columnconfigure(1, weight=0)
+        scroll_frame.grid_columnconfigure(2, weight=1)
         self._swatch_buttons: Dict[str, tk.Button] = {}
 
         for row_i, (key, label) in enumerate(self.COLOR_KEYS):
