@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, macos-13, ubuntu-22.04] # Swap to ubuntu-22.04 to support more linux versions
+        os: [windows-latest, macos-latest, macos-15-intel, ubuntu-22.04] # Swap to ubuntu-22.04 to support more linux versions
                                                                    # Add to macos-13 to support intel CPUs
 
     steps:
