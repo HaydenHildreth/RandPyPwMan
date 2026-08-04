@@ -24,7 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest, macos-latest, macos-13, ubuntu-22.04] # Swap to ubuntu-22.04 to support more linux versions
+                                                                   # Add to macos-13 to support intel CPUs
 
     steps:
       - name: Check out repository
@@ -69,8 +70,8 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           mkdir -p out
-          tar -czf "out/${APP_NAME}-macos.tar.gz" -C dist "${APP_NAME}.app"
-
+          tar -czf "out/${APP_NAME}-macos-${{ runner.arch }}.tar.gz" -C dist "${APP_NAME}.app"
+          
       # -------- Linux: build onefile binary, wrap as .AppImage --------
       - name: Build with PyInstaller (Linux)
         if: runner.os == 'Linux'
@@ -113,7 +114,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.APP_NAME }}-${{ runner.os }}
+          name: ${{ env.APP_NAME }}-${{ runner.os }}-${{ runner.arch }}
           path: out/*
           if-no-files-found: error
 
