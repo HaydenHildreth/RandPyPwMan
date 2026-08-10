@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 08-10-2026
+  
+No database changes.
+
+### Added
+
+Release builds which are automatically compiled and released after each program change. Thank you to [Kirill Zhosul](https://github.com/kirillzhosul) for showing me this.
+
+### Fixed
+
+None.
+
+### Notes
+
+- This took a lot of work but I am happy with this!
+
 ## [1.99.20] - 06-20-2026
   
 No database changes.
