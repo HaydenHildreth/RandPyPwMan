@@ -1,0 +1,135 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [ published ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  APP_NAME: RandPyPwMan
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, macos-15-intel, ubuntu-22.04] # Swap to ubuntu-22.04 to support more linux versions
+                                                                   # Add to macos-13 to support intel CPUs
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Linux GUI/runtime dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk tk-dev
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      # -------- Windows: build a single .exe --------
+      - name: Build with PyInstaller (Windows)
+        if: runner.os == 'Windows'
+        run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} main.py
+
+      - name: Stage Windows artifact
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p out
+          cp "dist/${APP_NAME}.exe" "out/${APP_NAME}-windows.exe"
+
+      # -------- macOS: build .app bundle, ship as .tar.gz --------
+      - name: Build with PyInstaller (macOS)
+        if: runner.os == 'macOS'
+        run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} main.py
+
+      - name: Stage macOS artifact
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p out
+          tar -czf "out/${APP_NAME}-macos-${{ runner.arch }}.tar.gz" -C dist "${APP_NAME}.app"
+          
+      # -------- Linux: build onefile binary, wrap as .AppImage --------
+      - name: Build with PyInstaller (Linux)
+        if: runner.os == 'Linux'
+        run: pyinstaller --onefile --name ${{ env.APP_NAME }} main.py
+
+      - name: Package AppImage (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -e
+          APPDIR=AppDir
+          mkdir -p "$APPDIR/usr/bin"
+          cp "dist/${APP_NAME}" "$APPDIR/usr/bin/${APP_NAME}"
+          chmod +x "$APPDIR/usr/bin/${APP_NAME}"
+
+          # Minimal placeholder icon (solid color square) - swap in a
+          # real icon.png at the repo root and point to it here if you
+          # add one later.
+          sudo apt-get install -y imagemagick
+          convert -size 256x256 xc:"#2563EB" "$APPDIR/${APP_NAME}.png"
+
+          cat > "$APPDIR/${APP_NAME}.desktop" <<EOF
+          [Desktop Entry]
+          Type=Application
+          Name=${APP_NAME}
+          Exec=${APP_NAME}
+          Icon=${APP_NAME}
+          Categories=Utility;
+          Terminal=false
+          EOF
+
+          ln -sf "usr/bin/${APP_NAME}" "$APPDIR/AppRun"
+
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+
+          mkdir -p out
+          ./appimagetool-x86_64.AppImage --appimage-extract-and-run "$APPDIR" "out/${APP_NAME}-linux.AppImage"
+
+      # -------- Upload as a workflow artifact (every run) --------
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ runner.os }}-${{ runner.arch }}
+          path: out/*
+          if-no-files-found: error
+
+  publish:
+    name: Attach binaries to Release
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Upload assets to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
