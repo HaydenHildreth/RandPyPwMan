@@ -2084,7 +2084,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v2.0.1\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v2.0.2\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -3114,6 +3114,7 @@ class AddEditDialog:
         
         self.group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups)
         self.group_combo.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
+        self.group_combo['postcommand'] = lambda: self._suppress_empty_group_dropdown(self.group_combo)
         current_row += 1
         
         # Show date fields only when editing
@@ -3153,6 +3154,11 @@ class AddEditDialog:
         
         self.window.bind('<Return>', lambda e: self._save())
         self.window.bind('<Escape>', lambda e: self._cancel())
+    
+    def _suppress_empty_group_dropdown(self, combo):
+        """Prevent dropdown list from opening immediately if no group exists"""
+        if not combo['values']:
+            combo.after(1, lambda: combo.tk.call('ttk::combobox::Unpost', combo._w))
     
     def _apply_theme_to_dialog(self):
         """Apply theme colors to date labels in dialog"""
@@ -3296,6 +3302,7 @@ class ImportDialog:
         
         group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups, width=25)
         group_combo.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        group_combo['postcommand'] = lambda: self._suppress_empty_group_dropdown(group_combo)
         
         file_frame = ttk.Frame(main_frame)
         file_frame.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=(10, 10))
@@ -3313,6 +3320,11 @@ class ImportDialog:
         self.import_btn = ttk.Button(button_frame, text="Import", command=self._import_passwords, state='disabled')
         self.import_btn.pack(side=tk.LEFT, padx=(0, 10))
         ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+    
+    def _suppress_empty_group_dropdown(self, combo):
+        """Prevent dropdown list from opening immediately if no group exists"""
+        if not combo['values']:
+            combo.after(1, lambda: combo.tk.call('ttk::combobox::Unpost', combo._w))
     
     def _browse_file(self):
         """Browse for CSV file"""
@@ -3467,7 +3479,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v2.0.1")
+        self.root.title("RandPyPwGen v2.0.2")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -3500,7 +3512,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v2.0.1")
+        self.root.title("RandPyPwGen v2.0.2")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))

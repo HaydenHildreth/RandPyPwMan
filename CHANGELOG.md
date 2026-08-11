@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 08-12-2026
+  
+No database changes.
+
+### Added
+
+None.
+
+### Fixed
+
+[Issue 154](https://github.com/HaydenHildreth/RandPyPwMan/issues/154).
+
+### Notes
+
+- Fixes weird Tkinter quirk.
+
 ## [2.0.1] - 08-11-2026
   
 No database changes.
