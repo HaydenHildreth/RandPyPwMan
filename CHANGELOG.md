@@ -1,6 +1,40 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 08-11-2026
+  
+No database changes.
+
+### Added
+
+Enhanced security via passwords being defaulted to hidden. 
+
+### Fixed
+
+[Issue 155](https://github.com/HaydenHildreth/RandPyPwMan/issues/155).
+
+### Notes
+
+- These requests were nice and should improve user quality of life.
+
+## [1.99.20] - 06-20-2026
+  
+No database changes.
+
+### Added
+
+None
+
+### Fixed
+
+Fixed issue where theme background would not apply to entire frame when window was expanded. [Issue #145](https://github.com/HaydenHildreth/RandPyPwMan/issues/145)
+
+Fixed issue where scrollbar would try to keep scrolling when using mousewheel. [Issue #144](https://github.com/HaydenHildreth/RandPyPwMan/issues/144)
+
+### Notes
+
+- None.
+
 ## [2.0.0] - 08-10-2026
   
 No database changes.

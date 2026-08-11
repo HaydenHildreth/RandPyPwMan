@@ -1569,7 +1569,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self.db_manager = db_manager
         self.lock_callback = lock_callback
         self.password_generator = PasswordGenerator()
-        self.passwords_visible = True
+        self.passwords_visible = False # Set to False; Fixes issue #155 @KirillZhosul
         self.stored_passwords: Dict[int, str] = {}
         self.current_group = "All"
         self._current_generated_password = ''
