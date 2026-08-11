@@ -9,9 +9,13 @@ No database changes.
 
 Enhanced security via passwords being defaulted to hidden. 
 
+New button to copy password after it was generated.
+
 ### Fixed
 
 [Issue 155](https://github.com/HaydenHildreth/RandPyPwMan/issues/155).
+
+[Issue 153](https://github.com/HaydenHildreth/RandPyPwMan/issues/153).
 
 ### Notes
 
