@@ -1612,8 +1612,10 @@ class MainFrame(ttk.Frame, ThemedWidget):
             row=0, column=2, padx=(0, 10))
         ttk.Button(gen_frame, text="Add to DB", command=self._show_add_dialog).grid(
             row=0, column=3, padx=(0, 10))
+        ttk.Button(gen_frame, text="Copy", command=self._copy_generated_password).grid(
+                    row=0, column=4, padx=(0, 10))
         ttk.Button(gen_frame, text="Clear", command=self._clear_password).grid(
-            row=0, column=4)
+            row=0, column=5)
         
         self.generated_password_var = tk.StringVar()
         self.password_label = ttk.Label(gen_frame, textvariable=self.generated_password_var,
@@ -1899,6 +1901,16 @@ class MainFrame(ttk.Frame, ThemedWidget):
             messagebox.showerror("Invalid Input", "Please enter a valid password length.")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate password: {str(e)}")
+
+    def _copy_generated_password(self):
+        """Copy the currently generated password to clipboard"""
+        self._register_activity()
+        password = getattr(self, '_current_generated_password', '')
+        if not password:
+            messagebox.showwarning("No Password", "Please generate a password first.")
+            return
+        pyperclip.copy(password)
+        messagebox.showinfo("Copied", "Password copied to clipboard!")
     
     def _clear_password(self):
         """Clear generated password"""
