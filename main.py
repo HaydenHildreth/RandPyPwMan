@@ -1196,7 +1196,8 @@ class DatabaseManager:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             c.execute("SELECT name FROM groups ORDER BY name")
-            groups = [row[0] for row in c.fetchall()]
+            groups = [row[0] for row in c.fetchall()
+                if row[0] is not None and row[0].strip() != '']
             conn.close()
             
             # Always add "All" for group at start
@@ -3292,8 +3293,6 @@ class ImportDialog:
         groups = self.db_manager.get_all_groups()
         if 'All' in groups:
             groups.remove('All')
-        
-        groups.insert(0, "(None)")
         
         group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups, width=25)
         group_combo.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
