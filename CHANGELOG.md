@@ -11,7 +11,7 @@ None.
 
 ### Fixed
 
-[Issue 154](https://github.com/HaydenHildreth/RandPyPwMan/issues/154).
+Empty group in group combobox drop down. [Issue #154](https://github.com/HaydenHildreth/RandPyPwMan/issues/154).
 
 ### Notes
 
@@ -29,9 +29,9 @@ New button to copy password after it was generated.
 
 ### Fixed
 
-[Issue 155](https://github.com/HaydenHildreth/RandPyPwMan/issues/155).
+Passwords being visible by default. [Issue #155](https://github.com/HaydenHildreth/RandPyPwMan/issues/155)
 
-[Issue 153](https://github.com/HaydenHildreth/RandPyPwMan/issues/153).
+Inability to copy generated passwords. [Issue #153](https://github.com/HaydenHildreth/RandPyPwMan/issues/153).
 
 ### Notes
 
