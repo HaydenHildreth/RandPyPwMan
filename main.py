@@ -1454,10 +1454,16 @@ class PasswordGenerator:
     def __init__(self):
         self.alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
     
-    def generate(self, length: int) -> str:
+    def generate(self, length: int, use_special: bool = True) -> str:
         """Generate a random password of desired length"""
         if length <= 0 or length > 100:
             raise ValueError("Password length must be between 1 and 100")
+
+        if use_special:
+            # self.alphabet = string.punctuation
+            self.alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
+        else:
+            self.alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits
         
         return ''.join(secrets.choice(self.alphabet) for _ in range(length))
 
@@ -1617,6 +1623,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
                     row=0, column=4, padx=(0, 10))
         ttk.Button(gen_frame, text="Clear", command=self._clear_password).grid(
             row=0, column=5)
+        self.use_special_flag = tk.BooleanVar(value=True)
+        tk.Checkbutton(gen_frame, text="Use special characters", variable=self.use_special_flag).grid(row=2, column=2, padx=(10, 0))
         
         self.generated_password_var = tk.StringVar()
         self.password_label = ttk.Label(gen_frame, textvariable=self.generated_password_var,
@@ -1895,7 +1903,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         try:
             length = int(self.length_var.get())
-            password = self.password_generator.generate(length)
+            password = self.password_generator.generate(length, self.use_special_flag.get())
             self.generated_password_var.set(f"Generated: {password}")
             self._current_generated_password = password
         except ValueError:
@@ -2084,7 +2092,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v2.0.2\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v2.0.3\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -3479,7 +3487,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v2.0.2")
+        self.root.title("RandPyPwGen v2.0.3")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -3512,7 +3520,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v2.0.2")
+        self.root.title("RandPyPwGen v2.0.3")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
