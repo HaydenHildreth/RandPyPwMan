@@ -1624,7 +1624,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         ttk.Button(gen_frame, text="Clear", command=self._clear_password).grid(
             row=0, column=5)
         self.use_special_flag = tk.BooleanVar(value=True)
-        tk.Checkbutton(gen_frame, text="Use special characters", variable=self.use_special_flag).grid(row=2, column=2, padx=(10, 0))
+        ttk.Checkbutton(gen_frame, text="Use special characters", variable=self.use_special_flag).grid(row=2, column=2, padx=(10, 0))
         
         self.generated_password_var = tk.StringVar()
         self.password_label = ttk.Label(gen_frame, textvariable=self.generated_password_var,
@@ -1802,7 +1802,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         
         # Configure ttk styles
         style = ttk.Style()
-        style.theme_use('clam')  # Use clam theme as base for better customization
+        style.theme_use('clam')
         
         # Frame styles
         style.configure('TFrame', background=theme['bg'])
@@ -1824,6 +1824,12 @@ class MainFrame(ttk.Frame, ThemedWidget):
         style.map('TButton',
                  background=[('active', theme['accent']), ('pressed', theme['accent'])],
                  foreground=[('active', theme['button_fg']), ('pressed', theme['button_fg'])])
+
+        # Checkbutton styles
+        style.configure('TCheckbutton', background=theme['bg'], foreground=theme['fg'])
+        style.map('TCheckbutton',
+                  background=[('active', theme['bg'])],
+                  foreground=[('active', theme['fg'])])
         
         # Combobox styles
         style.configure('TCombobox', fieldbackground=theme['entry_bg'], background=theme['button_bg'],
