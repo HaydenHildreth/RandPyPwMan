@@ -1729,6 +1729,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="Import Passwords...", command=self._show_import_dialog)
+        file_menu.add_command(label="Export Passwords...", command=self._show_export_dialog)
         file_menu.add_command(label="Change Master Password...", command=self._change_master_password)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.master.quit)
