@@ -2089,6 +2089,11 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         default_group = None if self.current_group == "All" else self.current_group
         ImportDialog(self, self.db_manager, callback=self._on_data_changed, current_group=default_group)
+
+    def _show_export_dialog(self):
+        """Show export window"""
+        self._register_activity()
+        ExportDialog(self, self.db_manager, current_group=self.current_group)
     
     def _change_master_password(self):
         """Change master password"""
@@ -3414,6 +3419,10 @@ class ImportDialog:
         
         except Exception as e:
             messagebox.showerror("Import Error", f"Failed to import passwords: {str(e)}")
+
+
+class ExportDialog:
+    pass
 
 
 class ChangeMasterPasswordDialog:
