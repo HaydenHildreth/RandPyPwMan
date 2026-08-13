@@ -9,6 +9,8 @@ No database changes.
 
 Ability to generate passwords without special characters. [Issue #152](https://github.com/HaydenHildreth/RandPyPwMan/issues/152).
 
+Ability to export passwords to a .csv file type. [Issue #140](https://github.com/HaydenHildreth/RandPyPwMan/issues/140).
+
 ### Fixed
 
 None.
