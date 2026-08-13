@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.3] - 08-13-2026
+  
+No database changes.
+
+### Added
+
+Ability to generate passwords without special characters. [Issue #152](https://github.com/HaydenHildreth/RandPyPwMan/issues/152).
+
+### Fixed
+
+None.
+
+### Notes
+
+- None.
+
 ## [2.0.2] - 08-12-2026
   
 No database changes.
