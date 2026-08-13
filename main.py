@@ -3423,7 +3423,136 @@ class ImportDialog:
 
 
 class ExportDialog:
-    pass
+    """Dialog for exporting passwords to a CSV file"""
+    def __init__(self, parent, db_manager, current_group="All"):
+        self.db_manager = db_manager
+        self.current_group = current_group if current_group else "All"
+        self.filename = None
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Export Passwords")
+        self.window.geometry("400x300")
+        self.window.resizable(True, True)
+        
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 75
+        y = parent_y + 75
+        self.window.geometry(f"400x300+{x}+{y}")
+        
+        self._apply_window_theme()
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid_columnconfigure(0, weight=1)
+        
+        ttk.Label(main_frame, text="Export passwords from group:", font=("Arial", 10, "bold")).grid(
+            row=0, column=0, sticky=tk.W, pady=(0, 5))
+        
+        groups = self.db_manager.get_all_groups()
+        self.group_var = tk.StringVar(value=self.current_group if self.current_group in groups else "All")
+        group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups,
+                                    state='readonly', width=25)
+        group_combo.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        
+        file_frame = ttk.Frame(main_frame)
+        file_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        file_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(file_frame, text="Save to:").grid(row=0, column=0, sticky=tk.W)
+        self.file_var = tk.StringVar()
+        file_entry = ttk.Entry(file_frame, textvariable=self.file_var, state='readonly', width=20)
+        file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 10))
+        ttk.Button(file_frame, text="Browse", command=self._browse_file).grid(row=0, column=2)
+        
+        warning_label = ttk.Label(
+            main_frame,
+            text=("Warning: the exported file stores passwords in\n"
+                  "plain text, not encrypted. Store it securely and\n"
+                  "delete it when you're done."),
+            font=("Arial", 8), foreground="#B91C1C", justify=tk.LEFT)
+        warning_label.grid(row=3, column=0, sticky=tk.W, pady=(10, 15))
+        
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=4, column=0)
+        
+        self.export_btn = ttk.Button(button_frame, text="Export", command=self._export_passwords, state='disabled')
+        self.export_btn.pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+    
+    def _browse_file(self):
+        """Browse for CSV save location"""
+        filename = filedialog.asksaveasfilename(
+            title="Save CSV File",
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        
+        if filename:
+            self.filename = filename
+            self.file_var.set(filename)
+            self.export_btn.config(state='normal')
+    
+    def _export_passwords(self):
+        """Decrypt and write records to a CSV file"""
+        if not self.filename:
+            messagebox.showerror("Error", "Please choose a file to save to.")
+            return
+        
+        if not messagebox.askyesno(
+            "Confirm Export",
+            "This will write your passwords to a plain text CSV file.\n"
+            "Anyone with access to that file will be able to read them.\n\n"
+            "Continue?"):
+            return
+        
+        group_filter = self.group_var.get()
+        
+        try:
+            records = self.db_manager.get_all_records(group_filter)
+            exported_count = 0
+            
+            with open(self.filename, 'w', newline='', encoding='utf-8') as file:
+                csv_writer = csv.writer(file)
+                csv_writer.writerow(['site', 'username', 'password', 'group'])
+                
+                for record in records:
+                    # Handle different record lengths for backward compatibility
+                    if len(record) >= 5:
+                        record_id, site, username, encrypted_password, group_name = record[:5]
+                    else:
+                        record_id, site, username, encrypted_password = record[:4]
+                        group_name = None
+                    
+                    try:
+                        password = self.db_manager.decrypt_password(encrypted_password)
+                    except Exception as e:
+                        print(f"Error decrypting record {record_id}: {e}")
+                        continue
+                    
+                    csv_writer.writerow([site, username, password, group_name or ''])
+                    exported_count += 1
+            
+            if exported_count > 0:
+                messagebox.showinfo("Success", f"Successfully exported {exported_count} password(s)!")
+                self.window.destroy()
+            else:
+                messagebox.showwarning("No Data", "No records were found to export.")
+        
+        except Exception as e:
+            messagebox.showerror("Export Error", f"Failed to export passwords: {str(e)}")
 
 
 class ChangeMasterPasswordDialog:
