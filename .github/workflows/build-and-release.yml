@@ -24,8 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, macos-15-intel, ubuntu-22.04] # Swap to ubuntu-22.04 to support more linux versions
-                                                                   # Add to macos-13 to support intel CPUs
+        os: [windows-latest, macos-latest, macos-15-intel, ubuntu-22.04]
 
     steps:
       - name: Check out repository
@@ -49,7 +48,7 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # -------- Windows: build a single .exe --------
+      # Windows: build a single .exe
       - name: Build with PyInstaller (Windows)
         if: runner.os == 'Windows'
         run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} main.py
@@ -61,7 +60,7 @@ jobs:
           mkdir -p out
           cp "dist/${APP_NAME}.exe" "out/${APP_NAME}-windows.exe"
 
-      # -------- macOS: build .app bundle, ship as .tar.gz --------
+      # MacOS: build .app bundle, as .tar.gz 
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'
         run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} main.py
@@ -72,7 +71,7 @@ jobs:
           mkdir -p out
           tar -czf "out/${APP_NAME}-macos-${{ runner.arch }}.tar.gz" -C dist "${APP_NAME}.app"
           
-      # -------- Linux: build onefile binary, wrap as .AppImage --------
+      # Linux: build onefile binary, as .AppImage
       - name: Build with PyInstaller (Linux)
         if: runner.os == 'Linux'
         run: pyinstaller --onefile --name ${{ env.APP_NAME }} main.py
@@ -110,7 +109,7 @@ jobs:
           mkdir -p out
           ./appimagetool-x86_64.AppImage --appimage-extract-and-run "$APPDIR" "out/${APP_NAME}-linux.AppImage"
 
-      # -------- Upload as a workflow artifact (every run) --------
+      # Upload as a workflow
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
