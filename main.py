@@ -1454,10 +1454,16 @@ class PasswordGenerator:
     def __init__(self):
         self.alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
     
-    def generate(self, length: int) -> str:
+    def generate(self, length: int, use_special: bool = True) -> str:
         """Generate a random password of desired length"""
         if length <= 0 or length > 100:
             raise ValueError("Password length must be between 1 and 100")
+
+        if use_special:
+            # self.alphabet = string.punctuation
+            self.alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
+        else:
+            self.alphabet = string.ascii_lowercase + string.ascii_uppercase + string.digits
         
         return ''.join(secrets.choice(self.alphabet) for _ in range(length))
 
@@ -1617,6 +1623,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
                     row=0, column=4, padx=(0, 10))
         ttk.Button(gen_frame, text="Clear", command=self._clear_password).grid(
             row=0, column=5)
+        self.use_special_flag = tk.BooleanVar(value=True)
+        ttk.Checkbutton(gen_frame, text="Use special characters", variable=self.use_special_flag).grid(row=2, column=2, padx=(10, 0))
         
         self.generated_password_var = tk.StringVar()
         self.password_label = ttk.Label(gen_frame, textvariable=self.generated_password_var,
@@ -1721,6 +1729,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="Import Passwords...", command=self._show_import_dialog)
+        file_menu.add_command(label="Export Passwords...", command=self._show_export_dialog)
         file_menu.add_command(label="Change Master Password...", command=self._change_master_password)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.master.quit)
@@ -1794,7 +1803,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         
         # Configure ttk styles
         style = ttk.Style()
-        style.theme_use('clam')  # Use clam theme as base for better customization
+        style.theme_use('clam')
         
         # Frame styles
         style.configure('TFrame', background=theme['bg'])
@@ -1816,6 +1825,12 @@ class MainFrame(ttk.Frame, ThemedWidget):
         style.map('TButton',
                  background=[('active', theme['accent']), ('pressed', theme['accent'])],
                  foreground=[('active', theme['button_fg']), ('pressed', theme['button_fg'])])
+
+        # Checkbutton styles
+        style.configure('TCheckbutton', background=theme['bg'], foreground=theme['fg'])
+        style.map('TCheckbutton',
+                  background=[('active', theme['bg'])],
+                  foreground=[('active', theme['fg'])])
         
         # Combobox styles
         style.configure('TCombobox', fieldbackground=theme['entry_bg'], background=theme['button_bg'],
@@ -1895,7 +1910,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         try:
             length = int(self.length_var.get())
-            password = self.password_generator.generate(length)
+            password = self.password_generator.generate(length, self.use_special_flag.get())
             self.generated_password_var.set(f"Generated: {password}")
             self._current_generated_password = password
         except ValueError:
@@ -2075,6 +2090,11 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         default_group = None if self.current_group == "All" else self.current_group
         ImportDialog(self, self.db_manager, callback=self._on_data_changed, current_group=default_group)
+
+    def _show_export_dialog(self):
+        """Show export window"""
+        self._register_activity()
+        ExportDialog(self, self.db_manager, current_group=self.current_group)
     
     def _change_master_password(self):
         """Change master password"""
@@ -2084,7 +2104,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v2.0.2\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo("About", "RandPyPwGen v2.0.3\nA secure password manager\n\nBy Hayden Hildreth")
     
     def _open_help(self):
         """Open help in browser"""
@@ -3402,6 +3422,139 @@ class ImportDialog:
             messagebox.showerror("Import Error", f"Failed to import passwords: {str(e)}")
 
 
+class ExportDialog:
+    """Dialog for exporting passwords to a CSV file"""
+    def __init__(self, parent, db_manager, current_group="All"):
+        self.db_manager = db_manager
+        self.current_group = current_group if current_group else "All"
+        self.filename = None
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Export Passwords")
+        self.window.geometry("400x300")
+        self.window.resizable(True, True)
+        
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        x = parent_x + 75
+        y = parent_y + 75
+        self.window.geometry(f"400x300+{x}+{y}")
+        
+        self._apply_window_theme()
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+    
+    def _apply_window_theme(self):  
+        """Apply theme colors to the dialog window"""
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        if theme_name in THEMES:
+            theme = THEMES[theme_name]
+            self.window.configure(bg=theme['bg'])
+    
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        main_frame.grid_columnconfigure(0, weight=1)
+        
+        ttk.Label(main_frame, text="Export passwords from group:", font=("Arial", 10, "bold")).grid(
+            row=0, column=0, sticky=tk.W, pady=(0, 5))
+        
+        groups = self.db_manager.get_all_groups()
+        self.group_var = tk.StringVar(value=self.current_group if self.current_group in groups else "All")
+        group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups,
+                                    state='readonly', width=25)
+        group_combo.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        
+        file_frame = ttk.Frame(main_frame)
+        file_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        file_frame.grid_columnconfigure(1, weight=1)
+        
+        ttk.Label(file_frame, text="Save to:").grid(row=0, column=0, sticky=tk.W)
+        self.file_var = tk.StringVar()
+        file_entry = ttk.Entry(file_frame, textvariable=self.file_var, state='readonly', width=20)
+        file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 10))
+        ttk.Button(file_frame, text="Browse", command=self._browse_file).grid(row=0, column=2)
+        
+        warning_label = ttk.Label(
+            main_frame,
+            text=("Warning: the exported file stores passwords in\n"
+                  "plain text, not encrypted. Store it securely and\n"
+                  "delete it when you're done."),
+            font=("Arial", 8), foreground="#B91C1C", justify=tk.LEFT)
+        warning_label.grid(row=3, column=0, sticky=tk.W, pady=(10, 15))
+        
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=4, column=0)
+        
+        self.export_btn = ttk.Button(button_frame, text="Export", command=self._export_passwords, state='disabled')
+        self.export_btn.pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+    
+    def _browse_file(self):
+        """Browse for CSV save location"""
+        filename = filedialog.asksaveasfilename(
+            title="Save CSV File",
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        
+        if filename:
+            self.filename = filename
+            self.file_var.set(filename)
+            self.export_btn.config(state='normal')
+    
+    def _export_passwords(self):
+        """Decrypt and write records to a CSV file"""
+        if not self.filename:
+            messagebox.showerror("Error", "Please choose a file to save to.")
+            return
+        
+        if not messagebox.askyesno(
+            "Confirm Export",
+            "This will write your passwords to a plain text CSV file.\n"
+            "Anyone with access to that file will be able to read them.\n\n"
+            "Continue?"):
+            return
+        
+        group_filter = self.group_var.get()
+        
+        try:
+            records = self.db_manager.get_all_records(group_filter)
+            exported_count = 0
+            
+            with open(self.filename, 'w', newline='', encoding='utf-8') as file:
+                csv_writer = csv.writer(file)
+                csv_writer.writerow(['site', 'username', 'password', 'group'])
+                
+                for record in records:
+                    # Handle different record lengths for backward compatibility
+                    if len(record) >= 5:
+                        record_id, site, username, encrypted_password, group_name = record[:5]
+                    else:
+                        record_id, site, username, encrypted_password = record[:4]
+                        group_name = None
+                    
+                    try:
+                        password = self.db_manager.decrypt_password(encrypted_password)
+                    except Exception as e:
+                        print(f"Error decrypting record {record_id}: {e}")
+                        continue
+                    
+                    csv_writer.writerow([site, username, password, group_name or ''])
+                    exported_count += 1
+            
+            if exported_count > 0:
+                messagebox.showinfo("Success", f"Successfully exported {exported_count} password(s)!")
+                self.window.destroy()
+            else:
+                messagebox.showwarning("No Data", "No records were found to export.")
+        
+        except Exception as e:
+            messagebox.showerror("Export Error", f"Failed to export passwords: {str(e)}")
+
+
 class ChangeMasterPasswordDialog:
     """Dialog for changing master password"""
     
@@ -3479,7 +3632,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v2.0.2")
+        self.root.title("RandPyPwGen v2.0.3")
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -3512,7 +3665,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v2.0.2")
+        self.root.title("RandPyPwGen v2.0.3")
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
