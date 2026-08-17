@@ -1,6 +1,24 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.4] - 08-17-2026
+  
+No database changes.
+
+### Added
+
+None.
+
+### Fixed
+
+README.md; I've made this more concise and separated out the CHANGELOG.md entirely.
+
+Screenshots, these now show the current version. The screenshots don't need to update with every version, but the previous ones were still from v1.0.0 and were out of date.
+
+### Notes
+
+- The only changes were to README.md, besides reflecting the version change in program and other files.
+
 ## [2.0.3] - 08-13-2026
   
 No database changes.
