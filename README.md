@@ -6,13 +6,12 @@
 It is a simple and easy to use password generator/manager that is open-source and made in Python 3 using Tkinter. It is cross-platform, and able to ran on most major Operating Systems. Program screenshots are available below, or you can view the screenshot folder in the repository.
 
 ## Screenshots
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot6.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot1.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot2.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot3.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot4.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot5.png)
-![Screenshot](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/screenshots/old/1.0/screenshot7.png)
+![Screenshot 1](./screenshots/screenshot_1.png)
+![Screenshot 2](./screenshots/screenshot_2.png)
+![Screenshot 3](./screenshots/screenshot_3.png)
+![Screenshot 4](./screenshots/screenshot_4.png)
+![Screenshot 5](./screenshots/screenshot_5.png)
+![Screenshot 6](./screenshots/screenshot_6.png)
 
 ## How to use it?
 ### Windows
