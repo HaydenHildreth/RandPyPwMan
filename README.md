@@ -114,5 +114,14 @@ python main.py
 deactivate
 ```
 
+## Features
+- Password Manager
+- Password Generator
+- Groups
+- Themes
+    - Custom Themes
+- Auto-Lock (Idle Lock)
+- Importing/Exporting of passwords
+
 ## Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for change notes.
