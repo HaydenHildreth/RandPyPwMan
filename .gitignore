@@ -9,3 +9,9 @@ __pycache__/
 instance/
 .env
 /db
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.png binary
+*.ico binary
+*.jpg binary
