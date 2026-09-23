@@ -185,6 +185,7 @@
   "groups.rename_failed": "Failed to rename group: {error}",
   "groups.add_failed": "Failed to add group: {error}",
   "groups.delete_failed": "Failed to delete group: {error}",
+  "groups.all_label": "All Groups",
 
   "autolock.config_title": "Auto-Lock Configuration",
   "autolock.enable_checkbox": "Enable auto-lock",

@@ -185,6 +185,7 @@
   "groups.rename_failed": "Error al renombrar la categoría: {error}",
   "groups.add_failed": "Error al añadir la categoría: {error}",
   "groups.delete_failed": "Error al eliminar la categoría: {error}",
+  "groups.all_label": "Todas las categorías",
 
   "autolock.config_title": "Configuración de bloqueo automático",
   "autolock.enable_checkbox": "Habilitar bloqueo automático",

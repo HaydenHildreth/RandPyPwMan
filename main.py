@@ -1225,7 +1225,7 @@ class DatabaseManager:
             
             group_name = group_name.strip()
             
-            if group_name.lower() == 'all':
+            if is_reserved_group_name(group_name):
                 return False
             
             conn = sqlite3.connect(self.data_db)
@@ -1491,6 +1491,28 @@ def _get_all_themes(db_manager) -> dict:
     merged.update(db_manager.get_custom_themes())
     return merged
 
+
+# Keep 'All' reserved so I can change display name in front-end
+ALL_GROUPS_SENTINEL = "All"
+
+
+def group_display_name(internal_name: str) -> str:
+    """Translate a group name for front-end. Only the ALL_GROUPS_SENTINEL is translated"""
+    if internal_name == ALL_GROUPS_SENTINEL:
+        return t("groups.all_label")
+    return internal_name
+
+
+def group_internal_name(display_name: str) -> str:
+    if display_name == t("groups.all_label"):
+        return ALL_GROUPS_SENTINEL
+    return display_name
+
+
+def is_reserved_group_name(name: str) -> bool:
+    lowered = name.strip().lower()
+    return lowered == ALL_GROUPS_SENTINEL.lower() or lowered == t("groups.all_label").strip().lower()
+
 class LoginFrame(ttk.Frame, ThemedWidget):
     """Frame for master password authentication"""
     
@@ -1648,7 +1670,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         
         ttk.Label(group_frame, text=t("main.group_label")).grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
         
-        self.group_var = tk.StringVar(value="All")
+        self.group_var = tk.StringVar(value=t("groups.all_label"))
         self.group_combo = ttk.Combobox(group_frame, textvariable=self.group_var, state='readonly', width=25)
         self.group_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
         self.group_combo.bind('<<ComboboxSelected>>', lambda e: self._on_group_change())
@@ -1898,16 +1920,16 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _refresh_groups(self):
         """Refresh the list of groups in the dropdown"""
         groups = self.db_manager.get_all_groups()
-        self.group_combo['values'] = groups
+        self.group_combo['values'] = [group_display_name(g) for g in groups]
         
         if self.current_group not in groups:
-            self.current_group = "All"
-            self.group_var.set("All")
+            self.current_group = ALL_GROUPS_SENTINEL
+        self.group_var.set(group_display_name(self.current_group))
     
     def _on_group_change(self):
         """Handle group selection change"""
         self._register_activity()
-        self.current_group = self.group_var.get()
+        self.current_group = group_internal_name(self.group_var.get())
         self._populate_treeview()
     
     def _show_new_group_dialog(self):
@@ -2840,7 +2862,7 @@ class NewGroupDialog:
             messagebox.showerror(t("errors.title"), t("groups.empty_name_error"))
             return
         
-        if group_name.lower() == "all":
+        if is_reserved_group_name(group_name):
             messagebox.showerror(t("errors.title"), t("groups.reserved_name_error"))
             return
 
@@ -3043,7 +3065,7 @@ class RenameGroupDialog:
             messagebox.showerror(t("errors.title"), t("groups.empty_name_error"))
             return
         
-        if new_name.lower() == "all":
+        if is_reserved_group_name(new_name):
             messagebox.showerror(t("errors.title"), t("groups.reserved_name_error"))
             return
 
@@ -3570,8 +3592,10 @@ class ExportDialog:
             row=0, column=0, sticky=tk.W, pady=(0, 5))
         
         groups = self.db_manager.get_all_groups()
-        self.group_var = tk.StringVar(value=self.current_group if self.current_group in groups else "All")
-        group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups,
+        selected_internal = self.current_group if self.current_group in groups else ALL_GROUPS_SENTINEL
+        self.group_var = tk.StringVar(value=group_display_name(selected_internal))
+        group_combo = ttk.Combobox(main_frame, textvariable=self.group_var,
+                                    values=[group_display_name(g) for g in groups],
                                     state='readonly', width=25)
         group_combo.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
         
@@ -3622,7 +3646,7 @@ class ExportDialog:
             t("export.confirm_export_message")):
             return
         
-        group_filter = self.group_var.get()
+        group_filter = group_internal_name(self.group_var.get())
         
         try:
             records = self.db_manager.get_all_records(group_filter)
