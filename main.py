@@ -19,6 +19,8 @@ from datetime import datetime
 import re
 import json
 
+from i18n import t, i18n
+
 
 THEMES = {
     'Light': {
@@ -790,7 +792,7 @@ class DatabaseManager:
                 raise Exception("No encryption key found")
                 
         except Exception as e:
-            messagebox.showerror("Encryption Error", f"Failed to load encryption key: {str(e)}")
+            messagebox.showerror(t("errors.encryption_title"), t("errors.load_key_failed", error=str(e)))
             sys.exit(1)
     
     def _migrate_database(self):
@@ -906,7 +908,7 @@ class DatabaseManager:
             return True
         
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to setup databases: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("errors.setup_failed", error=str(e)))
             return False
     
     def _set_default_settings(self):
@@ -923,6 +925,7 @@ class DatabaseManager:
                 c.execute("INSERT OR IGNORE INTO settings VALUES ('auto_lock_enabled', '1')")
                 c.execute("INSERT OR IGNORE INTO settings VALUES ('auto_lock_minutes', '5')")
                 c.execute("INSERT OR IGNORE INTO settings VALUES ('theme', 'Light')")
+                c.execute("INSERT OR IGNORE INTO settings VALUES ('language', 'en')")
                 conn.commit()
             else:
                 # Existing installation - check for missing settings and add them
@@ -944,6 +947,12 @@ class DatabaseManager:
                 c.execute("SELECT COUNT(*) FROM settings WHERE key='auto_lock_minutes'")
                 if c.fetchone()[0] == 0:
                     c.execute("INSERT INTO settings VALUES ('auto_lock_minutes', '5')")
+                    conn.commit()
+
+                # Check if language setting exists
+                c.execute("SELECT COUNT(*) FROM settings WHERE key='language'")
+                if c.fetchone()[0] == 0:
+                    c.execute("INSERT INTO settings VALUES ('language', 'en')")
                     conn.commit()
             
             conn.close()
@@ -1023,7 +1032,7 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to save custom theme: {e}")
+            messagebox.showerror(t("errors.database_title"), t("errors.save_theme_failed", error=str(e)))
             return False
 
     def delete_custom_theme(self, name: str) -> bool:
@@ -1037,7 +1046,7 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to delete custom theme: {e}")
+            messagebox.showerror(t("errors.database_title"), t("errors.delete_theme_failed", error=str(e)))
             return False
     
     def _has_master_password(self) -> bool:
@@ -1060,7 +1069,7 @@ class DatabaseManager:
                 self.success = False
                 self.password_entry = None
                 self.window = tk.Tk()
-                self.window.title('RandPyPwGen Setup')
+                self.window.title(t('app.setup_title'))
                 self.window.geometry('400x200')
                 self.window.resizable(True, True)
                 
@@ -1076,11 +1085,11 @@ class DatabaseManager:
                 main_frame = tk.Frame(self.window, padx=20, pady=20)
                 main_frame.pack(fill=tk.BOTH, expand=True)
                 
-                title_label = tk.Label(main_frame, text="Welcome to RandPyPwGen Setup", 
+                title_label = tk.Label(main_frame, text=t("setup.welcome"), 
                                      font=("Arial", 12, "bold"))
                 title_label.pack(pady=(0, 20))
                 
-                instruction_label = tk.Label(main_frame, text="Enter master password:")
+                instruction_label = tk.Label(main_frame, text=t("setup.enter_password"))
                 instruction_label.pack(pady=(0, 10))
                 
                 self.password_entry = tk.Entry(main_frame, show='*', width=30, font=("Arial", 10))
@@ -1090,11 +1099,11 @@ class DatabaseManager:
                 button_frame = tk.Frame(main_frame)
                 button_frame.pack()
                 
-                setup_btn = tk.Button(button_frame, text="Setup", command=self._setup_password,
+                setup_btn = tk.Button(button_frame, text=t("setup.setup_button"), command=self._setup_password,
                                     font=("Arial", 10), padx=20)
                 setup_btn.pack(side=tk.LEFT, padx=(0, 10))
                 
-                exit_btn = tk.Button(button_frame, text="Exit", command=self._on_close,
+                exit_btn = tk.Button(button_frame, text=t("common.exit"), command=self._on_close,
                                    font=("Arial", 10), padx=20)
                 exit_btn.pack(side=tk.LEFT)
                 
@@ -1103,26 +1112,26 @@ class DatabaseManager:
             
             def _setup_password(self):
                 if self.password_entry is None:
-                    messagebox.showerror("Error", "Internal error: password entry not found")
+                    messagebox.showerror(t("errors.title"), "Internal error: password entry not found")
                     return
                 
                 try:
                     password = self.password_entry.get()
                     
                     if not password:
-                        messagebox.showerror("Error", "Password cannot be empty!")
+                        messagebox.showerror(t("errors.title"), t("setup.empty_password_error"))
                         self.password_entry.focus_set()
                         return
                     
                     password = password.strip()
                     
                     if not password:
-                        messagebox.showerror("Error", "Password cannot be empty!")
+                        messagebox.showerror(t("errors.title"), t("setup.empty_password_error"))
                         self.password_entry.focus_set()
                         return
                     
                     if len(password) < 4:
-                        messagebox.showerror("Error", "Password must be at least 4 characters long!")
+                        messagebox.showerror(t("errors.title"), t("setup.password_too_short"))
                         self.password_entry.focus_set()
                         return
                     
@@ -1136,13 +1145,13 @@ class DatabaseManager:
                     conn.commit()
                     conn.close()
                     
-                    messagebox.showinfo("Success", "Master password set successfully!")
+                    messagebox.showinfo(t("common.success_title"), t("setup.password_set_success"))
                     self.success = True
                     self.window.quit()
                     self.window.destroy()
                     
                 except Exception as e:
-                    messagebox.showerror("Error", f"Failed to set master password: {str(e)}")
+                    messagebox.showerror(t("errors.title"), t("setup.set_password_failed", error=str(e)))
             
             def _on_close(self):
                 self.window.quit()
@@ -1169,7 +1178,7 @@ class DatabaseManager:
             return False
             
         except Exception as e:
-            messagebox.showerror("Authentication Error", f"Failed to verify password: {str(e)}")
+            messagebox.showerror(t("errors.authentication_title"), t("errors.verify_password_failed", error=str(e)))
             return False
     
     def get_all_records(self, group_filter: str = "All") -> List[Tuple]:
@@ -1187,7 +1196,7 @@ class DatabaseManager:
             conn.close()
             return records
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to retrieve records: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("errors.retrieve_records_failed", error=str(e)))
             return []
     
     def get_all_groups(self) -> List[str]:
@@ -1229,7 +1238,7 @@ class DatabaseManager:
             # Group already exists
             return False
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to add group: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("groups.add_failed", error=str(e)))
             return False
     
     def delete_group(self, group_name: str) -> bool:
@@ -1248,7 +1257,7 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to delete group: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("groups.delete_failed", error=str(e)))
             return False
     
     def rename_group(self, old_name: str, new_name: str) -> bool:
@@ -1273,10 +1282,10 @@ class DatabaseManager:
             conn.close()
             return True
         except sqlite3.IntegrityError:
-            messagebox.showerror("Error", f"Group '{new_name}' already exists!")
+            messagebox.showerror(t("errors.title"), t("groups.rename_exists_error", name=new_name))
             return False
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to rename group: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("groups.rename_failed", error=str(e)))
             return False
     
     def search_records(self, search_term: str, group_filter: str = "All") -> List[Tuple]:
@@ -1296,7 +1305,7 @@ class DatabaseManager:
             conn.close()
             return records
         except Exception as e:
-            messagebox.showerror("Search Error", f"Failed to search records: {str(e)}")
+            messagebox.showerror(t("errors.search_title"), t("errors.search_failed", error=str(e)))
             return []
     
     def add_record(self, site: str, username: str, password: str, group_name: Optional[str] = None) -> Optional[int]:
@@ -1332,7 +1341,7 @@ class DatabaseManager:
             conn.close()
             return record_id
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to add record: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("record.add_failed", error=str(e)))
             return None
 
     def update_record(self, record_id: int, site: str, username: str, password: str, group_name: Optional[str] = None) -> bool:
@@ -1367,7 +1376,7 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to update record: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("record.update_failed", error=str(e)))
             return False
     
     def get_record_by_id(self, record_id: int) -> Optional[Tuple]:
@@ -1380,7 +1389,7 @@ class DatabaseManager:
             conn.close()
             return record
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to retrieve record: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("record.retrieve_failed", error=str(e)))
             return None
     
     def delete_record(self, record_id: int) -> bool:
@@ -1393,7 +1402,7 @@ class DatabaseManager:
             conn.close()
             return True
         except Exception as e:
-            messagebox.showerror("Database Error", f"Failed to delete record: {str(e)}")
+            messagebox.showerror(t("errors.database_title"), t("record.delete_failed", error=str(e)))
             return False
     
     def decrypt_password(self, encrypted_password: bytes) -> str:
@@ -1444,7 +1453,7 @@ class DatabaseManager:
             
             return True
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to change master password: {str(e)}")
+            messagebox.showerror(t("errors.title"), t("master_password.change_failed", error=str(e)))
             return False
 
 
@@ -1496,10 +1505,10 @@ class LoginFrame(ttk.Frame, ThemedWidget):
             self.grid_columnconfigure(0, weight=1)
             self.grid_columnconfigure(1, weight=1)
             
-            self.title_label = ttk.Label(self, text="RandPyPwGen", font=("Arial", 16, "bold"))
+            self.title_label = ttk.Label(self, text=t("login.title"), font=("Arial", 16, "bold"))
             self.title_label.grid(row=0, column=0, columnspan=2, pady=(0, 20))
             
-            self.password_label = ttk.Label(self, text="Master Password:")
+            self.password_label = ttk.Label(self, text=t("login.master_password_label"))
             self.password_label.grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=5)
             
             self.password_var = tk.StringVar()
@@ -1510,8 +1519,8 @@ class LoginFrame(ttk.Frame, ThemedWidget):
             button_frame = ttk.Frame(self)
             button_frame.grid(row=3, column=0, columnspan=2, pady=(20, 0))
             
-            ttk.Button(button_frame, text="Unlock", command=self._authenticate).pack(side=tk.LEFT, padx=(0, 10))
-            ttk.Button(button_frame, text="Exit", command=self.quit).pack(side=tk.LEFT)
+            ttk.Button(button_frame, text=t("login.unlock_button"), command=self._authenticate).pack(side=tk.LEFT, padx=(0, 10))
+            ttk.Button(button_frame, text=t("common.exit"), command=self.quit).pack(side=tk.LEFT)
             
             self.password_entry.bind('<Return>', lambda e: self._authenticate())
     
@@ -1520,7 +1529,7 @@ class LoginFrame(ttk.Frame, ThemedWidget):
         if self.db_manager.verify_master_password(password):
             self.on_success_callback()
         else:
-            messagebox.showerror("Authentication Failed", "Incorrect master password.")
+            messagebox.showerror(t("login.auth_failed_title"), t("login.auth_failed_message"))
             self.password_var.set("")
             self.password_entry.focus()
     
@@ -1605,26 +1614,26 @@ class MainFrame(ttk.Frame, ThemedWidget):
     
     def _create_password_generation_section(self):
         """Create password generation section. This is the top frame"""
-        gen_frame = ttk.LabelFrame(self, text="Password Generation", padding="10")
+        gen_frame = ttk.LabelFrame(self, text=t("main.password_gen_title"), padding="10")
         gen_frame.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
         gen_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(gen_frame, text="Password Length:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        ttk.Label(gen_frame, text=t("main.password_length_label")).grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
         
         self.length_var = tk.StringVar()
         length_entry = ttk.Entry(gen_frame, textvariable=self.length_var, width=10)
         length_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 10))
         
-        ttk.Button(gen_frame, text="Generate", command=self._generate_password).grid(
+        ttk.Button(gen_frame, text=t("main.generate_button"), command=self._generate_password).grid(
             row=0, column=2, padx=(0, 10))
-        ttk.Button(gen_frame, text="Add to DB", command=self._show_add_dialog).grid(
+        ttk.Button(gen_frame, text=t("main.add_to_db_button"), command=self._show_add_dialog).grid(
             row=0, column=3, padx=(0, 10))
-        ttk.Button(gen_frame, text="Copy", command=self._copy_generated_password).grid(
+        ttk.Button(gen_frame, text=t("common.copy"), command=self._copy_generated_password).grid(
                     row=0, column=4, padx=(0, 10))
-        ttk.Button(gen_frame, text="Clear", command=self._clear_password).grid(
+        ttk.Button(gen_frame, text=t("common.clear"), command=self._clear_password).grid(
             row=0, column=5)
         self.use_special_flag = tk.BooleanVar(value=True)
-        ttk.Checkbutton(gen_frame, text="Use special characters", variable=self.use_special_flag).grid(row=2, column=2, padx=(10, 0))
+        ttk.Checkbutton(gen_frame, text=t("main.use_special_chars"), variable=self.use_special_flag).grid(row=2, column=2, padx=(10, 0))
         
         self.generated_password_var = tk.StringVar()
         self.password_label = ttk.Label(gen_frame, textvariable=self.generated_password_var,
@@ -1633,37 +1642,37 @@ class MainFrame(ttk.Frame, ThemedWidget):
     
     def _create_group_filter_section(self):
         """Create group filter section. This is the second frame from top, below password generation"""
-        group_frame = ttk.LabelFrame(self, text="Group Filter", padding="10")
+        group_frame = ttk.LabelFrame(self, text=t("main.group_filter_title"), padding="10")
         group_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
         group_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(group_frame, text="Group:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        ttk.Label(group_frame, text=t("main.group_label")).grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
         
         self.group_var = tk.StringVar(value="All")
         self.group_combo = ttk.Combobox(group_frame, textvariable=self.group_var, state='readonly', width=25)
         self.group_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
         self.group_combo.bind('<<ComboboxSelected>>', lambda e: self._on_group_change())
         
-        ttk.Button(group_frame, text="New Group", command=self._show_new_group_dialog).grid(row=0, column=2, padx=(0, 5))
-        ttk.Button(group_frame, text="Manage Groups", command=self._show_manage_groups_dialog).grid(row=0, column=3)
+        ttk.Button(group_frame, text=t("groups.new_group_button"), command=self._show_new_group_dialog).grid(row=0, column=2, padx=(0, 5))
+        ttk.Button(group_frame, text=t("groups.manage_groups_button"), command=self._show_manage_groups_dialog).grid(row=0, column=3)
         
         self._refresh_groups()
     
     def _create_search_section(self):
         """Create search section. This is the third frame from top, and is below group filter"""
-        search_frame = ttk.LabelFrame(self, text="Search", padding="10")
+        search_frame = ttk.LabelFrame(self, text=t("main.search_title"), padding="10")
         search_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
         search_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(search_frame, text="Search:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        ttk.Label(search_frame, text=t("main.search_label")).grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
         
         self.search_var = tk.StringVar()
         search_entry = ttk.Entry(search_frame, textvariable=self.search_var)
         search_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(0, 10))
         search_entry.bind('<Return>', lambda e: self._search())
         
-        ttk.Button(search_frame, text="Search", command=self._search).grid(row=0, column=2, padx=(0, 10))
-        ttk.Button(search_frame, text="Clear", command=self._clear_search).grid(row=0, column=3)
+        ttk.Button(search_frame, text=t("common.search"), command=self._search).grid(row=0, column=2, padx=(0, 10))
+        ttk.Button(search_frame, text=t("common.clear"), command=self._clear_search).grid(row=0, column=3)
     
     def _create_treeview_section(self):
         """Create treeview section and its scrollbar. This is the fourth from the top. This is below search"""
@@ -1675,11 +1684,11 @@ class MainFrame(ttk.Frame, ThemedWidget):
         columns = ('ID', 'Site', 'Username', 'Password', 'Group')
         self.tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
         
-        self.tree.heading('ID', text='ID')
-        self.tree.heading('Site', text='Site Name')
-        self.tree.heading('Username', text='Username')
-        self.tree.heading('Password', text='Password')
-        self.tree.heading('Group', text='Group')
+        self.tree.heading('ID', text=t("main.column_id"))
+        self.tree.heading('Site', text=t("main.column_site"))
+        self.tree.heading('Username', text=t("main.column_username"))
+        self.tree.heading('Password', text=t("main.column_password"))
+        self.tree.heading('Group', text=t("main.column_group"))
         
         self.tree.column('ID', width=50, minwidth=50)
         self.tree.column('Site', width=200, minwidth=100)
@@ -1709,11 +1718,11 @@ class MainFrame(ttk.Frame, ThemedWidget):
         button_frame.grid(row=4, column=0, columnspan=4, sticky=(tk.W, tk.E))
         
         buttons = [
-            ("Add", self._show_add_dialog),
-            ("Edit", self._show_edit_dialog),
-            ("Delete", self._delete_selected),
-            ("Copy Password", self._copy_password),
-            ("Toggle Visibility", self._toggle_password_visibility)
+            (t("common.add"), self._show_add_dialog),
+            (t("common.edit"), self._show_edit_dialog),
+            (t("common.delete"), self._delete_selected),
+            (t("main.copy_password_button"), self._copy_password),
+            (t("main.toggle_visibility_button"), self._toggle_password_visibility)
         ]
         
         for i, (text, command) in enumerate(buttons):
@@ -1727,22 +1736,23 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self.master.config(menu=menubar)
         
         file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Import Passwords...", command=self._show_import_dialog)
-        file_menu.add_command(label="Export Passwords...", command=self._show_export_dialog)
-        file_menu.add_command(label="Change Master Password...", command=self._change_master_password)
+        menubar.add_cascade(label=t("menu.file"), menu=file_menu)
+        file_menu.add_command(label=t("menu.import_passwords"), command=self._show_import_dialog)
+        file_menu.add_command(label=t("menu.export_passwords"), command=self._show_export_dialog)
+        file_menu.add_command(label=t("menu.change_master_password"), command=self._change_master_password)
         file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.master.quit)
+        file_menu.add_command(label=t("common.exit"), command=self.master.quit)
         
         options_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Options", menu=options_menu)
-        options_menu.add_command(label="Auto-Lock Settings...", command=self._show_autolock_settings)
-        options_menu.add_command(label="Theme Settings...", command=self._show_theme_settings)
+        menubar.add_cascade(label=t("menu.options"), menu=options_menu)
+        options_menu.add_command(label=t("menu.autolock_settings"), command=self._show_autolock_settings)
+        options_menu.add_command(label=t("menu.theme_settings"), command=self._show_theme_settings)
+        options_menu.add_command(label=t("menu.language_settings"), command=self._show_language_settings)
         
         help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="About", command=self._show_about)
-        help_menu.add_command(label="Help", command=self._open_help)
+        menubar.add_cascade(label=t("menu.help"), menu=help_menu)
+        help_menu.add_command(label=t("menu.about"), command=self._show_about)
+        help_menu.add_command(label=t("menu.help_item"), command=self._open_help)
     
     def _start_activity_monitoring(self):
         """Begin to monitor activity"""
@@ -1788,6 +1798,11 @@ class MainFrame(ttk.Frame, ThemedWidget):
         """Show theme settings"""
         self._register_activity()
         ThemeSettingsDialog(self, self.db_manager, self._apply_current_theme)
+
+    def _show_language_settings(self):
+        """Show language settings"""
+        self._register_activity()
+        LanguageSettingsDialog(self, self.db_manager, self.lock_callback)
     
     def _apply_current_theme(self):
         """Apply the saved theme"""
@@ -1911,22 +1926,22 @@ class MainFrame(ttk.Frame, ThemedWidget):
         try:
             length = int(self.length_var.get())
             password = self.password_generator.generate(length, self.use_special_flag.get())
-            self.generated_password_var.set(f"Generated: {password}")
+            self.generated_password_var.set(f"{t('main.generated_label')}: {password}")
             self._current_generated_password = password
         except ValueError:
-            messagebox.showerror("Invalid Input", "Please enter a valid password length.")
+            messagebox.showerror(t("errors.invalid_input_title"), t("main.invalid_length_message"))
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to generate password: {str(e)}")
+            messagebox.showerror(t("errors.title"), t("main.generate_failed", error=str(e)))
 
     def _copy_generated_password(self):
         """Copy the currently generated password to clipboard"""
         self._register_activity()
         password = getattr(self, '_current_generated_password', '')
         if not password:
-            messagebox.showwarning("No Password", "Please generate a password first.")
+            messagebox.showwarning(t("main.no_password_title"), t("main.no_password_message"))
             return
         pyperclip.copy(password)
-        messagebox.showinfo("Copied", "Password copied to clipboard!")
+        messagebox.showinfo(t("common.copied_title"), t("main.password_copied_message"))
     
     def _clear_password(self):
         """Clear generated password"""
@@ -1947,7 +1962,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select a record to edit.")
+            messagebox.showwarning(t("errors.no_selection_title"), t("main.select_edit_error"))
             return
         
         item = self.tree.item(selection[0])
@@ -1958,7 +1973,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         full_record = self.db_manager.get_record_by_id(record_id)
         
         if not full_record:
-            messagebox.showerror("Error", "Failed to retrieve record details.")
+            messagebox.showerror(t("errors.title"), t("record.retrieve_details_failed"))
             return
         
         # Extract data from full record
@@ -1987,12 +2002,12 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select record(s) to delete.")
+            messagebox.showwarning(t("errors.no_selection_title"), t("main.select_delete_error"))
             return
         
         count = len(selection)
-        message = f"Are you sure you want to delete {count} record(s)?"
-        if not messagebox.askyesno("Confirm Deletion", message):
+        message = t("main.confirm_delete_message", count=count)
+        if not messagebox.askyesno(t("common.confirm_deletion_title"), message):
             return
         
         for item in selection:
@@ -2010,7 +2025,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         selection = self.tree.selection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select a record to copy password.")
+            messagebox.showwarning(t("errors.no_selection_title"), t("main.select_copy_error"))
             return
         
         item = self.tree.item(selection[0])
@@ -2023,7 +2038,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
             password = values[3]
         
         pyperclip.copy(password)
-        messagebox.showinfo("Copied", "Password copied to clipboard!")
+        messagebox.showinfo(t("common.copied_title"), t("main.password_copied_message"))
     
     def _toggle_password_visibility(self):
         """Toggle password visibility in treeview"""
@@ -2104,7 +2119,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
     def _show_about(self):
         """Show about window"""
         self._register_activity()
-        messagebox.showinfo("About", "RandPyPwGen v2.0.4\nA secure password manager\n\nBy Hayden Hildreth")
+        messagebox.showinfo(t("menu.about"), f"{t('app.title_versioned')}\n{t('about.tagline')}\n\n{t('about.credit', author='Hayden Hildreth')}")
     
     def _open_help(self):
         """Open help in browser"""
@@ -2118,7 +2133,7 @@ class ThemeSettingsDialog:
         self.theme_callback = theme_callback
 
         self.window = tk.Toplevel(parent)
-        self.window.title("Theme Settings")
+        self.window.title(t("menu.theme_settings").rstrip('.'))
         self.window.geometry("450x600")
         self.window.resizable(True, True)
         self.window.minsize(400, 520)
@@ -2152,10 +2167,10 @@ class ThemeSettingsDialog:
         main_frame.grid_rowconfigure(2, weight=1)
         main_frame.grid_columnconfigure(0, weight=1)
 
-        ttk.Label(main_frame, text="Theme Configuration",
+        ttk.Label(main_frame, text=t("theme.config_title"),
                   font=("Arial", 11, "bold")).grid(row=0, column=0, pady=(0, 20), sticky=tk.W)
 
-        ttk.Label(main_frame, text="Select Theme:",
+        ttk.Label(main_frame, text=t("theme.select_label"),
                   font=("Arial", 10)).grid(row=1, column=0, sticky=tk.W, pady=(0, 10))
 
         current_theme = self.db_manager.get_setting('theme', 'Light')
@@ -2178,10 +2193,10 @@ class ThemeSettingsDialog:
         self.theme_listbox.bind('<<ListboxSelect>>', self._on_theme_select)
         self.theme_listbox.bind('<Double-Button-1>', lambda e: self._apply_theme())
 
-        preview_frame = ttk.LabelFrame(main_frame, text="Preview", padding="10")
+        preview_frame = ttk.LabelFrame(main_frame, text=t("theme.preview_title"), padding="10")
         preview_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
 
-        self.preview_label = ttk.Label(preview_frame, text="Preview colors will appear here")
+        self.preview_label = ttk.Label(preview_frame, text=t("theme.preview_placeholder"))
         self.preview_label.pack()
 
         self.preview_canvas = tk.Canvas(preview_frame, width=356, height=65)
@@ -2192,17 +2207,17 @@ class ThemeSettingsDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=4, column=0, pady=(0, 0))
 
-        ttk.Button(button_frame, text="Apply",
+        ttk.Button(button_frame, text=t("common.apply"),
                    command=self._apply_theme).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(button_frame, text="New Custom Theme",
+        ttk.Button(button_frame, text=t("theme.new_custom_button"),
                    command=self._open_creator).pack(side=tk.LEFT, padx=(0, 5))
-        self.edit_btn = ttk.Button(button_frame, text="Edit",
+        self.edit_btn = ttk.Button(button_frame, text=t("common.edit"),
                                    command=self._edit_custom_theme)
         self.edit_btn.pack(side=tk.LEFT, padx=(0, 5))
-        self.delete_btn = ttk.Button(button_frame, text="Delete",
+        self.delete_btn = ttk.Button(button_frame, text=t("common.delete"),
                                      command=self._delete_custom_theme)
         self.delete_btn.pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(button_frame, text="Cancel",
+        ttk.Button(button_frame, text=t("common.cancel"),
                    command=self.window.destroy).pack(side=tk.LEFT)
 
         self._update_button_states()
@@ -2252,11 +2267,11 @@ class ThemeSettingsDialog:
         self.preview_canvas.delete('all')
         x_start, y, width, height = 10, 10, 60, 40
         colors = [
-            ('BG',     theme['bg']),
-            ('Text',   theme['fg']),
-            ('Accent', theme['accent']),
-            ('Button', theme['button_bg']),
-            ('Entry',  theme['entry_bg']),
+            (t('common.color_bg'),     theme['bg']),
+            (t('common.color_text'),   theme['fg']),
+            (t('common.color_accent'), theme['accent']),
+            (t('common.color_button'), theme['button_bg']),
+            (t('common.color_entry'),  theme['entry_bg']),
         ]
         for i, (label, color) in enumerate(colors):
             x = x_start + i * (width + 10)
@@ -2268,11 +2283,11 @@ class ThemeSettingsDialog:
     def _apply_theme(self):
         theme_name = self._selected_theme_name()
         if self.db_manager.set_setting('theme', theme_name):
-            messagebox.showinfo("Success", f"Theme '{theme_name}' applied successfully!")
+            messagebox.showinfo(t("common.success_title"), t("theme.applied_success", name=theme_name))
             self.theme_callback()
             self.window.destroy()
         else:
-            messagebox.showerror("Error", "Failed to save theme setting.")
+            messagebox.showerror(t("errors.title"), t("theme.save_setting_failed"))
 
     def _open_creator(self, existing_name=None, existing_colors=None):
         self.window.grab_release()
@@ -2289,7 +2304,7 @@ class ThemeSettingsDialog:
         name = self._selected_theme_name()
         custom = self.db_manager.get_custom_themes()
         if name not in custom:
-            messagebox.showwarning("Not Editable", "Only custom themes can be edited.")
+            messagebox.showwarning(t("theme.not_editable_title"), t("theme.not_editable_message"))
             return
         self._open_creator(existing_name=name, existing_colors=custom[name])
 
@@ -2297,57 +2312,21 @@ class ThemeSettingsDialog:
         name = self._selected_theme_name()
         custom = self.db_manager.get_custom_themes()
         if name not in custom:
-            messagebox.showwarning("Not Deletable", "Only custom themes can be deleted.")
+            messagebox.showwarning(t("theme.not_deletable_title"), t("theme.not_deletable_message"))
             return
-        if not messagebox.askyesno("Confirm Delete", f"Delete custom theme '{name}'?"):
+        if not messagebox.askyesno(t("common.confirm_delete_title"), t("theme.confirm_delete_message", name=name)):
             return
         if self.db_manager.delete_custom_theme(name):
             if self.db_manager.get_setting('theme') == name:
                 self.db_manager.set_setting('theme', 'Light')
                 self.theme_callback()
-            messagebox.showinfo("Deleted", f"Theme '{name}' deleted.")
+            messagebox.showinfo(t("theme.deleted_title"), t("theme.deleted_message", name=name))
             self._populate_listbox(select_name='Light')
             self._preview_theme()
             self._update_button_states()
 
 class CustomThemeCreatorDialog:
     """Dialog for creating or editing a custom theme via color pickers"""
-
-    COLOR_KEYS = [
-        ('bg',           'Background'),
-        ('fg',           'Foreground (text)'),
-        ('accent',       'Accent'),
-        ('button_bg',    'Button Background'),
-        ('button_fg',    'Button Text'),
-        ('entry_bg',     'Entry Background'),
-        ('entry_fg',     'Entry Text'),
-        ('active_bg',    'Active / Hover Background'),
-        ('active_fg',    'Active / Hover Text'),
-        ('tree_bg',      'Treeview Background'),
-        ('tree_fg',      'Treeview Text'),
-        ('tree_sel_bg',  'Treeview Selected Background'),
-        ('tree_sel_fg',  'Treeview Selected Text'),
-        ('menu_bg',      'Menu Background'),
-        ('menu_fg',      'Menu Text'),
-    ]
-
-    DEFAULTS = {
-        'bg':          '#FFFFFF',
-        'fg':          '#1F2937',
-        'accent':      '#2563EB',
-        'button_bg':   '#F3F4F6',
-        'button_fg':   '#1F2937',
-        'entry_bg':    '#FFFFFF',
-        'entry_fg':    '#1F2937',
-        'active_bg':   '#E5E7EB',
-        'active_fg':   '#111827',
-        'tree_bg':     '#FFFFFF',
-        'tree_fg':     '#111827',
-        'tree_sel_bg': '#2563EB',
-        'tree_sel_fg': '#FFFFFF',
-        'menu_bg':     '#FFFFFF',
-        'menu_fg':     '#111827',
-    }
 
     def __init__(self, parent, db_manager, on_saved_callback,
                  existing_name=None, existing_colors=None):
@@ -2358,8 +2337,44 @@ class CustomThemeCreatorDialog:
         self._preview_previous_theme = None
         self._preview_btn_ref = None
 
+        self.COLOR_KEYS = [
+            ('bg',           t('theme_creator.color_bg')),
+            ('fg',           t('theme_creator.color_fg')),
+            ('accent',       t('theme_creator.color_accent')),
+            ('button_bg',    t('theme_creator.color_button_bg')),
+            ('button_fg',    t('theme_creator.color_button_fg')),
+            ('entry_bg',     t('theme_creator.color_entry_bg')),
+            ('entry_fg',     t('theme_creator.color_entry_fg')),
+            ('active_bg',    t('theme_creator.color_active_bg')),
+            ('active_fg',    t('theme_creator.color_active_fg')),
+            ('tree_bg',      t('theme_creator.color_tree_bg')),
+            ('tree_fg',      t('theme_creator.color_tree_fg')),
+            ('tree_sel_bg',  t('theme_creator.color_tree_sel_bg')),
+            ('tree_sel_fg',  t('theme_creator.color_tree_sel_fg')),
+            ('menu_bg',      t('theme_creator.color_menu_bg')),
+            ('menu_fg',      t('theme_creator.color_menu_fg')),
+        ]
+
+        self.DEFAULTS = {
+            'bg':          '#FFFFFF',
+            'fg':          '#1F2937',
+            'accent':      '#2563EB',
+            'button_bg':   '#F3F4F6',
+            'button_fg':   '#1F2937',
+            'entry_bg':    '#FFFFFF',
+            'entry_fg':    '#1F2937',
+            'active_bg':   '#E5E7EB',
+            'active_fg':   '#111827',
+            'tree_bg':     '#FFFFFF',
+            'tree_fg':     '#111827',
+            'tree_sel_bg': '#2563EB',
+            'tree_sel_fg': '#FFFFFF',
+            'menu_bg':     '#FFFFFF',
+            'menu_fg':     '#111827',
+        }
+
         self.window = tk.Toplevel(parent)
-        self.window.title("Edit Custom Theme" if existing_name else "Create Custom Theme")
+        self.window.title(t("theme_creator.edit_title") if existing_name else t("theme_creator.create_title"))
         self.window.geometry("560x620")
         self.window.resizable(True, True)
         self.window.minsize(480, 560)
@@ -2397,7 +2412,7 @@ class CustomThemeCreatorDialog:
         name_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 12))
         name_frame.grid_columnconfigure(1, weight=1)
 
-        ttk.Label(name_frame, text="Theme Name:",
+        ttk.Label(name_frame, text=t("theme_creator.name_label"),
                   font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
         self.name_var = tk.StringVar(value=initial_name)
         name_entry = ttk.Entry(name_frame, textvariable=self.name_var)
@@ -2460,7 +2475,7 @@ class CustomThemeCreatorDialog:
         bottom.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(12, 0))
         bottom.grid_columnconfigure(0, weight=1)
 
-        preview_frame = ttk.LabelFrame(bottom, text="Preview", padding="8")
+        preview_frame = ttk.LabelFrame(bottom, text=t("theme.preview_title"), padding="8")
         preview_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
         self.preview_canvas = tk.Canvas(preview_frame, height=80)
         self.preview_canvas.bind('<Configure>', lambda e: self._draw_preview())
@@ -2469,22 +2484,22 @@ class CustomThemeCreatorDialog:
 
         btn_frame = ttk.Frame(bottom)
         btn_frame.grid(row=1, column=0)
-        self._preview_btn_ref = ttk.Button(btn_frame, text="Preview in App",
+        self._preview_btn_ref = ttk.Button(btn_frame, text=t("theme_creator.preview_in_app_button"),
                    command=self._preview_in_app)
         self._preview_btn_ref.pack(side=tk.LEFT, padx=(0, 8))
-        ttk.Button(btn_frame, text="Save Theme",
+        ttk.Button(btn_frame, text=t("theme_creator.save_theme_button"),
                    command=self._save).pack(side=tk.LEFT, padx=(0, 8))
-        ttk.Button(btn_frame, text="Cancel",
+        ttk.Button(btn_frame, text=t("common.cancel"),
                    command=self._close).pack(side=tk.LEFT)
 
     def _pick_color(self, key: str):
         current = self.color_vars[key].get()
         try:
             result = colorchooser.askcolor(color=current,
-                                           title=f"Choose color — {key}",
+                                           title=f"{t('theme_creator.choose_color_title')} — {key}",
                                            parent=self.window)
         except Exception:
-            result = colorchooser.askcolor(title=f"Choose color — {key}",
+            result = colorchooser.askcolor(title=f"{t('theme_creator.choose_color_title')} — {key}",
                                            parent=self.window)
         if result and result[1]:
             hex_color = result[1].upper()
@@ -2521,11 +2536,11 @@ class CustomThemeCreatorDialog:
             return
 
         swatches = [
-            ('BG',     colors['bg']),
-            ('Text',   colors['fg']),
-            ('Accent', colors['accent']),
-            ('Button', colors['button_bg']),
-            ('Entry',  colors['entry_bg']),
+            (t('common.color_bg'),     colors['bg']),
+            (t('common.color_text'),   colors['fg']),
+            (t('common.color_accent'), colors['accent']),
+            (t('common.color_button'), colors['button_bg']),
+            (t('common.color_entry'),  colors['entry_bg']),
         ]
         n = len(swatches)
         margin = 8
@@ -2552,24 +2567,24 @@ class CustomThemeCreatorDialog:
     def _save(self):
         name = self.name_var.get().strip()
         if not name:
-            messagebox.showerror("Validation", "Theme name cannot be empty.",
+            messagebox.showerror(t("errors.validation_title"), t("theme_creator.empty_name_error"),
                                  parent=self.window)
             return
         if name.lower() == 'all':
-            messagebox.showerror("Validation", "'All' is a reserved name.",
+            messagebox.showerror(t("errors.validation_title"), t("theme_creator.reserved_name_error"),
                                  parent=self.window)
             return
         if name in THEMES:
-            messagebox.showerror("Validation",
-                f"A built-in theme named '{name}' already exists. Choose a different name.",
+            messagebox.showerror(t("errors.validation_title"),
+                t("theme_creator.builtin_exists_error", name=name),
                 parent=self.window)
             return
 
         colors = self._current_colors()
         for key, val in colors.items():
             if not re.match(r'^#[0-9A-Fa-f]{6}$', val):
-                messagebox.showerror("Validation",
-                    f"Invalid color for '{key}': {val}\nMust be a 6-digit hex code like #AABBCC.",
+                messagebox.showerror(t("errors.validation_title"),
+                    t("theme_creator.invalid_color_error", key=key, val=val),
                     parent=self.window)
                 return
 
@@ -2577,7 +2592,7 @@ class CustomThemeCreatorDialog:
             self.db_manager.delete_custom_theme(self.existing_name)
 
         if self.db_manager.save_custom_theme(name, colors):
-            messagebox.showinfo("Saved", f"Custom theme '{name}' saved!",
+            messagebox.showinfo(t("theme_creator.saved_title"), t("theme_creator.saved_message", name=name),
                                 parent=self.window)
             self.on_saved_callback(name)
             self._close()
@@ -2600,9 +2615,8 @@ class CustomThemeCreatorDialog:
         for key, val in colors.items():
             if not re.match(r'^#[0-9A-Fa-f]{6}$', val):
                 messagebox.showwarning(
-                    "Invalid Color",
-                    f"Cannot preview — invalid color for '{key}': {val}\n"
-                    "Must be a 6-digit hex code like #AABBCC.",
+                    t("theme_creator.invalid_color_title"),
+                    t("theme_creator.invalid_color_preview_error", key=key, val=val),
                     parent=self.window)
                 return
 
@@ -2631,9 +2645,8 @@ class CustomThemeCreatorDialog:
                 break
 
         messagebox.showinfo(
-            "Preview Active",
-            "You are now previewing this theme on the main window.\n"
-            "Click 'Revert Preview' to go back to your previous theme.",
+            t("theme_creator.preview_active_title"),
+            t("theme_creator.preview_active_message"),
             parent=self.window)
 
         # Change button
@@ -2663,11 +2676,107 @@ class CustomThemeCreatorDialog:
         if not hasattr(self, '_preview_btn_ref'):
             return
         if reverting:
-            self._preview_btn_ref.config(text="Revert Preview",
+            self._preview_btn_ref.config(text=t("theme_creator.revert_preview_button"),
                                         command=self._revert_preview)
         else:
-            self._preview_btn_ref.config(text="Preview in App",
+            self._preview_btn_ref.config(text=t("theme_creator.preview_in_app_button"),
                                         command=self._preview_in_app)
+
+
+def _restart_application(root):
+    try:
+        root.quit()
+        root.destroy()
+    except Exception:
+        pass
+
+    try:
+        python = sys.executable
+        os.execv(python, [python] + sys.argv)
+    except Exception:
+        # Ask for restart
+        try:
+            messagebox.showinfo(t("language.dialog_title"), t("language.manual_restart_fallback"))
+        except Exception:
+            pass
+        sys.exit(0)
+
+
+class LanguageSettingsDialog:
+    """Dialog for configuring the app language"""
+
+    def __init__(self, parent, db_manager, restart_callback):
+        self.db_manager = db_manager
+        self.restart_callback = restart_callback
+
+        self.window = tk.Toplevel(parent)
+        self.window.title(t("language.dialog_title"))
+        self.window.geometry("320x260")
+        self.window.resizable(True, True)
+
+        self.window.update_idletasks()
+        parent_x = parent.winfo_rootx()
+        parent_y = parent.winfo_rooty()
+        self.window.geometry(f"320x260+{parent_x + 100}+{parent_y + 100}")
+
+        self._apply_window_theme()
+        self._create_widgets()
+        self.window.transient(parent)
+        self.window.grab_set()
+
+    def _apply_window_theme(self):
+        theme_name = self.db_manager.get_setting('theme', 'Light')
+        all_themes = _get_all_themes(self.db_manager)
+        if theme_name in all_themes:
+            self.window.configure(bg=all_themes[theme_name]['bg'])
+
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.window.grid_rowconfigure(0, weight=1)
+        self.window.grid_columnconfigure(0, weight=1)
+        main_frame.grid_columnconfigure(0, weight=1)
+
+        ttk.Label(main_frame, text=t("language.select_label"),
+                  font=("Arial", 10, "bold")).grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
+
+        current = self.db_manager.get_setting('language', 'en')
+
+        self.listbox = tk.Listbox(main_frame, height=6, exportselection=False)
+        self.listbox.grid(row=1, column=0, sticky=(tk.W, tk.E))
+
+        self._codes = i18n.available_languages()
+        for idx, code in enumerate(self._codes):
+            self.listbox.insert(tk.END, i18n.display_name(code))
+            if code == current:
+                self.listbox.selection_set(idx)
+
+        ttk.Label(main_frame, text=t("language.restart_notice"), font=("Arial", 8),
+                  wraplength=260, justify=tk.LEFT).grid(row=2, column=0, sticky=tk.W, pady=(10, 10))
+
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=3, column=0)
+        ttk.Button(button_frame, text=t("language.apply_button"), command=self._apply).pack(
+            side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text=t("language.cancel_button"), command=self.window.destroy).pack(side=tk.LEFT)
+
+    def _apply(self):
+        sel = self.listbox.curselection()
+        if not sel:
+            return
+        code = self._codes[sel[0]]
+        self.db_manager.set_setting('language', code)
+        i18n.set_language(code)
+
+        root = self.window
+        while root.master:
+            root = root.master
+
+        messagebox.showinfo(t("language.dialog_title"), t("language.restarting_notice"), parent=self.window)
+
+        self.window.destroy()
+        _restart_application(root)
+
 
 class NewGroupDialog:
     """Dialog for creating a new group"""
@@ -2677,7 +2786,7 @@ class NewGroupDialog:
         self.callback = callback
         
         self.window = tk.Toplevel(parent)
-        self.window.title("New Group")
+        self.window.title(t("groups.new_group_title"))
         self.window.geometry("350x160")
         self.window.resizable(True, True)
         
@@ -2705,10 +2814,10 @@ class NewGroupDialog:
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(main_frame, text="Create New Group", 
+        ttk.Label(main_frame, text=t("groups.create_new_title"), 
                  font=("Arial", 11, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 15))
         
-        ttk.Label(main_frame, text="Group Name:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text=t("groups.group_name_label")).grid(row=1, column=0, sticky=tk.W, pady=5)
         self.group_var = tk.StringVar()
         group_entry = ttk.Entry(main_frame, textvariable=self.group_var, width=25)
         group_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
@@ -2717,8 +2826,8 @@ class NewGroupDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=2, column=0, columnspan=2, pady=(15, 0))
         
-        ttk.Button(button_frame, text="Create", command=self._create_group).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        ttk.Button(button_frame, text=t("groups.create_button"), command=self._create_group).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text=t("common.cancel"), command=self.window.destroy).pack(side=tk.LEFT)
         
         self.window.bind('<Return>', lambda e: self._create_group())
         self.window.bind('<Escape>', lambda e: self.window.destroy())
@@ -2728,24 +2837,24 @@ class NewGroupDialog:
         group_name = self.group_var.get().strip()
         
         if not group_name:
-            messagebox.showerror("Error", "Group name cannot be empty!")
+            messagebox.showerror(t("errors.title"), t("groups.empty_name_error"))
             return
         
         if group_name.lower() == "all":
-            messagebox.showerror("Error", "'All' is a reserved group name!")
+            messagebox.showerror(t("errors.title"), t("groups.reserved_name_error"))
             return
 
         # Limit character length, see issue #131
         if len(group_name) > 20:
-            messagebox.showerror("Error", "Group name must be 20 characters or fewer.")
+            messagebox.showerror(t("errors.title"), t("groups.name_too_long_error"))
             return
         
         if self.db_manager.add_group(group_name):
-            messagebox.showinfo("Success", f"Group '{group_name}' created successfully!")
+            messagebox.showinfo(t("common.success_title"), t("groups.created", name=group_name))
             self.callback()
             self.window.destroy()
         else:
-            messagebox.showerror("Error", f"Group '{group_name}' already exists!")
+            messagebox.showerror(t("errors.title"), t("groups.already_exists_error", name=group_name))
 
 
 class ManageGroupsDialog:
@@ -2756,7 +2865,7 @@ class ManageGroupsDialog:
         self.callback = callback
         
         self.window = tk.Toplevel(parent)
-        self.window.title("Manage Groups")
+        self.window.title(t("groups.manage_groups_title"))
         self.window.geometry("400x350")
         self.window.resizable(True, True)
         
@@ -2785,7 +2894,7 @@ class ManageGroupsDialog:
         main_frame.grid_columnconfigure(0, weight=1)
         main_frame.grid_rowconfigure(1, weight=1)
         
-        ttk.Label(main_frame, text="Manage Groups", 
+        ttk.Label(main_frame, text=t("groups.manage_groups_title"), 
                  font=("Arial", 11, "bold")).grid(row=0, column=0, pady=(0, 15))
         
         list_frame = ttk.Frame(main_frame)
@@ -2811,9 +2920,9 @@ class ManageGroupsDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=2, column=0, pady=(0, 10))
         
-        ttk.Button(button_frame, text="Rename Group", command=self._rename_group).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Delete Group", command=self._delete_group).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Close", command=self.window.destroy).pack(side=tk.LEFT)
+        ttk.Button(button_frame, text=t("groups.rename_button"), command=self._rename_group).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text=t("groups.delete_button"), command=self._delete_group).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text=t("common.close"), command=self.window.destroy).pack(side=tk.LEFT)
         
     
     def _populate_groups(self):
@@ -2825,7 +2934,7 @@ class ManageGroupsDialog:
             groups.remove('All')
         
         if not groups:
-            self.groups_listbox.insert(tk.END, "(No groups created yet)")
+            self.groups_listbox.insert(tk.END, t("groups.no_groups_placeholder"))
         else:
             for group in groups:
                 self.groups_listbox.insert(tk.END, group)
@@ -2834,12 +2943,12 @@ class ManageGroupsDialog:
         """Rename selected group"""
         selection = self.groups_listbox.curselection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select a group to rename.")
+            messagebox.showwarning(t("errors.no_selection_title"), t("groups.select_rename_error"))
             return
         
         old_name = self.groups_listbox.get(selection[0])
         
-        if old_name == "(No groups created yet)":
+        if old_name == t("groups.no_groups_placeholder"):
             return
         
         RenameGroupDialog(self.window, self.db_manager, old_name, self._on_change_complete)
@@ -2848,21 +2957,20 @@ class ManageGroupsDialog:
         """Delete selected group"""
         selection = self.groups_listbox.curselection()
         if not selection:
-            messagebox.showwarning("No Selection", "Please select a group to delete.")
+            messagebox.showwarning(t("errors.no_selection_title"), t("groups.select_delete_error"))
             return
         
         group_name = self.groups_listbox.get(selection[0])
         
-        if group_name == "(No groups created yet)":
+        if group_name == t("groups.no_groups_placeholder"):
             return
         
-        if not messagebox.askyesno("Confirm Deletion", 
-                                   f"Are you sure you want to delete the group '{group_name}'?\n\n"
-                                   "Passwords in this group will not be deleted, but will have no group assigned."):
+        if not messagebox.askyesno(t("common.confirm_deletion_title"),
+                                   t("groups.confirm_delete_message", name=group_name)):
             return
         
         if self.db_manager.delete_group(group_name):
-            messagebox.showinfo("Success", f"Group '{group_name}' deleted successfully!")
+            messagebox.showinfo(t("common.success_title"), t("groups.deleted_success", name=group_name))
             self._on_change_complete()
     
     def _on_change_complete(self):
@@ -2880,7 +2988,7 @@ class RenameGroupDialog:
         self.callback = callback
         
         self.window = tk.Toplevel(parent)
-        self.window.title("Rename Group")
+        self.window.title(t("groups.rename_group_title"))
         self.window.geometry("350x150")
         self.window.resizable(True, True)
         
@@ -2908,10 +3016,10 @@ class RenameGroupDialog:
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(main_frame, text=f"Rename Group: {self.old_name}", 
+        ttk.Label(main_frame, text=t("groups.rename_group_heading", name=self.old_name), 
                  font=("Arial", 10, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 15))
         
-        ttk.Label(main_frame, text="New Name:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text=t("groups.new_name_label")).grid(row=1, column=0, sticky=tk.W, pady=5)
         self.new_name_var = tk.StringVar(value=self.old_name)
         name_entry = ttk.Entry(main_frame, textvariable=self.new_name_var, width=25)
         name_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
@@ -2921,8 +3029,8 @@ class RenameGroupDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=2, column=0, columnspan=2, pady=(15, 0))
         
-        ttk.Button(button_frame, text="Rename", command=self._rename).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        ttk.Button(button_frame, text=t("groups.rename_button"), command=self._rename).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text=t("common.cancel"), command=self.window.destroy).pack(side=tk.LEFT)
         
         self.window.bind('<Return>', lambda e: self._rename())
         self.window.bind('<Escape>', lambda e: self.window.destroy())
@@ -2932,16 +3040,16 @@ class RenameGroupDialog:
         new_name = self.new_name_var.get().strip()
         
         if not new_name:
-            messagebox.showerror("Error", "Group name cannot be empty!")
+            messagebox.showerror(t("errors.title"), t("groups.empty_name_error"))
             return
         
         if new_name.lower() == "all":
-            messagebox.showerror("Error", "'All' is a reserved name!")
+            messagebox.showerror(t("errors.title"), t("groups.reserved_name_error"))
             return
 
         # Limit character length, see issue #131
         if len(new_name) > 20:
-            messagebox.showerror("Error", "Group name must be 20 characters or fewer.")
+            messagebox.showerror(t("errors.title"), t("groups.name_too_long_error"))
             return
         
         if new_name == self.old_name:
@@ -2949,7 +3057,7 @@ class RenameGroupDialog:
             return
         
         if self.db_manager.rename_group(self.old_name, new_name):
-            messagebox.showinfo("Success", f"Group renamed from '{self.old_name}' to '{new_name}'!")
+            messagebox.showinfo(t("common.success_title"), t("groups.renamed_success", old=self.old_name, new=new_name))
             self.callback()
             self.window.destroy()
 
@@ -2961,7 +3069,7 @@ class AutoLockSettingsDialog:
         self.db_manager = db_manager
         
         self.window = tk.Toplevel(parent)
-        self.window.title("Auto-Lock Settings")
+        self.window.title(t("menu.autolock_settings").rstrip('.'))
         self.window.geometry("400x180")
         self.window.resizable(True, True)
         
@@ -2989,21 +3097,21 @@ class AutoLockSettingsDialog:
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(main_frame, text="Auto-Lock Configuration", 
+        ttk.Label(main_frame, text=t("autolock.config_title"), 
                  font=("Arial", 11, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 20))
         
         self.enabled_var = tk.BooleanVar()
         enabled_value = self.db_manager.get_setting('auto_lock_enabled', '1')
         self.enabled_var.set(enabled_value == '1')
         
-        ttk.Checkbutton(main_frame, text="Enable auto-lock", 
+        ttk.Checkbutton(main_frame, text=t("autolock.enable_checkbox"), 
                        variable=self.enabled_var,
                        command=self._toggle_enabled).grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=(0, 15))
         
         timeout_frame = ttk.Frame(main_frame)
         timeout_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 20))
         
-        ttk.Label(timeout_frame, text="Lock after:").pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Label(timeout_frame, text=t("autolock.lock_after_label")).pack(side=tk.LEFT, padx=(0, 10))
         
         self.minutes_var = tk.StringVar()
         current_minutes = self.db_manager.get_setting('auto_lock_minutes', '5')
@@ -3015,13 +3123,13 @@ class AutoLockSettingsDialog:
                                           state='readonly' if not self.enabled_var.get() else 'normal')
         self.minutes_spinbox.pack(side=tk.LEFT, padx=(0, 10))
         
-        ttk.Label(timeout_frame, text="minutes of inactivity").pack(side=tk.LEFT)
+        ttk.Label(timeout_frame, text=t("autolock.minutes_label")).pack(side=tk.LEFT)
         
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=3, column=0, columnspan=2)
         
-        ttk.Button(button_frame, text="Save", command=self._save_settings).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        ttk.Button(button_frame, text=t("common.save"), command=self._save_settings).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text=t("common.cancel"), command=self.window.destroy).pack(side=tk.LEFT)
     
     def _toggle_enabled(self):
         """Toggle the enabled state of timeout controls"""
@@ -3039,20 +3147,20 @@ class AutoLockSettingsDialog:
             try:
                 minutes_int = int(minutes)
                 if minutes_int < 1 or minutes_int > 60:
-                    messagebox.showerror("Invalid Input", "Timeout must be between 1 and 60 minutes.")
+                    messagebox.showerror(t("errors.invalid_input_title"), t("autolock.timeout_range_error"))
                     return
             except ValueError:
-                messagebox.showerror("Invalid Input", "Please enter a valid number of minutes.")
+                messagebox.showerror(t("errors.invalid_input_title"), t("autolock.invalid_minutes_error"))
                 return
             
             self.db_manager.set_setting('auto_lock_enabled', enabled)
             self.db_manager.set_setting('auto_lock_minutes', minutes)
             
-            messagebox.showinfo("Success", "Auto-lock settings saved successfully!")
+            messagebox.showinfo(t("common.success_title"), t("autolock.saved_success"))
             self.window.destroy()
             
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save settings: {str(e)}")
+            messagebox.showerror(t("errors.title"), t("autolock.save_failed", error=str(e)))
 
 
 class AddEditDialog:
@@ -3073,7 +3181,7 @@ class AddEditDialog:
             group = default_group
         
         self.window = tk.Toplevel(parent)
-        self.window.title("Edit Record" if record_id else "Add Record")
+        self.window.title(t("record.edit_title") if record_id else t("record.add_title"))
         
         # Adjust window height if editing (to show dates)
         window_height = 340 if record_id and (date_added or date_modified) else 250
@@ -3106,26 +3214,26 @@ class AddEditDialog:
         
         current_row = 0
         
-        ttk.Label(main_frame, text="Site Name:").grid(row=current_row, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text=t("record.site_label")).grid(row=current_row, column=0, sticky=tk.W, pady=5)
         self.site_var = tk.StringVar(value=site)
         site_entry = ttk.Entry(main_frame, textvariable=self.site_var)
         site_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         site_entry.focus()
         current_row += 1
         
-        ttk.Label(main_frame, text="Username:").grid(row=current_row, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text=t("record.username_label")).grid(row=current_row, column=0, sticky=tk.W, pady=5)
         self.username_var = tk.StringVar(value=username)
         username_entry = ttk.Entry(main_frame, textvariable=self.username_var)
         username_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         current_row += 1
         
-        ttk.Label(main_frame, text="Password:").grid(row=current_row, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text=t("record.password_label")).grid(row=current_row, column=0, sticky=tk.W, pady=5)
         self.password_var = tk.StringVar(value=password)
         password_entry = ttk.Entry(main_frame, textvariable=self.password_var)
         password_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         current_row += 1
         
-        ttk.Label(main_frame, text="Group:").grid(row=current_row, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text=t("record.group_label")).grid(row=current_row, column=0, sticky=tk.W, pady=5)
         self.group_var = tk.StringVar(value=group if group else "")
         
         groups = self.db_manager.get_all_groups()
@@ -3146,7 +3254,7 @@ class AddEditDialog:
             
             # Date Added
             if self.date_added:
-                ttk.Label(main_frame, text="Date Added:", font=("Arial", 9, "bold")).grid(
+                ttk.Label(main_frame, text=t("record.date_added_label"), font=("Arial", 9, "bold")).grid(
                     row=current_row, column=0, sticky=tk.W, pady=3)
                 self.date_added_label = ttk.Label(main_frame, text=self._format_date(self.date_added), 
                                              font=("Arial", 9))
@@ -3155,7 +3263,7 @@ class AddEditDialog:
             
             # Date Modified
             if self.date_modified:
-                ttk.Label(main_frame, text="Last Modified:", font=("Arial", 9, "bold")).grid(
+                ttk.Label(main_frame, text=t("record.last_modified_label"), font=("Arial", 9, "bold")).grid(
                     row=current_row, column=0, sticky=tk.W, pady=3)
                 self.date_modified_label = ttk.Label(main_frame, text=self._format_date(self.date_modified), 
                                                 font=("Arial", 9))
@@ -3168,9 +3276,9 @@ class AddEditDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=current_row, column=0, columnspan=2, pady=(20, 0))
         
-        action_text = "Update" if self.record_id else "Add"
+        action_text = t("record.update_button") if self.record_id else t("common.add")
         ttk.Button(button_frame, text=action_text, command=self._save).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Cancel", command=self._cancel).pack(side=tk.LEFT)
+        ttk.Button(button_frame, text=t("common.cancel"), command=self._cancel).pack(side=tk.LEFT)
         
         self.window.bind('<Return>', lambda e: self._save())
         self.window.bind('<Escape>', lambda e: self._cancel())
@@ -3198,7 +3306,7 @@ class AddEditDialog:
     def _format_date(self, date_str):
         """Format date string for display"""
         if not date_str:
-            return "N/A"
+            return t("record.date_not_available")
         
         try:
             # Handle different date formats
@@ -3222,19 +3330,19 @@ class AddEditDialog:
         group = self.group_var.get().strip()
         
         if not site:
-            messagebox.showerror("Validation Error", "Site name is required!")
+            messagebox.showerror(t("errors.validation_title"), t("record.site_required_error"))
             return
         
         if len(site) > 100:
-            messagebox.showerror("Validation Error", "Site name must be 100 characters or fewer.")
+            messagebox.showerror(t("errors.validation_title"), t("record.site_too_long_error"))
             return
         
         if len(username) > 100:
-            messagebox.showerror("Validation Error", "Username must be 100 characters or fewer.")
+            messagebox.showerror(t("errors.validation_title"), t("record.username_too_long_error"))
             return
         
         if not password:
-            messagebox.showerror("Validation Error", "Password is required!")
+            messagebox.showerror(t("errors.validation_title"), t("record.password_required_error"))
             return
         
         if not group:
@@ -3244,13 +3352,13 @@ class AddEditDialog:
             if self.record_id:
                 success = self.db_manager.update_record(self.record_id, site, username, password, group)
                 if success:
-                    messagebox.showinfo("Success", "Record updated successfully!")
+                    messagebox.showinfo(t("common.success_title"), t("record.updated_success"))
                 else:
                     return
             else:
                 record_id = self.db_manager.add_record(site, username, password, group)
                 if record_id:
-                    messagebox.showinfo("Success", "Record added successfully!")
+                    messagebox.showinfo(t("common.success_title"), t("record.added_success"))
                 else:
                     return
             
@@ -3258,7 +3366,7 @@ class AddEditDialog:
             self.window.destroy()
             
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save record: {str(e)}")
+            messagebox.showerror(t("errors.title"), t("record.save_failed", error=str(e)))
     
     def _cancel(self):
         """Cancel the dialog"""
@@ -3275,7 +3383,7 @@ class ImportDialog:
         self.filename = None
         
         self.window = tk.Toplevel(parent)
-        self.window.title("Import Passwords")
+        self.window.title(t("menu.import_passwords").rstrip('.'))
         self.window.geometry("350x275")
         self.window.resizable(True, True)
         
@@ -3302,7 +3410,7 @@ class ImportDialog:
         main_frame = ttk.Frame(self.window, padding="20")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        ttk.Label(main_frame, text="Select data source:", font=("Arial", 10, "bold")).grid(
+        ttk.Label(main_frame, text=t("import.select_source_label"), font=("Arial", 10, "bold")).grid(
             row=0, column=0, sticky=tk.W, pady=(0, 10))
         
         self.source_var = tk.StringVar(value="Chrome")
@@ -3312,7 +3420,7 @@ class ImportDialog:
             ttk.Radiobutton(main_frame, text=text, variable=self.source_var, 
                            value=value).grid(row=i+1, column=0, sticky=tk.W, pady=2)
         
-        ttk.Label(main_frame, text="Import to group:", font=("Arial", 10)).grid(
+        ttk.Label(main_frame, text=t("import.import_to_group_label"), font=("Arial", 10)).grid(
             row=3, column=0, sticky=tk.W, pady=(15, 5))
         
         self.group_var = tk.StringVar(value=self.current_group if self.current_group else "")
@@ -3328,18 +3436,18 @@ class ImportDialog:
         file_frame.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=(10, 10))
         file_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(file_frame, text="File:").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(file_frame, text=t("common.file_label")).grid(row=0, column=0, sticky=tk.W)
         self.file_var = tk.StringVar()
         file_entry = ttk.Entry(file_frame, textvariable=self.file_var, state='readonly', width=20)
         file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 10))
-        ttk.Button(file_frame, text="Browse", command=self._browse_file).grid(row=0, column=2)
+        ttk.Button(file_frame, text=t("common.browse"), command=self._browse_file).grid(row=0, column=2)
         
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=6, column=0, pady=(10, 0))
         
-        self.import_btn = ttk.Button(button_frame, text="Import", command=self._import_passwords, state='disabled')
+        self.import_btn = ttk.Button(button_frame, text=t("import.import_button"), command=self._import_passwords, state='disabled')
         self.import_btn.pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        ttk.Button(button_frame, text=t("common.cancel"), command=self.window.destroy).pack(side=tk.LEFT)
     
     def _suppress_empty_group_dropdown(self, combo):
         """Prevent dropdown list from opening immediately if no group exists"""
@@ -3349,8 +3457,8 @@ class ImportDialog:
     def _browse_file(self):
         """Browse for CSV file"""
         filename = filedialog.askopenfilename(
-            title="Select CSV File",
-            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+            title=t("import.select_file_title"),
+            filetypes=[(t("common.csv_files"), "*.csv"), (t("common.all_files"), "*.*")]
         )
         
         if filename:
@@ -3361,7 +3469,7 @@ class ImportDialog:
     def _import_passwords(self):
         """Import passwords from CSV file"""
         if not self.filename:
-            messagebox.showerror("Error", "Please select a file to import.")
+            messagebox.showerror(t("errors.title"), t("import.no_file_error"))
             return
         
         try:
@@ -3384,7 +3492,7 @@ class ImportDialog:
                         file.seek(0)
                         csv_reader = csv.reader(file)
                 except StopIteration:
-                    messagebox.showerror("Error", "The selected file appears to be empty.")
+                    messagebox.showerror(t("errors.title"), t("import.empty_file_error"))
                     return
                 
                 for row in csv_reader:
@@ -3411,15 +3519,15 @@ class ImportDialog:
                         continue
             
             if imported_count > 0:
-                group_msg = f"to group '{group}'" if group else "without a group"
-                messagebox.showinfo("Success", f"Successfully imported {imported_count} password(s) {group_msg}!")
+                group_msg = t("import.to_group", name=group) if group else t("import.without_group")
+                messagebox.showinfo(t("common.success_title"), t("import.success_message", count=imported_count, group_msg=group_msg))
                 self.callback()
                 self.window.destroy()
             else:
-                messagebox.showwarning("No Data", "No valid password records were found in the file.")
+                messagebox.showwarning(t("import.no_data_title"), t("import.no_data_message"))
         
         except Exception as e:
-            messagebox.showerror("Import Error", f"Failed to import passwords: {str(e)}")
+            messagebox.showerror(t("import.import_error_title"), t("import.import_failed", error=str(e)))
 
 
 class ExportDialog:
@@ -3430,7 +3538,7 @@ class ExportDialog:
         self.filename = None
         
         self.window = tk.Toplevel(parent)
-        self.window.title("Export Passwords")
+        self.window.title(t("menu.export_passwords").rstrip('.'))
         self.window.geometry("400x300")
         self.window.resizable(True, True)
         
@@ -3458,7 +3566,7 @@ class ExportDialog:
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(0, weight=1)
         
-        ttk.Label(main_frame, text="Export passwords from group:", font=("Arial", 10, "bold")).grid(
+        ttk.Label(main_frame, text=t("export.select_group_label"), font=("Arial", 10, "bold")).grid(
             row=0, column=0, sticky=tk.W, pady=(0, 5))
         
         groups = self.db_manager.get_all_groups()
@@ -3471,33 +3579,31 @@ class ExportDialog:
         file_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
         file_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(file_frame, text="Save to:").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(file_frame, text=t("export.save_to_label")).grid(row=0, column=0, sticky=tk.W)
         self.file_var = tk.StringVar()
         file_entry = ttk.Entry(file_frame, textvariable=self.file_var, state='readonly', width=20)
         file_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=(10, 10))
-        ttk.Button(file_frame, text="Browse", command=self._browse_file).grid(row=0, column=2)
+        ttk.Button(file_frame, text=t("common.browse"), command=self._browse_file).grid(row=0, column=2)
         
         warning_label = ttk.Label(
             main_frame,
-            text=("Warning: the exported file stores passwords in\n"
-                  "plain text, not encrypted. Store it securely and\n"
-                  "delete it when you're done."),
+            text=t("export.plaintext_warning"),
             font=("Arial", 8), foreground="#B91C1C", justify=tk.LEFT)
         warning_label.grid(row=3, column=0, sticky=tk.W, pady=(10, 15))
         
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=4, column=0)
         
-        self.export_btn = ttk.Button(button_frame, text="Export", command=self._export_passwords, state='disabled')
+        self.export_btn = ttk.Button(button_frame, text=t("export.export_button"), command=self._export_passwords, state='disabled')
         self.export_btn.pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        ttk.Button(button_frame, text=t("common.cancel"), command=self.window.destroy).pack(side=tk.LEFT)
     
     def _browse_file(self):
         """Browse for CSV save location"""
         filename = filedialog.asksaveasfilename(
-            title="Save CSV File",
+            title=t("export.save_file_title"),
             defaultextension=".csv",
-            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+            filetypes=[(t("common.csv_files"), "*.csv"), (t("common.all_files"), "*.*")]
         )
         
         if filename:
@@ -3508,14 +3614,12 @@ class ExportDialog:
     def _export_passwords(self):
         """Decrypt and write records to a CSV file"""
         if not self.filename:
-            messagebox.showerror("Error", "Please choose a file to save to.")
+            messagebox.showerror(t("errors.title"), t("export.no_file_error"))
             return
         
         if not messagebox.askyesno(
-            "Confirm Export",
-            "This will write your passwords to a plain text CSV file.\n"
-            "Anyone with access to that file will be able to read them.\n\n"
-            "Continue?"):
+            t("export.confirm_export_title"),
+            t("export.confirm_export_message")):
             return
         
         group_filter = self.group_var.get()
@@ -3546,13 +3650,13 @@ class ExportDialog:
                     exported_count += 1
             
             if exported_count > 0:
-                messagebox.showinfo("Success", f"Successfully exported {exported_count} password(s)!")
+                messagebox.showinfo(t("common.success_title"), t("export.success_message", count=exported_count))
                 self.window.destroy()
             else:
-                messagebox.showwarning("No Data", "No records were found to export.")
+                messagebox.showwarning(t("import.no_data_title"), t("export.no_records_message"))
         
         except Exception as e:
-            messagebox.showerror("Export Error", f"Failed to export passwords: {str(e)}")
+            messagebox.showerror(t("export.export_error_title"), t("export.export_failed", error=str(e)))
 
 
 class ChangeMasterPasswordDialog:
@@ -3562,7 +3666,7 @@ class ChangeMasterPasswordDialog:
         self.db_manager = db_manager
         
         self.window = tk.Toplevel(parent)
-        self.window.title("Change Master Password")
+        self.window.title(t("menu.change_master_password").rstrip('.'))
         self.window.geometry("400x150")
         self.window.resizable(True, True)
         
@@ -3590,10 +3694,10 @@ class ChangeMasterPasswordDialog:
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(1, weight=1)
         
-        ttk.Label(main_frame, text="Enter new master password:", 
+        ttk.Label(main_frame, text=t("master_password.enter_new_label"), 
                  font=("Arial", 10, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 20))
         
-        ttk.Label(main_frame, text="New Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text=t("master_password.new_password_label")).grid(row=1, column=0, sticky=tk.W, pady=5)
         self.password_var = tk.StringVar()
         password_entry = ttk.Entry(main_frame, textvariable=self.password_var, show='*')
         password_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
@@ -3602,8 +3706,8 @@ class ChangeMasterPasswordDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=2, column=0, columnspan=2, pady=(20, 0))
         
-        ttk.Button(button_frame, text="Change Password", command=self._change_password).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Cancel", command=self.window.destroy).pack(side=tk.LEFT)
+        ttk.Button(button_frame, text=t("master_password.change_button"), command=self._change_password).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(button_frame, text=t("common.cancel"), command=self.window.destroy).pack(side=tk.LEFT)
         
         self.window.bind('<Return>', lambda e: self._change_password())
     
@@ -3612,18 +3716,18 @@ class ChangeMasterPasswordDialog:
         new_password = self.password_var.get().strip()
         
         if not new_password:
-            messagebox.showerror("Error", "Password cannot be empty!")
+            messagebox.showerror(t("errors.title"), t("setup.empty_password_error"))
             return
         
         if len(new_password) < 4:
-            messagebox.showerror("Error", "Password must be at least 4 characters long!")
+            messagebox.showerror(t("errors.title"), t("setup.password_too_short"))
             return
         
-        if not messagebox.askyesno("Confirm", "This will re-encrypt all your passwords. Continue?"):
+        if not messagebox.askyesno(t("common.confirm_title"), t("master_password.reencrypt_confirm")):
             return
         
         if self.db_manager.change_master_password(new_password):
-            messagebox.showinfo("Success", "Master password changed successfully!")
+            messagebox.showinfo(t("common.success_title"), t("master_password.changed_success"))
             self.window.destroy()
 
 
@@ -3632,7 +3736,7 @@ class PasswordManagerApp:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("RandPyPwGen v2.0.4")
+        self.root.title(t("app.title_versioned"))
         self.root.geometry("900x700")
         
         self.root.update_idletasks()
@@ -3644,6 +3748,10 @@ class PasswordManagerApp:
         self.root.grid_columnconfigure(0, weight=1)
         
         self.db_manager = DatabaseManager()
+
+        # Set language for i18n
+        i18n.set_language(self.db_manager.get_setting('language', 'en'))
+        self.root.title(t("app.title_versioned"))
         
         self.current_frame = None
         self._show_login()
@@ -3657,7 +3765,7 @@ class PasswordManagerApp:
         self.current_frame.grid(row=0, column=0)
         
         self.root.geometry("400x200")
-        self.root.title("RandPyPwGen - Login")
+        self.root.title(t("app.login_window_title"))
     
     def _show_main(self):
         """Show main application frame"""
@@ -3665,7 +3773,7 @@ class PasswordManagerApp:
             self.current_frame.destroy()
         
         self.root.geometry("900x700")
-        self.root.title("RandPyPwGen v2.0.4")
+        self.root.title(t("app.title_versioned"))
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -3689,7 +3797,7 @@ def main():
         print("\nApplication interrupted by user.")
         sys.exit(0)
     except Exception as e:
-        messagebox.showerror("Fatal Error", f"An unexpected error occurred: {str(e)}")
+        messagebox.showerror(t("errors.fatal_title"), t("errors.fatal_message", error=str(e)))
         sys.exit(1)
 
 
