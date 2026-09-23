@@ -1,6 +1,22 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.5] - 09-23-2026
+  
+Minor database changes to unlock.db > SETTINGS table, with the addition of the language column added.
+
+### Added
+
+Multi-Language support. See LOCALES\ directory and LOCALES\README.md for more information. Also, this commit has added a i18n.py file for key translation.
+
+### Fixed
+
+[Issue #161](https://github.com/HaydenHildreth/RandPyPwMan/issues/161)
+
+### Notes
+
+- If you'd like to assist in translation please read the LOCALES\README.md or reach out to me directly.
+
 ## [2.0.4] - 08-17-2026
   
 No database changes.
