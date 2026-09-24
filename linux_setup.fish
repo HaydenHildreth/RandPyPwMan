@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+cd (dirname (status --current-filename))/..
 
 python -m venv .venv
 
