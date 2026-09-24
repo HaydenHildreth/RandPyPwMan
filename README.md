@@ -121,6 +121,7 @@ deactivate
     - Custom Themes
 - Auto-Lock (Idle Lock)
 - Importing/Exporting of passwords
+- Multi-language Support (English, Spanish, Russian)
 
 ## Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for change notes.
