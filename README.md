@@ -62,7 +62,7 @@ chmod +x ./scripts/mac_setup.sh
 
 * Activate virtual enviroment
 ```
-source ./venv/bin/activate
+source ./.venv/bin/activate
 ```
 
 * Run main script:
