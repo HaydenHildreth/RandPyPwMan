@@ -52,12 +52,12 @@ cd <path-to-repo>\
 
 * Make setup script executable:
 ```
-chmod +x ./mac_setup.sh
+chmod +x ./scripts/mac_setup.sh
 ```
 
 * Run setup script:
 ```
-./mac_setup.sh
+./scripts/mac_setup.sh
 ```
 
 * Activate virtual enviroment
@@ -90,12 +90,12 @@ cd <path-to-repo>\
 
 * Make setup script executable:
 ```
-chmod +x ./linux_setup.sh
+chmod +x ./scripts/linux_setup.sh
 ```
 
 * Run setup script:
 ```
-./linux_setup.sh
+./scripts/linux_setup.sh
 ```
 
 * Activate virtual enviroment
