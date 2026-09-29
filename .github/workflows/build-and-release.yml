@@ -51,7 +51,7 @@ jobs:
       # Windows: build a single .exe
       - name: Build with PyInstaller (Windows)
         if: runner.os == 'Windows'
-        run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} main.py
+        run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} --add-data "LOCALES;LOCALES" main.py
 
       - name: Stage Windows artifact
         if: runner.os == 'Windows'
@@ -63,7 +63,7 @@ jobs:
       # MacOS: build .app bundle, as .tar.gz 
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'
-        run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} main.py
+        run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} --add-data "LOCALES:LOCALES" main.py
 
       - name: Stage macOS artifact
         if: runner.os == 'macOS'
@@ -74,7 +74,7 @@ jobs:
       # Linux: build onefile binary, as .AppImage
       - name: Build with PyInstaller (Linux)
         if: runner.os == 'Linux'
-        run: pyinstaller --onefile --name ${{ env.APP_NAME }} main.py
+        run: pyinstaller --onefile --name ${{ env.APP_NAME }} --add-data "LOCALES:LOCALES" main.py
 
       - name: Package AppImage (Linux)
         if: runner.os == 'Linux'

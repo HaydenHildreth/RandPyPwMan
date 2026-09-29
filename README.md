@@ -52,17 +52,17 @@ cd <path-to-repo>\
 
 * Make setup script executable:
 ```
-chmod +x ./mac_setup.sh
+chmod +x ./scripts/mac_setup.sh
 ```
 
 * Run setup script:
 ```
-./mac_setup.sh
+./scripts/mac_setup.sh
 ```
 
 * Activate virtual enviroment
 ```
-source ./venv/bin/activate
+source ./.venv/bin/activate
 ```
 
 * Run main script:
@@ -90,12 +90,12 @@ cd <path-to-repo>\
 
 * Make setup script executable:
 ```
-chmod +x ./linux_setup.sh
+chmod +x ./scripts/linux_setup.sh
 ```
 
 * Run setup script:
 ```
-./linux_setup.sh
+./scripts/linux_setup.sh
 ```
 
 * Activate virtual enviroment
@@ -121,6 +121,7 @@ deactivate
     - Custom Themes
 - Auto-Lock (Idle Lock)
 - Importing/Exporting of passwords
+- Multi-language Support (English, Spanish, Russian)
 
 ## Release Notes
 - #### See [CHANGELOG.MD](https://github.com/HaydenHildreth/RandPyPwMan/blob/main/CHANGELOG.md) for change notes.
