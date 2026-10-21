@@ -251,5 +251,10 @@
   "master_password.change_button": "Change Password",
   "master_password.reencrypt_confirm": "This will re-encrypt all your passwords. Continue?",
   "master_password.changed_success": "Master password changed successfully!",
-  "master_password.change_failed": "Failed to change master password: {error}"
+  "master_password.change_failed": "Failed to change master password: {error}",
+
+  "dates.month_names": "January, February, March, April, May, June, July, August, September, October, November, December",
+  "dates.date_format": "{month} {day}, {year}",
+  "dates.datetime_format": "{month} {day}, {year} at {time}",
+  "dates.time_format": "%I:%M %p"
 }

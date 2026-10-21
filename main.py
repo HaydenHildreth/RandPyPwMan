@@ -3329,20 +3329,23 @@ class AddEditDialog:
         """Format date string for display"""
         if not date_str:
             return t("record.date_not_available")
-        
-        try:
-            # Handle different date formats
-            for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d']:
-                try:
-                    dt = datetime.strptime(date_str, fmt)
-                    return dt.strftime('%B %d, %Y at %I:%M %p')
-                except ValueError:
-                    continue
-            
-            # If parsing fails, return as is
-            return date_str
-        except:
-            return date_str
+
+        for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+            try:
+                dt = datetime.strptime(date_str, fmt)
+            except ValueError:
+                continue
+
+            months = [m.strip() for m in t("dates.month_names").split(",")]
+            month = months[dt.month - 1]
+
+            if fmt == '%Y-%m-%d':
+                return t("dates.date_format", day=dt.day, month=month, year=dt.year)
+
+            return t("dates.datetime_format", day=dt.day, month=month, year=dt.year,
+                    time=dt.strftime(t("dates.time_format")))
+
+        return date_str
     
     def _save(self):
         """Save the record"""

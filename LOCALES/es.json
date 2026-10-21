@@ -251,5 +251,10 @@
   "master_password.change_button": "Cambiar contraseña",
   "master_password.reencrypt_confirm": "Esto volverá a cifrar todas tus contraseñas. ¿Deseas continuar?",
   "master_password.changed_success": "¡Contraseña maestra cambiada con éxito!",
-  "master_password.change_failed": "Error al cambiar la contraseña maestra: {error}"
+  "master_password.change_failed": "Error al cambiar la contraseña maestra: {error}",
+
+  "dates.month_names": "enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre",
+  "dates.date_format": "{day} de {month} de {year}",
+  "dates.datetime_format": "{day} de {month} de {year} a las {time}",
+  "dates.time_format": "%H:%M"
 }
