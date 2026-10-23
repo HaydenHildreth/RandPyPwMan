@@ -255,6 +255,6 @@
 
   "dates.month_names": "enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre",
   "dates.date_format": "{day} de {month} de {year}",
-  "dates.datetime_format": "{day} de {month} de {year} a las {time}",
+  "dates.datetime_format": "{day} de {month} de {year}, {time}",
   "dates.time_format": "%H:%M"
 }
