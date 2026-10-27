@@ -1,4 +1,4 @@
-# Adding or Improving a KillerPDF Translation
+# Adding or Improving a translation
 
 ## File format
 
