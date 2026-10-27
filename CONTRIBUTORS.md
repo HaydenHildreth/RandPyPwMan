@@ -3,6 +3,7 @@
 ## Special thanks for all the people who had helped this project so far:
 
 * [Hayden Hildreth](https://github.com/haydenhildreth)
+* [Kirill Zhosul](https://github.com/kirillzhosul)
 * [Justin Gheen](https://github.com/PurpleHam)
 * [Tyler Michaelsen](https://github.com/tylermichaelsen)
 * [JacquesJ44](https://github.com/JacquesJ44)
