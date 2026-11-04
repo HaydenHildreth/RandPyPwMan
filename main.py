@@ -1806,7 +1806,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         self._check_auto_lock()
     
-    def _register_activity(self):
+    def _register_activity(self, event=None):
         """Register an activity event"""
         self.last_activity_time = time.time()
     
@@ -2491,8 +2491,7 @@ class CustomThemeCreatorDialog:
                 canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
             except Exception:
                 pass
-        canvas.bind_all('<MouseWheel>', _on_mousewheel)
-        canvas.bind('<Destroy>', lambda e: canvas.unbind_all('<MouseWheel>'))
+        self.window.bind('<MouseWheel>', _on_mousewheel)
 
         scroll_frame.grid_columnconfigure(0, weight=0)
         scroll_frame.grid_columnconfigure(1, weight=0)
@@ -2649,10 +2648,6 @@ class CustomThemeCreatorDialog:
         # If closed while open go back
         if getattr(self, '_preview_previous_theme', None) is not None:
             self._revert_preview()
-        try:
-            self.window.unbind_all('<MouseWheel>')
-        except Exception:
-            pass
         self.window.destroy()
 
     def _preview_in_app(self):
@@ -3843,9 +3838,11 @@ class PasswordManagerApp:
         # Set language for i18n
         i18n.set_language(self.db_manager.get_setting('language', 'en'))
         self.root.title(t("app.title_versioned"))
-        
+
         self.current_frame = None
+        self._bind_activity_tracking()
         self._show_login()
+
     
     def _show_login(self):
         """Show login frame"""
@@ -3868,6 +3865,24 @@ class PasswordManagerApp:
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+
+    def _bind_activity_tracking(self):
+        for sequence in ('<Key>', '<Button>', '<MouseWheel>', '<Motion>'):
+            self.root.bind_all(sequence, self._on_user_activity, add='+')
+
+    def _on_user_activity(self, event=None):
+        frame = self.current_frame
+        if not isinstance(frame, MainFrame):
+            return
+        # Ignore <Motion> events where the pointer hasn't actually moved
+        if event is not None and event.type == tk.EventType.Motion:
+            pos = (event.x_root, event.y_root)
+            if pos == getattr(self, '_last_pointer_pos', None):
+                return
+            self._last_pointer_pos = pos
+        frame._register_activity()
+
     
     def run(self):
         """Run the application"""
