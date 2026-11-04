@@ -108,6 +108,7 @@
   "main.no_url_message": "No URL available for this record.",
   "main.invalid_url_message": "Invalid URL format.",
   "main.select_url_error": "Please select a record to open its URL.",
+  "main.lock_button": "Lock",
 
   "theme.config_title": "Настройка темы",
   "theme.select_label": "Выберите тему:",

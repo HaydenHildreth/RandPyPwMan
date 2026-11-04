@@ -1768,7 +1768,8 @@ class MainFrame(ttk.Frame, ThemedWidget):
             (t("common.delete"), self._delete_selected),
             (t("main.copy_password_button"), self._copy_password),
             (t("main.toggle_visibility_button"), self._toggle_password_visibility),
-            (t("main.open_url_button"), self._open_url)
+            (t("main.open_url_button"), self._open_url),
+            (t("main.lock_button"), self._lock_application),
         ]
         
         for i, (text, command) in enumerate(buttons):
