@@ -1,5 +1,5 @@
 {
-  "app.title_versioned": "RandPyPwGen v2.1.0",
+  "app.title_versioned": "RandPyPwGen v2.1.1",
   "app.setup_title": "Configuración de RandPyPwGen",
   "app.login_window_title": "RandPyPwGen - Iniciar sesión",
 
@@ -102,6 +102,13 @@
   "main.password_copied_message": "¡Contraseña copiada al portapapeles!",
   "main.invalid_length_message": "Introduce una longitud de contraseña válida.",
   "main.generate_failed": "Error al generar la contraseña: {error}",
+  "main.column_url": "URL",
+  "main.open_url_button": "Abrir URL",
+  "main.no_url_title": "Sin URL",
+  "main.no_url_message": "No hay URL disponible para este registro.",
+  "main.invalid_url_message": "Formato de URL no válido.",
+  "main.select_url_error": "Selecciona un registro para abrir su URL.",
+  "main.lock_button": "Bloquear",
 
   "theme.config_title": "Configuración del tema",
   "theme.select_label": "Seleccionar tema:",
@@ -218,6 +225,9 @@
   "record.add_failed": "Error al añadir el registro: {error}",
   "record.update_failed": "Error al actualizar el registro: {error}",
   "record.delete_failed": "Error al eliminar el registro: {error}",
+  "record.url_label": "URL:",
+  "record.url_too_long_error": "La URL debe tener 255 caracteres o menos.",
+  "record.notes_label": "Notas:",
 
   "import.select_source_label": "Seleccionar fuente de datos:",
   "import.import_to_group_label": "Importar a la categoría:",

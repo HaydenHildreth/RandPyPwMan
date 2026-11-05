@@ -1,5 +1,5 @@
 {
-  "app.title_versioned": "RandPyPwGen v2.1.0",
+  "app.title_versioned": "RandPyPwGen v2.1.1",
   "app.setup_title": "RandPyPwGen Setup",
   "app.login_window_title": "RandPyPwGen - Login",
 
@@ -102,6 +102,13 @@
   "main.password_copied_message": "Password copied to clipboard!",
   "main.invalid_length_message": "Please enter a valid password length.",
   "main.generate_failed": "Failed to generate password: {error}",
+  "main.column_url": "URL",
+  "main.open_url_button": "Open URL",
+  "main.no_url_title": "No URL",
+  "main.no_url_message": "No URL available for this record.",
+  "main.invalid_url_message": "Invalid URL format.",
+  "main.select_url_error": "Please select a record to open its URL.",
+  "main.lock_button": "Lock",
 
   "theme.config_title": "Theme Configuration",
   "theme.select_label": "Select Theme:",
@@ -218,6 +225,9 @@
   "record.add_failed": "Failed to add record: {error}",
   "record.update_failed": "Failed to update record: {error}",
   "record.delete_failed": "Failed to delete record: {error}",
+  "record.url_label": "URL:",
+  "record.url_too_long_error": "URL must be 255 characters or fewer.",
+  "record.notes_label": "Notes:",
 
   "import.select_source_label": "Select data source:",
   "import.import_to_group_label": "Import to group:",

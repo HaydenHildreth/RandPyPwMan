@@ -18,8 +18,17 @@ from cryptography.fernet import Fernet
 from datetime import datetime
 import re
 import json
+import shutil
+from collections import namedtuple
 
 from i18n import t, i18n
+
+
+Record = namedtuple(
+    'Record',
+    'id site url username password group_name notes date_added date_modified'
+)
+RECORD_COLUMNS = ', '.join(Record._fields)
 
 
 THEMES = {
@@ -795,56 +804,58 @@ class DatabaseManager:
             messagebox.showerror(t("errors.encryption_title"), t("errors.load_key_failed", error=str(e)))
             sys.exit(1)
     
+    def _backup_data_db(self):
+        """Copy data.db aside before changing its schema"""
+        stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        backup = self.db_path / f"data.db.pre-migration-{stamp}.bak"
+        shutil.copy2(self.data_db, backup)
+
     def _migrate_database(self):
-        """Add fields to table if they do not exist. This is useful for updating to new versions"""
+        """Run migration process on old data.db file if applicable"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            
-            # Check if group_name column exists
+
             c.execute("PRAGMA table_info(data)")
-            columns = [column[1] for column in c.fetchall()]
-            
+            columns = {row[1] for row in c.fetchall()}
+
+            required = {'group_name', 'date_added', 'date_modified', 'url', 'notes'}
+            if required - columns:
+                self._backup_data_db()
+
             if 'group_name' not in columns:
                 c.execute("ALTER TABLE data ADD COLUMN group_name varchar(100)")
-                conn.commit()
             else:
                 c.execute("UPDATE data SET group_name = NULL WHERE group_name = 'All'")
-                conn.commit()
-            
-            # Check if date_added column exists
+
             if 'date_added' not in columns:
-                c.execute("ALTER TABLE data ADD COLUMN date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-                conn.commit()
-            
-            # Check if date_modified column exists
+                c.execute("ALTER TABLE data ADD COLUMN date_added TIMESTAMP")
             if 'date_modified' not in columns:
-                c.execute("ALTER TABLE data ADD COLUMN date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-                conn.commit()
-            
-            # Create groups table if it doesn't exist
+                c.execute("ALTER TABLE data ADD COLUMN date_modified TIMESTAMP")
+
+            # New fields for issue #170
+            if 'url' not in columns:
+                c.execute("ALTER TABLE data ADD COLUMN url varchar(255) NOT NULL DEFAULT ''")
+            if 'notes' not in columns:
+                c.execute("ALTER TABLE data ADD COLUMN notes TEXT NOT NULL DEFAULT ''")
+
             c.execute("""CREATE TABLE IF NOT EXISTS groups(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name varchar(100) UNIQUE NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )""")
-            conn.commit()
-            
+
             # Move existing groups from data table to groups table
             c.execute("SELECT DISTINCT group_name FROM data WHERE group_name IS NOT NULL AND group_name != ''")
-            existing_groups = [row[0] for row in c.fetchall()]
-            
-            for group in existing_groups:
-                try:
-                    c.execute("INSERT OR IGNORE INTO groups (name) VALUES (?)", (group,))
-                except:
-                    pass
-            
+            for (group,) in c.fetchall():
+                c.execute("INSERT OR IGNORE INTO groups (name) VALUES (?)", (group,))
+
             conn.commit()
             conn.close()
         except Exception as e:
-            print(f"Migration warning: {e}")
-    
+            messagebox.showerror(t("errors.database_title"), t("errors.setup_failed", error=str(e)))
+            sys.exit(1)
+
     def _setup_databases(self) -> bool:
         """Setup databases if they don't exist"""
         try:
@@ -859,7 +870,9 @@ class DatabaseManager:
                 password varchar(100) NOT NULL,
                 group_name varchar(100),
                 date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                url varchar(255) NOT NULL DEFAULT '',
+                notes TEXT NOT NULL DEFAULT ''
             )""")
             
             # Create groups table
@@ -1181,18 +1194,18 @@ class DatabaseManager:
             messagebox.showerror(t("errors.authentication_title"), t("errors.verify_password_failed", error=str(e)))
             return False
     
-    def get_all_records(self, group_filter: str = "All") -> List[Tuple]:
+    def get_all_records(self, group_filter: str = "All") -> List[Record]:
         """Return all records from data table"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             
             if group_filter == "All":
-                c.execute("SELECT * FROM data ORDER BY id")
+                c.execute(f"SELECT {RECORD_COLUMNS} FROM data ORDER BY id")
             else:
-                c.execute("SELECT * FROM data WHERE group_name=? ORDER BY id", (group_filter,))
+                c.execute(f"SELECT {RECORD_COLUMNS} FROM data WHERE group_name=? ORDER BY id", (group_filter,))
             
-            records = c.fetchall()
+            records = [Record(*row) for row in c.fetchall()]
             conn.close()
             return records
         except Exception as e:
@@ -1288,54 +1301,62 @@ class DatabaseManager:
             messagebox.showerror(t("errors.database_title"), t("groups.rename_failed", error=str(e)))
             return False
     
-    def search_records(self, search_term: str, group_filter: str = "All") -> List[Tuple]:
-        """Search for records on site or username"""
+    def search_records(self, search_term: str, group_filter: str = "All") -> List[Record]:
+        """Search for records on site, username or URL"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
+            like = f'%{search_term}%'
             
             if group_filter == "All":
-                c.execute("""SELECT * FROM data WHERE site LIKE ? OR username LIKE ? ORDER BY id""",
-                         (f'%{search_term}%', f'%{search_term}%'))
+                c.execute(f"""SELECT {RECORD_COLUMNS} FROM data
+                              WHERE site LIKE ? OR username LIKE ? OR url LIKE ? ORDER BY id""",
+                          (like, like, like))
             else:
-                c.execute("""SELECT * FROM data WHERE (site LIKE ? OR username LIKE ?) AND group_name=? ORDER BY id""",
-                         (f'%{search_term}%', f'%{search_term}%', group_filter))
+                c.execute(f"""SELECT {RECORD_COLUMNS} FROM data
+                              WHERE (site LIKE ? OR username LIKE ? OR url LIKE ?) AND group_name=?
+                              ORDER BY id""",
+                          (like, like, like, group_filter))
             
-            records = c.fetchall()
+            records = [Record(*row) for row in c.fetchall()]
             conn.close()
             return records
         except Exception as e:
             messagebox.showerror(t("errors.search_title"), t("errors.search_failed", error=str(e)))
             return []
     
-    def add_record(self, site: str, username: str, password: str, group_name: Optional[str] = None) -> Optional[int]:
+    def _ensure_group(self, group_name: Optional[str]) -> Optional[str]:
+        """Clean up groups"""
+        if group_name is None:
+            return None
+        group_name = group_name.strip()
+        if group_name == '':
+            return None
+        conn = sqlite3.connect(self.data_db)
+        try:
+            conn.execute("INSERT OR IGNORE INTO groups (name) VALUES (?)", (group_name,))
+            conn.commit()
+        except Exception:
+            pass
+        finally:
+            conn.close()
+        return group_name
+    
+    def add_record(self, site: str, username: str, password: str, group_name: Optional[str] = None,
+                   url: str = '', notes: str = '') -> Optional[int]:
         """Add a new password"""
         try:
             encrypted_password = self.fernet.encrypt(password.encode('utf-8'))
-            
-            if group_name == '':
-                group_name = None
-            
-            # Add group to groups table if it doesn't exist and is not None
-            if group_name is not None and group_name.strip() != '':
-                group_name = group_name.strip()
-                conn_temp = sqlite3.connect(self.data_db)
-                c_temp = conn_temp.cursor()
-                try:
-                    c_temp.execute("INSERT OR IGNORE INTO groups (name) VALUES (?)", (group_name,))
-                    conn_temp.commit()
-                except:
-                    pass
-                finally:
-                    conn_temp.close()
+            encrypted_notes = self.encrypt_notes(notes)
+            group_name = self._ensure_group(group_name)
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("""INSERT INTO data (site, username, password, group_name, date_added, date_modified) 
-            VALUES (?, ?, ?, ?, ?, ?)""",
-            (site, username, encrypted_password, group_name, 
-            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            c.execute("""INSERT INTO data (site, url, username, password, group_name, notes,
+                                           date_added, date_modified)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                      (site, url, username, encrypted_password, group_name, encrypted_notes, now, now))
             record_id = c.lastrowid
             conn.commit()
             conn.close()
@@ -1344,34 +1365,21 @@ class DatabaseManager:
             messagebox.showerror(t("errors.database_title"), t("record.add_failed", error=str(e)))
             return None
 
-    def update_record(self, record_id: int, site: str, username: str, password: str, group_name: Optional[str] = None) -> bool:
+    def update_record(self, record_id: int, site: str, username: str, password: str,
+                      group_name: Optional[str] = None, url: str = '', notes: str = '') -> bool:
         """Update existing password"""
         try:
             encrypted_password = self.fernet.encrypt(password.encode('utf-8'))
-            
-            if group_name == '':
-                group_name = None
-            
-            # Add group to groups table if it doesn't exist and is not None
-            if group_name is not None and group_name.strip() != '':
-                group_name = group_name.strip()
-                conn_temp = sqlite3.connect(self.data_db)
-                c_temp = conn_temp.cursor()
-                try:
-                    c_temp.execute("INSERT OR IGNORE INTO groups (name) VALUES (?)", (group_name,))
-                    conn_temp.commit()
-                except:
-                    pass
-                finally:
-                    conn_temp.close()
+            encrypted_notes = self.encrypt_notes(notes)
+            group_name = self._ensure_group(group_name)
             
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("""UPDATE data SET site=?, username=?, password=?, group_name=?, date_modified=? 
-            WHERE id=?""",
-            (site, username, encrypted_password, group_name,
-            datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            record_id))
+            c.execute("""UPDATE data SET site=?, url=?, username=?, password=?, group_name=?,
+                                         notes=?, date_modified=?
+                         WHERE id=?""",
+                      (site, url, username, encrypted_password, group_name, encrypted_notes,
+                       datetime.now().strftime('%Y-%m-%d %H:%M:%S'), record_id))
             conn.commit()
             conn.close()
             return True
@@ -1379,15 +1387,15 @@ class DatabaseManager:
             messagebox.showerror(t("errors.database_title"), t("record.update_failed", error=str(e)))
             return False
     
-    def get_record_by_id(self, record_id: int) -> Optional[Tuple]:
+    def get_record_by_id(self, record_id: int) -> Optional[Record]:
         """Return one password/record using ID"""
         try:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
-            c.execute("SELECT * FROM data WHERE id=?", (record_id,))
-            record = c.fetchone()
+            c.execute(f"SELECT {RECORD_COLUMNS} FROM data WHERE id=?", (record_id,))
+            row = c.fetchone()
             conn.close()
-            return record
+            return Record(*row) if row else None
         except Exception as e:
             messagebox.showerror(t("errors.database_title"), t("record.retrieve_failed", error=str(e)))
             return None
@@ -1412,8 +1420,23 @@ class DatabaseManager:
         except Exception as e:
             raise Exception(f"Failed to decrypt password: {str(e)}")
     
+    def encrypt_notes(self, notes: str) -> str:
+        """Does not encrypt empty notes"""
+        if not notes:
+            return ''
+        return self.fernet.encrypt(notes.encode('utf-8')).decode('ascii')
+    
+    def decrypt_notes(self, stored: str) -> str:
+        """Decrypt stored notes"""
+        if not stored:
+            return ''
+        try:
+            return self.fernet.decrypt(stored.encode('ascii')).decode('utf-8')
+        except Exception as e:
+            raise Exception(f"Failed to decrypt notes: {str(e)}")
+    
     def change_master_password(self, new_password: str) -> bool:
-        """Update master password and re-encrypt all data"""
+        """Update master password and re-encrypt all data (passwords and notes)"""
         try:
             new_enc_key = Fernet.generate_key()
             new_fernet = Fernet(new_enc_key)
@@ -1423,20 +1446,18 @@ class DatabaseManager:
             conn = sqlite3.connect(self.data_db)
             c = conn.cursor()
             
-            for record in records:
-                if len(record) >= 7:
-                    record_id, site, username, encrypted_password, group_name, date_added, date_modified = record[:7]
-                elif len(record) == 5:
-                    record_id, site, username, encrypted_password, group_name = record
-                elif len(record) >= 4:
-                    record_id, site, username, encrypted_password = record[:4]
-                else:
-                    record_id_str = str(record[0]) if record else 'unknown'
-                    raise Exception(f"Record {record_id_str} has unexpected format ({len(record)} columns) and cannot be re-encrypted. Master password change aborted.")
-                
-                decrypted = self.decrypt_password(encrypted_password)
+            for rec in records:
+                decrypted = self.decrypt_password(rec.password)
                 new_encrypted = new_fernet.encrypt(decrypted.encode('utf-8'))
-                c.execute("UPDATE data SET password=? WHERE id=?", (new_encrypted, record_id))
+                
+                if rec.notes:
+                    notes_plain = self.decrypt_notes(rec.notes)
+                    new_notes = new_fernet.encrypt(notes_plain.encode('utf-8')).decode('ascii')
+                else:
+                    new_notes = ''
+                
+                c.execute("UPDATE data SET password=?, notes=? WHERE id=?",
+                          (new_encrypted, new_notes, rec.id))
             
             conn.commit()
             conn.close()
@@ -1703,7 +1724,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         tree_frame.grid_rowconfigure(0, weight=1)
         tree_frame.grid_columnconfigure(0, weight=1)
         
-        columns = ('ID', 'Site', 'Username', 'Password', 'Group')
+        columns = ('ID', 'Site', 'Username', 'Password', 'Group', 'URL')
         self.tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
         
         self.tree.heading('ID', text=t("main.column_id"))
@@ -1711,12 +1732,14 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self.tree.heading('Username', text=t("main.column_username"))
         self.tree.heading('Password', text=t("main.column_password"))
         self.tree.heading('Group', text=t("main.column_group"))
+        self.tree.heading('URL', text=t("main.column_url"))
         
         self.tree.column('ID', width=50, minwidth=50)
         self.tree.column('Site', width=200, minwidth=100)
         self.tree.column('Username', width=150, minwidth=100)
         self.tree.column('Password', width=150, minwidth=100)
         self.tree.column('Group', width=100, minwidth=80)
+        self.tree.column('URL', width=200, minwidth=100)
         
         self.tree.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
@@ -1744,7 +1767,9 @@ class MainFrame(ttk.Frame, ThemedWidget):
             (t("common.edit"), self._show_edit_dialog),
             (t("common.delete"), self._delete_selected),
             (t("main.copy_password_button"), self._copy_password),
-            (t("main.toggle_visibility_button"), self._toggle_password_visibility)
+            (t("main.toggle_visibility_button"), self._toggle_password_visibility),
+            (t("main.open_url_button"), self._open_url),
+            (t("main.lock_button"), self._lock_application),
         ]
         
         for i, (text, command) in enumerate(buttons):
@@ -1781,7 +1806,7 @@ class MainFrame(ttk.Frame, ThemedWidget):
         self._register_activity()
         self._check_auto_lock()
     
-    def _register_activity(self):
+    def _register_activity(self, event=None):
         """Register an activity event"""
         self.last_activity_time = time.time()
     
@@ -1992,32 +2017,20 @@ class MainFrame(ttk.Frame, ThemedWidget):
         record_id = values[0]
         
         # Get full record from database
-        full_record = self.db_manager.get_record_by_id(record_id)
+        rec = self.db_manager.get_record_by_id(record_id)
         
-        if not full_record:
+        if not rec:
             messagebox.showerror(t("errors.title"), t("record.retrieve_details_failed"))
             return
         
-        # Extract data from full record
-        if len(full_record) >= 7:
-            _, site, username, encrypted_password, group_name, date_added, date_modified = full_record[:7]
-        else:
-            # Fallback for older records without dates
-            if len(full_record) == 5:
-                _, site, username, encrypted_password, group_name = full_record
-            else:
-                _, site, username, encrypted_password = full_record[:4]
-                group_name = None
-            date_added = None
-            date_modified = None
-        
-        # Decrypt password
-        password = self.db_manager.decrypt_password(encrypted_password)
+        # Decrypt password and notes
+        password = self.db_manager.decrypt_password(rec.password)
+        notes = self.db_manager.decrypt_notes(rec.notes)
         
         AddEditDialog(self, self.db_manager, callback=self._on_data_changed,
-                     record_id=record_id, site=site, username=username, 
-                     password=password, group=group_name, 
-                     date_added=date_added, date_modified=date_modified)
+                     record_id=rec.id, site=rec.site, url=rec.url, username=rec.username,
+                     password=password, group=rec.group_name, notes=notes,
+                     date_added=rec.date_added, date_modified=rec.date_modified)
     
     def _delete_selected(self, event=None):
         """Delete selected records"""
@@ -2062,6 +2075,27 @@ class MainFrame(ttk.Frame, ThemedWidget):
         pyperclip.copy(password)
         messagebox.showinfo(t("common.copied_title"), t("main.password_copied_message"))
     
+    def _open_url(self):
+        """Open the selected entry's URL in browser"""
+        self._register_activity()
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning(t("errors.no_selection_title"), t("main.select_url_error"))
+            return
+        
+        url = str(self.tree.item(selection[0])['values'][5]).strip()
+        if not url:
+            messagebox.showwarning(t("main.no_url_title"), t("main.no_url_message"))
+            return
+        
+        if '://' not in url:
+            url = 'https://' + url
+        if not url.lower().startswith(('http://', 'https://')):
+            messagebox.showerror(t("errors.title"), t("main.invalid_url_message"))
+            return
+        
+        webbrowser.open(url)
+    
     def _toggle_password_visibility(self):
         """Toggle password visibility in treeview"""
         self._register_activity()
@@ -2100,27 +2134,19 @@ class MainFrame(ttk.Frame, ThemedWidget):
         if records is None:
             records = self.db_manager.get_all_records(self.current_group)
         
-        for record in records:
-            # Handle different record lengths for backward compatibility
-            if len(record) >= 7:
-                record_id, site, username, encrypted_password, group_name, date_added, date_modified = record[:7]
-            elif len(record) == 5:
-                record_id, site, username, encrypted_password, group_name = record
-            else:
-                record_id, site, username, encrypted_password = record[:4]
-                group_name = None
-            
-            password = self.db_manager.decrypt_password(encrypted_password)
+        for rec in records:
+            password = self.db_manager.decrypt_password(rec.password)
             
             if self.passwords_visible:
                 display_password = password
             else:
-                self.stored_passwords[record_id] = password
+                self.stored_passwords[rec.id] = password
                 display_password = '*' * min(len(password), 12)
             
-            display_group = group_name if group_name else ""
+            display_group = rec.group_name if rec.group_name else ""
             
-            self.tree.insert('', 'end', values=(record_id, site, username, display_password, display_group))
+            self.tree.insert('', 'end', values=(rec.id, rec.site, rec.username,
+                                                display_password, display_group, rec.url))
     
     def _show_import_dialog(self):
         """Show import window"""
@@ -2465,8 +2491,7 @@ class CustomThemeCreatorDialog:
                 canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
             except Exception:
                 pass
-        canvas.bind_all('<MouseWheel>', _on_mousewheel)
-        canvas.bind('<Destroy>', lambda e: canvas.unbind_all('<MouseWheel>'))
+        self.window.bind('<MouseWheel>', _on_mousewheel)
 
         scroll_frame.grid_columnconfigure(0, weight=0)
         scroll_frame.grid_columnconfigure(1, weight=0)
@@ -2623,10 +2648,6 @@ class CustomThemeCreatorDialog:
         # If closed while open go back
         if getattr(self, '_preview_previous_theme', None) is not None:
             self._revert_preview()
-        try:
-            self.window.unbind_all('<MouseWheel>')
-        except Exception:
-            pass
         self.window.destroy()
 
     def _preview_in_app(self):
@@ -3189,7 +3210,8 @@ class AddEditDialog:
     """Dialog for adding/editing password records"""
     
     def __init__(self, parent, db_manager, callback, record_id=None, site='', username='', password='', 
-                 group=None, initial_password='', default_group=None, date_added=None, date_modified=None):
+                 group=None, initial_password='', default_group=None, date_added=None, date_modified=None,
+                 url='', notes=''):
         self.db_manager = db_manager
         self.callback = callback
         self.record_id = record_id
@@ -3205,8 +3227,7 @@ class AddEditDialog:
         self.window = tk.Toplevel(parent)
         self.window.title(t("record.edit_title") if record_id else t("record.add_title"))
         
-        # Adjust window height if editing (to show dates)
-        window_height = 340 if record_id and (date_added or date_modified) else 250
+        window_height = 480 if record_id and (date_added or date_modified) else 390
         self.window.geometry(f"450x{window_height}")
         self.window.resizable(True, True)
         
@@ -3218,7 +3239,7 @@ class AddEditDialog:
         self.window.geometry(f"450x{window_height}+{x}+{y}")
         
         self._apply_window_theme() # Apply theme at top level and not just frames, need to get root window
-        self._create_widgets(site, username, password, group)
+        self._create_widgets(site, username, password, group, url, notes)
         self.window.transient(parent)
         self.window.grab_set()
         
@@ -3229,10 +3250,12 @@ class AddEditDialog:
             theme = THEMES[theme_name]
             self.window.configure(bg=theme['bg'])
     
-    def _create_widgets(self, site, username, password, group):
+    def _create_widgets(self, site, username, password, group, url='', notes=''):
         main_frame = ttk.Frame(self.window, padding="20")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         main_frame.grid_columnconfigure(1, weight=1)
+        self.window.grid_rowconfigure(0, weight=1)
+        self.window.grid_columnconfigure(0, weight=1)
         
         current_row = 0
         
@@ -3241,6 +3264,12 @@ class AddEditDialog:
         site_entry = ttk.Entry(main_frame, textvariable=self.site_var)
         site_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         site_entry.focus()
+        current_row += 1
+        
+        ttk.Label(main_frame, text=t("record.url_label")).grid(row=current_row, column=0, sticky=tk.W, pady=5)
+        self.url_var = tk.StringVar(value=url)
+        url_entry = ttk.Entry(main_frame, textvariable=self.url_var)
+        url_entry.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         current_row += 1
         
         ttk.Label(main_frame, text=t("record.username_label")).grid(row=current_row, column=0, sticky=tk.W, pady=5)
@@ -3265,6 +3294,22 @@ class AddEditDialog:
         self.group_combo = ttk.Combobox(main_frame, textvariable=self.group_var, values=groups)
         self.group_combo.grid(row=current_row, column=1, sticky=(tk.W, tk.E), padx=(10, 0), pady=5)
         self.group_combo['postcommand'] = lambda: self._suppress_empty_group_dropdown(self.group_combo)
+        current_row += 1
+        
+        # Notes
+        ttk.Label(main_frame, text=t("record.notes_label")).grid(
+            row=current_row, column=0, sticky=(tk.W, tk.N), pady=5)
+        all_themes = _get_all_themes(self.db_manager)
+        theme = all_themes.get(self.db_manager.get_setting('theme', 'Light'), THEMES['Light'])
+        self.notes_text = tk.Text(main_frame, height=4, width=30, wrap='word',
+                                  bg=theme['entry_bg'], fg=theme['entry_fg'],
+                                  insertbackground=theme['fg'], relief=tk.FLAT,
+                                  highlightthickness=1)
+        self.notes_text.grid(row=current_row, column=1, sticky=(tk.W, tk.E, tk.N, tk.S),
+                             padx=(10, 0), pady=5)
+        self.notes_text.insert('1.0', notes)
+        self.notes_text.bind('<Return>', self._notes_newline)
+        main_frame.grid_rowconfigure(current_row, weight=1)
         current_row += 1
         
         # Show date fields only when editing
@@ -3304,6 +3349,11 @@ class AddEditDialog:
         
         self.window.bind('<Return>', lambda e: self._save())
         self.window.bind('<Escape>', lambda e: self._cancel())
+    
+    def _notes_newline(self, event):
+        """Enter inside the notes box inserts a newline instead of triggering Save"""
+        event.widget.insert(tk.INSERT, '\n')
+        return 'break'
     
     def _suppress_empty_group_dropdown(self, combo):
         """Prevent dropdown list from opening immediately if no group exists"""
@@ -3350,9 +3400,11 @@ class AddEditDialog:
     def _save(self):
         """Save the record"""
         site = self.site_var.get().strip()
+        url = self.url_var.get().strip()
         username = self.username_var.get().strip()
         password = self.password_var.get().strip()
         group = self.group_var.get().strip()
+        notes = self.notes_text.get('1.0', 'end-1c').strip()
         
         if not site:
             messagebox.showerror(t("errors.validation_title"), t("record.site_required_error"))
@@ -3360,6 +3412,10 @@ class AddEditDialog:
         
         if len(site) > 100:
             messagebox.showerror(t("errors.validation_title"), t("record.site_too_long_error"))
+            return
+        
+        if len(url) > 255:
+            messagebox.showerror(t("errors.validation_title"), t("record.url_too_long_error"))
             return
         
         if len(username) > 100:
@@ -3375,13 +3431,15 @@ class AddEditDialog:
         
         try:
             if self.record_id:
-                success = self.db_manager.update_record(self.record_id, site, username, password, group)
+                success = self.db_manager.update_record(self.record_id, site, username, password, group,
+                                                        url=url, notes=notes)
                 if success:
                     messagebox.showinfo(t("common.success_title"), t("record.updated_success"))
                 else:
                     return
             else:
-                record_id = self.db_manager.add_record(site, username, password, group)
+                record_id = self.db_manager.add_record(site, username, password, group,
+                                                       url=url, notes=notes)
                 if record_id:
                     messagebox.showinfo(t("common.success_title"), t("record.added_success"))
                 else:
@@ -3524,19 +3582,25 @@ class ImportDialog:
                     if len(row) < 3:
                         continue
                     
+                    site = username = password = url = notes = ''
                     try:
-                        if source == "Chrome":
-                            if len(row) >= 4:
-                                site = row[0] or row[1]
-                                username = row[2]
-                                password = row[3]
-                        else:
+                        if source == "Chrome":  # name, url, username, password, note
+                            if len(row) < 4:
+                                continue
+                            site = row[0] or row[1]
+                            url = row[1]
+                            username = row[2]
+                            password = row[3]
+                            notes = row[4] if len(row) > 4 else ''
+                        else:  # Firefox: url, username, password, ...
                             site = row[0]
+                            url = row[0]
                             username = row[1]
                             password = row[2]
                         
                         if site and password:
-                            if self.db_manager.add_record(site, username, password, group):
+                            if self.db_manager.add_record(site, username, password, group,
+                                                          url=url, notes=notes):
                                 imported_count += 1
                     
                     except Exception as e:
@@ -3657,23 +3721,18 @@ class ExportDialog:
             
             with open(self.filename, 'w', newline='', encoding='utf-8') as file:
                 csv_writer = csv.writer(file)
-                csv_writer.writerow(['site', 'username', 'password', 'group'])
+                csv_writer.writerow(['site', 'username', 'password', 'group', 'url', 'notes'])
                 
-                for record in records:
-                    # Handle different record lengths for backward compatibility
-                    if len(record) >= 5:
-                        record_id, site, username, encrypted_password, group_name = record[:5]
-                    else:
-                        record_id, site, username, encrypted_password = record[:4]
-                        group_name = None
-                    
+                for rec in records:
                     try:
-                        password = self.db_manager.decrypt_password(encrypted_password)
+                        password = self.db_manager.decrypt_password(rec.password)
+                        notes = self.db_manager.decrypt_notes(rec.notes)
                     except Exception as e:
-                        print(f"Error decrypting record {record_id}: {e}")
+                        print(f"Error decrypting record {rec.id}: {e}")
                         continue
                     
-                    csv_writer.writerow([site, username, password, group_name or ''])
+                    csv_writer.writerow([rec.site, rec.username, password,
+                                         rec.group_name or '', rec.url, notes])
                     exported_count += 1
             
             if exported_count > 0:
@@ -3779,9 +3838,11 @@ class PasswordManagerApp:
         # Set language for i18n
         i18n.set_language(self.db_manager.get_setting('language', 'en'))
         self.root.title(t("app.title_versioned"))
-        
+
         self.current_frame = None
+        self._bind_activity_tracking()
         self._show_login()
+
     
     def _show_login(self):
         """Show login frame"""
@@ -3804,6 +3865,23 @@ class PasswordManagerApp:
         
         self.current_frame = MainFrame(self.root, self.db_manager, self._show_login)
         self.current_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+
+    def _bind_activity_tracking(self):
+        for sequence in ('<Key>', '<Button>', '<MouseWheel>', '<Motion>'):
+            self.root.bind_all(sequence, self._on_user_activity, add='+')
+
+    def _on_user_activity(self, event=None):
+        frame = self.current_frame
+        if not isinstance(frame, MainFrame):
+            return
+        if event is not None and event.type == tk.EventType.Motion:
+            pos = (event.x_root, event.y_root)
+            if pos == getattr(self, '_last_pointer_pos', None):
+                return
+            self._last_pointer_pos = pos
+        frame._register_activity()
+
     
     def run(self):
         """Run the application"""
@@ -3830,4 +3908,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

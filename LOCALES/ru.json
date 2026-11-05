@@ -1,5 +1,5 @@
 {
-  "app.title_versioned": "RandPyPwGen v2.1.0",
+  "app.title_versioned": "RandPyPwGen v2.1.1",
   "app.setup_title": "Настройка RandPyPwGen",
   "app.login_window_title": "RandPyPwGen - Вход",
 
@@ -102,6 +102,13 @@
   "main.password_copied_message": "Пароль скопирован в буфер обмена!",
   "main.invalid_length_message": "Введите корректную длину пароля.",
   "main.generate_failed": "Не удалось сгенерировать пароль: {error}",
+  "main.column_url": "URL",
+  "main.open_url_button": "Open URL",
+  "main.no_url_title": "No URL",
+  "main.no_url_message": "No URL available for this record.",
+  "main.invalid_url_message": "Invalid URL format.",
+  "main.select_url_error": "Please select a record to open its URL.",
+  "main.lock_button": "Lock",
 
   "theme.config_title": "Настройка темы",
   "theme.select_label": "Выберите тему:",
@@ -218,6 +225,9 @@
   "record.add_failed": "Не удалось добавить запись: {error}",
   "record.update_failed": "Не удалось обновить запись: {error}",
   "record.delete_failed": "Не удалось удалить запись: {error}",
+  "record.url_label": "URL:",
+  "record.url_too_long_error": "URL must be 255 characters or fewer.",
+  "record.notes_label": "Notes:",
 
   "import.select_source_label": "Выберите источник данных:",
   "import.import_to_group_label": "Импортировать в группу:",
