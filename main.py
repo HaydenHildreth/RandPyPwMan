@@ -3875,7 +3875,6 @@ class PasswordManagerApp:
         frame = self.current_frame
         if not isinstance(frame, MainFrame):
             return
-        # Ignore <Motion> events where the pointer hasn't actually moved
         if event is not None and event.type == tk.EventType.Motion:
             pos = (event.x_root, event.y_root)
             if pos == getattr(self, '_last_pointer_pos', None):
